@@ -1,8 +1,8 @@
 # Contexto del Proyecto
 
-## Nombre
+## Nombre / marca
 
-GallaAI
+**GallaAI** es el nombre oficial del proyecto y de la marca. No se usa otro nombre comercial (por ejemplo, “AI Workspace”).
 
 ---
 

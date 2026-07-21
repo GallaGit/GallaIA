@@ -1,10 +1,10 @@
-# AI Workspace
+# GallaAI
 
 > Plataforma de IA desarrollada como proyecto de aprendizaje con enfoque profesional.
 
 ## Descripción
 
-AI Workspace es un proyecto de largo plazo cuyo objetivo es construir una plataforma moderna de Inteligencia Artificial similar, a nivel conceptual, a soluciones como ChatGPT, Claude Projects o Notion AI.
+GallaAI es un proyecto de largo plazo cuyo objetivo es construir una plataforma moderna de Inteligencia Artificial similar, a nivel conceptual, a soluciones como ChatGPT, Claude Projects o Notion AI.
 
 El propósito principal no es copiar estas herramientas, sino aprender las tecnologías, patrones de arquitectura y buenas prácticas utilizadas para desarrollar productos de IA reales.
 
