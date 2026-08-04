@@ -22,5 +22,5 @@ Use **PostgreSQL** as the primary relational database when persistence is introd
 ## TODO
 
 - Accept this ADR when PostgreSQL is wired for Temporada 2.
-- Document connection/config conventions in [docs/backend/03-configuration.md](../backend/03-configuration.md) and [docs/architecture/database.md](../architecture/database.md).
+- Document connection/config conventions in [docs/backend/configuration.md](../backend/configuration.md) and [docs/architecture/database.md](../architecture/database.md).
 - Do not treat ADR-002 as implemented until migrations and a running instance exist.

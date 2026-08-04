@@ -41,23 +41,23 @@ Do not treat Planned or Future items as working software.
 
 ## Backend deep-dives (Draft stubs)
 
-Numbered series for long-term backend documentation. Folders under `backend/app/` are **scaffold only** until implemented.
+Backend documentation stubs. Folders under `backend/app/` are **scaffold only** until implemented.
 
 | Document | Topic |
 |----------|-------|
-| [backend/01-project-structure.md](backend/01-project-structure.md) | Layered layout |
-| [backend/02-request-lifecycle.md](backend/02-request-lifecycle.md) | Request path |
-| [backend/03-configuration.md](backend/03-configuration.md) | Settings and env |
-| [backend/04-dependency-injection.md](backend/04-dependency-injection.md) | FastAPI dependencies |
-| [backend/05-routing.md](backend/05-routing.md) | Routes and routers |
-| [backend/06-services.md](backend/06-services.md) | Service layer |
-| [backend/07-repositories.md](backend/07-repositories.md) | Data access (Temporada 2+) |
-| [backend/08-data-models.md](backend/08-data-models.md) | Models vs schemas |
-| [backend/09-error-handling.md](backend/09-error-handling.md) | Errors and HTTP mapping |
-| [backend/10-logging.md](backend/10-logging.md) | Logging |
-| [backend/11-testing.md](backend/11-testing.md) | Testing strategy |
+| [backend/project-structure.md](backend/project-structure.md) | Layered layout |
+| [backend/request-lifecycle.md](backend/request-lifecycle.md) | Request path |
+| [backend/configuration.md](backend/configuration.md) | Settings and env |
+| [backend/dependency-injection.md](backend/dependency-injection.md) | FastAPI dependencies |
+| [backend/routing.md](backend/routing.md) | Routes and routers |
+| [backend/services.md](backend/services.md) | Service layer |
+| [backend/repositories.md](backend/repositories.md) | Data access (Temporada 2+) |
+| [backend/data-models.md](backend/data-models.md) | Models vs schemas |
+| [backend/error-handling.md](backend/error-handling.md) | Errors and HTTP mapping |
+| [backend/logging.md](backend/logging.md) | Logging |
+| [backend/testing.md](backend/testing.md) | Testing strategy |
 | [backend/glossary.md](backend/glossary.md) | Backend terms |
-| [backend/authentication.md](backend/authentication.md) | Auth (outside T1 series; Future until users) |
+| [backend/authentication.md](backend/authentication.md) | Auth (Future until users) |
 
 ---
 

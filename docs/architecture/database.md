@@ -23,4 +23,4 @@ Draft
 - Document engine/session lifecycle when `db/session.py` is implemented.
 - Align migration workflow with Alembic under `app/db/migrations/`.
 - Do not list tables or indexes as Existing until they exist in code.
-- Cross-link [docs/backend/07-repositories.md](../backend/07-repositories.md) and [08-data-models.md](../backend/08-data-models.md).
+- Cross-link [docs/backend/repositories.md](../backend/repositories.md) and [data-models.md](../backend/data-models.md).

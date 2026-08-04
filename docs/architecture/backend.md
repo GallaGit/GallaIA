@@ -52,7 +52,7 @@ app/
 
 ## Deep-dives
 
-See [docs/backend/](../backend/) (`01`–`11` and glossary).
+See [docs/backend/](../backend/) (topic stubs and glossary).
 
 ## TODO
 

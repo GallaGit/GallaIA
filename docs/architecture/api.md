@@ -16,7 +16,7 @@ Draft
 
 ## Related docs
 
-- Deep routing notes: [docs/backend/05-routing.md](../backend/05-routing.md)
+- Deep routing notes: [docs/backend/routing.md](../backend/routing.md)
 - Future detail: `docs/api/` (conventions, endpoints, pagination, filtering, versioning) — scaffolding only today.
 
 ## TODO

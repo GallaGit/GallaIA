@@ -19,4 +19,4 @@ Draft
 - Choose log format (JSON vs text) for local vs container runs.
 - Define fields to include (timestamp, level, request id, route) and fields to redact.
 - Document logger acquisition conventions (`getLogger(__name__)` or project helper).
-- Align with `03-configuration.md` for log-level settings.
+- Align with `configuration.md` for log-level settings.
