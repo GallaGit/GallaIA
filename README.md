@@ -28,8 +28,9 @@ Este proyecto crecerá por módulos, donde cada nueva funcionalidad se integrar�
 Estado:
 
 - [x] Planificación inicial
-- [ ] Configuración del proyecto
-- [ ] Backend
+- [x] Estructura de carpetas y documentación base (scaffold)
+- [ ] Configuración del proyecto (dependencias, entorno)
+- [ ] Backend runnable (FastAPI)
 - [ ] Frontend
 - [ ] Integración con LLM
 - [ ] Chat funcional
@@ -38,31 +39,29 @@ Estado:
 
 ## Stack tecnológico
 
-### Backend
+Stack **elegido** (Planned). Aún no hay aplicación backend ejecutable ni dependencias instaladas en el repositorio.
+
+### Backend (Planned)
 
 - Python
 - FastAPI
+- SQLAlchemy (desde Temporada 2)
+- PostgreSQL (desde Temporada 2)
 
-### Frontend
+### Frontend (Planned)
 
 - React
 - Next.js
 - TypeScript
 
-### Base de datos
+### IA (Planned)
 
-- PostgreSQL
+- OpenAI, Anthropic o Groq (un proveedor en Temporada 1)
 
-### IA
-
-- OpenAI
-- Anthropic
-- Groq
-
-### DevOps
+### DevOps (Planned)
 
 - Docker
-- Docker Compose
+- Docker Compose (`backend/docker-compose.yml` — archivo vacío, pendiente de contenido)
 
 ---
 
@@ -96,19 +95,22 @@ Dashboard y administración.
 
 ## Estructura del repositorio
 
-```estructure
-backend/
-frontend/
-docs/
-README.md
-docker-compose.yml
 ```
+backend/          # Scaffold FastAPI (sin implementación aún)
+frontend/         # Frontend (pendiente)
+docs/             # Documentación
+README.md
+```
+
+Compose y Docker del backend viven bajo `backend/` (`Dockerfile`, `docker-compose.yml`), hoy como archivos vacíos.
 
 ---
 
 ## Documentación
 
-Toda la documentación técnica se encuentra en la carpeta **docs/**.
+Índice completo: **[docs/README.md](docs/README.md)**.
+
+Documentación de producto: `docs/alcance.md`, `docs/context.md`, `docs/product-vision/`.
 
 ---
 
