@@ -23,30 +23,38 @@ Este proyecto crecerá por módulos, donde cada nueva funcionalidad se integrar�
 
 ## Estado del proyecto
 
-**Versión actual:** v0.1.0 (En planificación)
+**Versión actual:** v0.1.0
 
-Estado:
+- **Fase 1 — Foundation:** completada (FastAPI, Settings, logging, `/health`, Docker).
+- **Fase 2 — API Base:** completada (router `/api/v1`, errores globales, middleware request-id, dependencias comunes).
+- **Siguiente:** Fase 3 — Base de datos (PostgreSQL).
+
+Checklist:
 
 - [x] Planificación inicial
-- [x] Estructura de carpetas y documentación base (scaffold)
-- [ ] Configuración del proyecto (dependencias, entorno)
-- [ ] Backend runnable (FastAPI)
+- [x] Estructura de carpetas y documentación base
+- [x] Configuración del proyecto (dependencias, entorno)
+- [x] Backend runnable (FastAPI + Docker)
 - [ ] Frontend
 - [ ] Integración con LLM
 - [ ] Chat funcional
+
+Roadmap técnico detallado: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
 ## Stack tecnológico
 
-Stack **elegido** (Planned). Aún no hay aplicación backend ejecutable ni dependencias instaladas en el repositorio.
-
-### Backend (Planned)
+### Backend (Existing)
 
 - Python
 - FastAPI
-- SQLAlchemy (desde Temporada 2)
-- PostgreSQL (desde Temporada 2)
+- Docker / Docker Compose
+
+### Backend (Planned)
+
+- SQLAlchemy (Fase 3+)
+- PostgreSQL (Fase 3+)
 
 ### Frontend (Planned)
 
@@ -56,16 +64,11 @@ Stack **elegido** (Planned). Aún no hay aplicación backend ejecutable ni depen
 
 ### IA (Planned)
 
-- OpenAI, Anthropic o Groq (un proveedor en Temporada 1)
-
-### DevOps (Planned)
-
-- Docker
-- Docker Compose (`backend/docker-compose.yml` — archivo vacío, pendiente de contenido)
+- OpenAI, Anthropic o Groq (un proveedor cuando llegue el chat)
 
 ---
 
-## Roadmap
+## Roadmap de producto
 
 ### Temporada 1
 
@@ -96,21 +99,23 @@ Dashboard y administración.
 ## Estructura del repositorio
 
 ```
-backend/          # Scaffold FastAPI (sin implementación aún)
+backend/          # API FastAPI (Fase 1 + inicio Fase 2)
 frontend/         # Frontend (pendiente)
 docs/             # Documentación
 README.md
 ```
 
-Compose y Docker del backend viven bajo `backend/` (`Dockerfile`, `docker-compose.yml`), hoy como archivos vacíos.
+Cómo arrancar el backend: **[backend/README.md](backend/README.md)**.
+
+Docker vive bajo `backend/` (`Dockerfile`, `docker-compose.yml`).
 
 ---
 
 ## Documentación
 
-Índice completo: **[docs/README.md](docs/README.md)**.
+Índice: **[docs/README.md](docs/README.md)**.
 
-Documentación de producto: `docs/alcance.md`, `docs/context.md`, `docs/product-vision/`.
+Producto: `docs/alcance.md`, `docs/context.md`, `docs/product-vision/`.
 
 ---
 

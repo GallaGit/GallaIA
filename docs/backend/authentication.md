@@ -16,7 +16,7 @@ Draft
 
 ## Notes
 
-This document is **outside** the numbered Temporada 1 backend series (`01`–`11`). It exists so the topic has a home when Temporada 2+ unlocks it.
+This document is outside the Temporada 1 backend core topics. It exists so authentication has a home when Temporada 2+ unlocks it.
 
 ## TODO
 

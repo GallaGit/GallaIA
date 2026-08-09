@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Explain the planned HTTP API surface between frontend and backend: resource style, error shape, and where detailed conventions will live.
+Explain the HTTP API surface between clients and the backend: versioning, health endpoints, errors, and where conventions will grow.
 
 ## Status
 
@@ -10,17 +10,24 @@ Draft
 
 ## Scope
 
-- Existing: No implemented endpoints; empty `app/api/routes/`.
-- Planned: REST-style chat (and health) endpoints for Temporada 1.
-- Future: Pagination, filtering, versioning, and richer resources — detail stubs under `docs/api/`.
+- Existing:
+  - `GET /` — simple ping
+  - `GET /health` — infra health (unversioned)
+  - `GET /api/v1/health` — versioned API health
+  - `GET /api/v1/demo-error` — learning-only error demo
+  - OpenAPI at `/docs`
+  - Router composition via `app.include_router(api_router, prefix="/api/v1")`
+  - Global `AppError` JSON envelope; `X-Request-ID` on responses
+- Planned: domain endpoints (users, auth, chat, …).
+- Future: pagination, filtering, richer versioning policy.
 
 ## Related docs
 
-- Deep routing notes: [docs/backend/05-routing.md](../backend/05-routing.md)
-- Future detail: `docs/api/` (conventions, endpoints, pagination, filtering, versioning) — scaffolding only today.
+- [docs/backend/routing.md](../backend/routing.md)
+- [docs/backend/request-lifecycle.md](../backend/request-lifecycle.md)
+- [docs/backend/error-handling.md](../backend/error-handling.md)
 
 ## TODO
 
-- Summarize resource naming and status-code policy once the first routes exist.
-- Link OpenAPI as the source of truth for request/response schemas.
-- Keep this doc architectural; leave endpoint catalogs to `docs/api/endpoints.md`.
+- Keep OpenAPI as the live contract for request/response shapes.
+- Drop demo-error from the public surface when Fase 3+ starts in earnest.

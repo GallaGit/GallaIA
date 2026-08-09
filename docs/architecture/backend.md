@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Describe the backend’s layered package layout, why each layer exists, and how documentation under `docs/backend/` deep-dives into each concern—without claiming a running FastAPI app today.
+Describe the backend’s layered package layout, what is active today, and how documentation under `docs/backend/` deep-dives into each concern.
 
 ## Status
 
@@ -10,52 +10,42 @@ Draft
 
 ## Scope
 
-- Existing: Empty scaffold mirroring:
+- Existing (active code):
+  - `app/main.py` — FastAPI app, lifespan, middleware, exception handlers, `/`, `/health`, mounts `/api/v1`
+  - `app/core/config.py` — `Settings` / `get_settings()`
+  - `app/core/logging.py` — `setup_logging` / `get_logger`
+  - `app/api/router.py` — aggregates v1 routers
+  - `app/api/routes/health.py` — `GET /api/v1/health` (+ demo-error)
+  - `app/api/dependencies/settings.py` — `SettingsDep`
+  - `app/exceptions/` — `AppError` + handlers
+  - `app/middleware/request_id.py` — `X-Request-ID` + request logging
+  - `Dockerfile`, `docker-compose.yml`, `.env.example`
+- Existing (reserved scaffold only): `db/`, `models/`, `schemas/`, `repositories/`, `services/`, `providers/`, `agents/`, `tools/`, `memory/`, `rag/`, `utils/`, `core/security.py`
+- Planned: DB/auth/chat layers (Fase 3+).
+- Future: activate reserved AI packages per roadmap.
 
-```
-app/
-  api/
-  core/
-  db/
-  models/
-  schemas/
-  repositories/
-  services/
-  providers/
-  agents/
-  tools/
-  memory/
-  rag/
-  middleware/
-  exceptions/
-  utils/
-  main.py
-```
+## Package roles
 
-- Planned: FastAPI entrypoint, chat route, service, and one AI provider for Temporada 1; config, logging, errors as supporting pieces.
-- Future: Activation of `db/`, repositories, agents, rag, memory, and tools per roadmap.
-
-## Package roles (intended)
-
-| Package | Role |
-|---------|------|
-| `api/` | HTTP routes and dependencies |
-| `core/` | Config, logging, security helpers |
-| `db/` | Engine/session and migrations (from Temporada 2) |
-| `models/` | ORM models |
-| `schemas/` | Pydantic API schemas |
-| `repositories/` | Data access |
-| `services/` | Use-case orchestration |
-| `providers/` | External AI provider adapters |
-| `agents/`, `tools/`, `memory/`, `rag/` | Reserved for later seasons |
-| `middleware/`, `exceptions/`, `utils/` | Cross-cutting support |
+| Package | Role | State |
+|---------|------|-------|
+| `api/` | HTTP routes, router, dependencies | Active |
+| `core/` | Config, logging, security helpers | Config + logging active |
+| `exceptions/` | App errors + HTTP handlers | Active |
+| `middleware/` | Cross-cutting HTTP middleware | Active (request-id) |
+| `db/` | Engine/session and migrations | Scaffold (Fase 3+) |
+| `models/` | ORM models | Scaffold |
+| `schemas/` | Pydantic API schemas | Scaffold |
+| `repositories/` | Data access | Scaffold |
+| `services/` | Use-case orchestration | Scaffold |
+| `providers/` | External AI provider adapters | Scaffold |
+| `agents/`, `tools/`, `memory/`, `rag/` | Later seasons | Reserved |
+| `utils/` | Helpers | Scaffold |
 
 ## Deep-dives
 
-See [docs/backend/](../backend/) (`01`–`11` and glossary).
+See [docs/backend/](../backend/).
 
 ## TODO
 
-- Expand responsibility and import-boundary rules after first routes land.
-- Mark which packages are Active vs Reserved as seasons progress.
-- Do not reorganize into feature-based or hexagonal layouts.
+- Mark packages Active vs Reserved as phases progress.
+- Do not reorganize into feature-based or hexagonal layouts ([ADR-002](../adr/ADR-002-project-structure.md)).
