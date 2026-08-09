@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_debug: bool = True
     log_level: str = "INFO"
+    database_url: str = "postgresql+psycopg://gallaai:gallaai@localhost:5432/gallaai"
 
 
 @lru_cache
