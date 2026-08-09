@@ -26,7 +26,8 @@ Este proyecto crecerá por módulos, donde cada nueva funcionalidad se integrar�
 **Versión actual:** v0.1.0
 
 - **Fase 1 — Foundation:** completada (FastAPI, Settings, logging, `/health`, Docker).
-- **Fase 2 — API Base:** iniciada (router + versionado `/api/v1`).
+- **Fase 2 — API Base:** completada (router `/api/v1`, errores globales, middleware request-id, dependencias comunes).
+- **Siguiente:** Fase 3 — Base de datos (PostgreSQL).
 
 Checklist:
 

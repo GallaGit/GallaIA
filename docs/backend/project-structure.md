@@ -10,8 +10,8 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), and `api` (router + health route). Docker and `pyproject.toml` at `backend/`.
-- Planned: Fill `exceptions/`, `middleware/`, `services/`, then `db/` / `repositories/` / `models/` / `schemas/`.
+- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), `api` (router, routes, dependencies), `exceptions/`, and `middleware/`. Docker and `pyproject.toml` at `backend/`.
+- Planned: `services/`, then `db/` / `repositories/` / `models/` / `schemas/`.
 - Future: `providers/`, `agents/`, `tools/`, `memory/`, `rag/`.
 
 ## Layout (simplified)
@@ -19,15 +19,18 @@ Draft (reflects current implementation)
 ```text
 backend/
 ├── app/
-│   ├── main.py              # FastAPI app + lifespan
+│   ├── main.py                 # FastAPI app + lifespan + handlers
 │   ├── api/
-│   │   ├── router.py        # mounts v1 routers
-│   │   └── routes/          # endpoint modules
+│   │   ├── router.py           # mounts v1 routers
+│   │   ├── dependencies/       # SettingsDep, …
+│   │   └── routes/             # endpoint modules
 │   ├── core/
 │   │   ├── config.py
 │   │   ├── logging.py
-│   │   └── security.py      # scaffold
-│   ├── db/ …                # scaffold
+│   │   └── security.py         # scaffold
+│   ├── exceptions/             # AppError + handlers
+│   ├── middleware/             # request-id
+│   ├── db/ …                   # scaffold (Fase 3+)
 │   ├── models/ schemas/ repositories/ services/ …
 │   └── …
 ├── Dockerfile

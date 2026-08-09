@@ -1,6 +1,6 @@
 # GallaAI Backend
 
-API HTTP del proyecto (FastAPI). Fase 1 Foundation completada; Fase 2 API Base iniciada.
+API HTTP del proyecto (FastAPI). Fase 1 Foundation y Fase 2 API Base completadas.
 
 ## Requisitos
 
@@ -50,12 +50,19 @@ docker compose down
 | GET | `/` | Ping simple |
 | GET | `/health` | Health de infra (sin versionar) |
 | GET | `/api/v1/health` | Health dentro de la API v1 |
+| GET | `/api/v1/demo-error` | Demo de error 404 (aprendizaje; quitar luego) |
+
+## Errores y request id
+
+- Errores de aplicación → JSON `{ "error": { "code", "message" } }` (ver `app/exceptions/`).
+- Cada respuesta incluye cabecera `X-Request-ID` (middleware).
 
 ## Configuración
 
 - Variables en `backend/.env` (no se sube a git).
 - Plantilla pública: `backend/.env.example`.
 - Lectura centralizada: `app/core/config.py` (`Settings` + `get_settings()`).
+- Inyección en rutas: `SettingsDep` en `app/api/dependencies/settings.py`.
 
 Variables actuales: `APP_NAME`, `APP_ENV`, `APP_DEBUG`, `LOG_LEVEL`.
 

@@ -10,34 +10,34 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `get_settings()` used as a dependency on health handlers (`Depends(get_settings)`); also called at import time in `main.py` for app title and logging setup.
-- Planned: DB session dependency, auth/current-user dependency, shared API dependencies under `app/api/dependencies/`.
+- Existing: `SettingsDep` in `app/api/dependencies/settings.py` (`Annotated[Settings, Depends(get_settings)]`); used by health routes and infra `/health`. `get_settings()` is also called at import time in `main.py` for app title and logging setup.
+- Planned: DB session dependency (`app/api/dependencies/db.py`), auth/current-user dependency.
 - Future: provider clients and other request-scoped resources.
 
 ## Pattern today
 
 ```python
-from fastapi import Depends
-from app.core.config import Settings, get_settings
+from app.api.dependencies.settings import SettingsDep
 
-def health(settings: Settings = Depends(get_settings)):
+def api_health(settings: SettingsDep):
     ...
 ```
 
-FastAPI calls `get_settings()`, caches via `@lru_cache`, and passes the `Settings` instance into the handler.
+FastAPI resolves `Depends(get_settings)` from the annotation, caches via `@lru_cache`, and passes the `Settings` instance into the handler.
 
 ## Guidelines
 
-- Prefer `Depends` for anything a route needs that is not pure request data.
+- Prefer typed aliases under `app/api/dependencies/` over inline `Depends(...)` in every route.
 - Keep dependency callables small and reusable.
 - Do not hide business rules inside dependencies; orchestration belongs in services (when introduced).
 
 ## Code
 
+- [`backend/app/api/dependencies/settings.py`](../../backend/app/api/dependencies/settings.py)
 - [`backend/app/core/config.py`](../../backend/app/core/config.py)
 - [`backend/app/api/routes/health.py`](../../backend/app/api/routes/health.py)
 
 ## TODO
 
-- Add `app/api/dependencies/` modules when DB/auth arrive.
+- Add `db.py` / `auth.py` dependency modules in Fase 3–4.
 - Document dependency lifetimes (request vs app scoped) with real examples.

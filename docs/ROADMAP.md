@@ -88,9 +88,9 @@ Empezaría por construir la base del backend.
 
 - API Router ✅
 - Versionado (`/api/v1`) ✅
-- Manejo global de errores
-- Middleware
-- Dependencias comunes
+- Manejo global de errores ✅
+- Middleware ✅
+- Dependencias comunes ✅
 
 ### Fase 3 — Base de datos
 

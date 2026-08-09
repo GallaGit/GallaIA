@@ -33,9 +33,9 @@ Do not treat Planned or Future items as working software.
 | Document | Focus |
 |----------|-------|
 | [architecture/overview.md](architecture/overview.md) | System overview, layered stance |
-| [architecture/backend.md](architecture/backend.md) | Backend package map (Fase 1+ partial Fase 2) |
+| [architecture/backend.md](architecture/backend.md) | Backend package map (Fase 1–2) |
 | [architecture/frontend.md](architecture/frontend.md) | Frontend ↔ API (Planned) |
-| [architecture/api.md](architecture/api.md) | HTTP API (`/api/v1` Existing) |
+| [architecture/api.md](architecture/api.md) | HTTP API (`/api/v1`, errors, request-id) |
 | [architecture/database.md](architecture/database.md) | Persistence (Planned, Fase 3+) |
 
 ---
@@ -55,7 +55,7 @@ How-to docs for the backend. Several reflect **current implementation**; others 
 | [backend/services.md](backend/services.md) | Service layer | Planned stub |
 | [backend/repositories.md](backend/repositories.md) | Data access (Fase 3+) | Planned stub |
 | [backend/data-models.md](backend/data-models.md) | Models vs schemas | Planned stub |
-| [backend/error-handling.md](backend/error-handling.md) | Errors and HTTP mapping | Planned stub |
+| [backend/error-handling.md](backend/error-handling.md) | Errors and HTTP mapping | Current state |
 | [backend/testing.md](backend/testing.md) | Testing strategy | Planned stub |
 | [backend/glossary.md](backend/glossary.md) | Backend terms | Draft |
 | [backend/authentication.md](backend/authentication.md) | Auth (Future until users) | Planned stub |

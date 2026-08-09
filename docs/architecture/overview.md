@@ -10,17 +10,19 @@ Draft
 
 ## Scope
 
-- Existing: Repository layout (`backend/`, `frontend/`, `docs/`); runnable FastAPI API with Settings, logging, health endpoints, Docker Compose, and `/api/v1` router prefix.
-- Planned: Finish Fase 2 (global errors, middleware, shared dependencies); then DB, auth, users, and chat per [ROADMAP.md](../ROADMAP.md).
+- Existing: Repository layout (`backend/`, `frontend/`, `docs/`); runnable FastAPI API with Settings, logging, health endpoints, Docker Compose, `/api/v1`, global errors, request-id middleware, and shared `SettingsDep`.
+- Planned: Fase 3+ — DB, auth, users, and chat per [ROADMAP.md](../ROADMAP.md).
 - Future: Persistence product features, RAG, agents, automations, and dashboard in later seasons.
 
 ## Current runtime shape
 
 ```text
 Client / browser
+    → RequestIdMiddleware
     → FastAPI (backend)
-        → GET /health          (infra)
-        → GET /api/v1/health   (versioned API)
+        → GET /health              (infra)
+        → GET /api/v1/health       (versioned API)
+        → AppError handlers on failure
 ```
 
 Frontend and AI providers are not wired yet.
