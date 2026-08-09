@@ -2,21 +2,35 @@
 
 ## Purpose
 
-Establish why structured logging matters for an AI-backed API, and how logging will be configured without leaking secrets or prompt contents inappropriately.
+Describe the logging setup so local runs and Docker share a consistent, readable format without leaking secrets.
 
 ## Status
 
-Draft
+Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Empty `app/core/logging.py`.
-- Planned: Central logging setup, log levels via config, request-correlated logs for Temporada 1.
-- Future: Centralized log shipping, metrics, and tracing.
+- Existing: `app/core/logging.py` (`setup_logging`, `get_logger`); called from `main.py` using `settings.log_level`; startup/shutdown logs in lifespan; debug logs on `/` and `/health`.
+- Planned: request-id correlation, structured JSON for production if needed.
+- Future: log shipping / metrics / tracing.
+
+## How it works
+
+1. `setup_logging(level)` configures root logging once (`basicConfig`, `force=True` so uvicorn does not swallow the format).
+2. Format: `%(asctime)s | %(levelname)s | %(name)s | %(message)s` to stdout.
+3. Modules obtain loggers with `get_logger(__name__)`.
+
+## Usage today
+
+- Lifespan logs app name, env, and debug flag at startup; shutdown message on stop.
+- Endpoint handlers may log at `DEBUG` (visible when `LOG_LEVEL=DEBUG`).
+
+## Code
+
+- [`backend/app/core/logging.py`](../../backend/app/core/logging.py)
+- [`backend/app/main.py`](../../backend/app/main.py)
 
 ## TODO
 
-- Choose log format (JSON vs text) for local vs container runs.
-- Define fields to include (timestamp, level, request id, route) and fields to redact.
-- Document logger acquisition conventions (`getLogger(__name__)` or project helper).
-- Align with `configuration.md` for log-level settings.
+- Redaction guidelines when logging request bodies or provider payloads.
+- Align production format with deployment docs when those exist.

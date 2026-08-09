@@ -2,21 +2,42 @@
 
 ## Purpose
 
-Explain why FastAPI dependencies are the preferred wiring mechanism for shared resources (settings, DB sessions, providers) and how that keeps routes thin.
+Explain why FastAPI `Depends` is used to wire shared resources into handlers, and what is injected today.
 
 ## Status
 
-Draft
+Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Empty `app/api/dependencies/` directory.
-- Planned: Dependency providers for settings and AI client(s) in Temporada 1.
-- Future: DB session, auth context, and richer provider factories in later seasons.
+- Existing: `get_settings()` used as a dependency on health handlers (`Depends(get_settings)`); also called at import time in `main.py` for app title and logging setup.
+- Planned: DB session dependency, auth/current-user dependency, shared API dependencies under `app/api/dependencies/`.
+- Future: provider clients and other request-scoped resources.
+
+## Pattern today
+
+```python
+from fastapi import Depends
+from app.core.config import Settings, get_settings
+
+def health(settings: Settings = Depends(get_settings)):
+    ...
+```
+
+FastAPI calls `get_settings()`, caches via `@lru_cache`, and passes the `Settings` instance into the handler.
+
+## Guidelines
+
+- Prefer `Depends` for anything a route needs that is not pure request data.
+- Keep dependency callables small and reusable.
+- Do not hide business rules inside dependencies; orchestration belongs in services (when introduced).
+
+## Code
+
+- [`backend/app/core/config.py`](../../backend/app/core/config.py)
+- [`backend/app/api/routes/health.py`](../../backend/app/api/routes/health.py)
 
 ## TODO
 
-- Define naming and placement conventions for dependency callables.
-- Document lifetime expectations (request-scoped vs app-scoped).
-- Show how services receive dependencies without importing infrastructure in routes.
-- Update with concrete examples once the first dependencies land.
+- Add `app/api/dependencies/` modules when DB/auth arrive.
+- Document dependency lifetimes (request vs app scoped) with real examples.

@@ -77,17 +77,17 @@ Empezaría por construir la base del backend.
 
 - Estructura del proyecto ✅
 - Documentación ✅
-- Inicializar FastAPI
-- Configuración (`Settings`)
-- Logging
-- Health endpoint (`GET /health`)
-- Docker
-- Docker Compose
+- Inicializar FastAPI ✅
+- Configuración (`Settings`) ✅
+- Logging ✅
+- Health endpoint (`GET /health`) ✅
+- Docker ✅
+- Docker Compose ✅
 
 ### Fase 2 — API Base
 
-- API Router
-- Versionado (`/api/v1`)
+- API Router ✅
+- Versionado (`/api/v1`) ✅
 - Manejo global de errores
 - Middleware
 - Dependencias comunes

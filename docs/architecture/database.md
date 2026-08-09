@@ -16,7 +16,7 @@ Draft
 
 ## Related decisions
 
-- [ADR-002: PostgreSQL](../adr/ADR-002-postgresql.md) (Proposed)
+- [ADR-003: PostgreSQL](../adr/ADR-003-postgresql.md) (Proposed)
 
 ## TODO
 

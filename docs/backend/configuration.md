@@ -2,21 +2,43 @@
 
 ## Purpose
 
-Capture why configuration is centralized in `app/core/config.py`, how environment variables will be loaded, and how secrets stay out of source control.
+Explain how application settings are loaded from the environment, why they are centralized, and which variables exist today.
 
 ## Status
 
-Draft
+Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Empty `app/core/config.py` and empty `backend/.env.example`.
-- Planned: Settings model (e.g. pydantic-settings), env loading, and documented variables for Temporada 1.
-- Future: Multi-environment profiles and secrets management beyond local `.env`.
+- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`).
+- Planned: DB URL, secrets for JWT/AI providers when those phases start.
+- Future: multi-environment profiles beyond local `.env`.
+
+## How it works
+
+1. `Settings` subclasses `BaseSettings` and reads `backend/.env` when the process cwd is `backend/` (as with `uvicorn` / Compose).
+2. Env names map to fields: `APP_NAME` → `app_name`, etc.
+3. `get_settings()` is cached with `@lru_cache` (one instance per process). After changing `.env`, restart the process.
+
+## Variables (current)
+
+| Env var | Field | Default / role |
+|---------|-------|----------------|
+| `APP_NAME` | `app_name` | Display name / OpenAPI title |
+| `APP_ENV` | `app_env` | e.g. `development` |
+| `APP_DEBUG` | `app_debug` | Debug flag |
+| `LOG_LEVEL` | `log_level` | Logging level (`INFO`, `DEBUG`, …) |
+
+## Conventions
+
+- Commit `.env.example` only. Never commit real secrets in `.env`.
+- Prefer reading config through `Settings` / `Depends(get_settings)`, not scattered `os.getenv` calls.
+
+## Code
+
+- [`backend/app/core/config.py`](../../backend/app/core/config.py)
+- Runbook: [`backend/README.md`](../../backend/README.md)
 
 ## TODO
 
-- Define required vs optional settings for Temporada 1 (API keys, app env, log level).
-- Document `.env` / `.env.example` conventions and what never gets committed.
-- Explain how config is injected into the app (no global mutable state).
-- Align with empty Docker/compose files when they are filled.
+- Document new settings as Fase 3+ adds database and auth.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (documentation: Draft)
+Accepted
 
 ## Context
 
@@ -19,10 +19,10 @@ Use **FastAPI** as the backend web framework.
 - Natural fit for Pydantic schemas, OpenAPI, and async I/O with AI provider clients.
 - Dependency injection via `Depends` supports a thin-route / service-layer style.
 - Team must learn FastAPI conventions (routers, lifespan, exception handlers).
-- This ADR does **not** imply FastAPI is already configured in the repo; `backend/app/main.py` is still an empty scaffold.
+- Confirmed in code: runnable app in `backend/app/main.py`, Settings, logging, health routes, Docker.
 
-## TODO
+## References
 
-- Accept this ADR when the first runnable FastAPI app is introduced.
-- Record rejected alternatives briefly if the team revisits the choice.
-- Link to [docs/architecture/backend.md](../architecture/backend.md) and [docs/backend/](../backend/).
+- [docs/architecture/backend.md](../architecture/backend.md)
+- [docs/backend/](../backend/)
+- [backend/README.md](../../backend/README.md)

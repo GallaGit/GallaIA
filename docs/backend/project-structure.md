@@ -2,21 +2,48 @@
 
 ## Purpose
 
-Explain why the backend uses a layered package layout under `backend/app/`, what each package owns, and how that layout supports incremental growth without premature complexity.
+Explain why the backend uses a layered package layout under `backend/app/`, what each package owns, and what is active today versus reserved for later phases.
 
 ## Status
 
-Draft
+Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Empty directory scaffold under `backend/app/` (api, core, db, models, schemas, repositories, services, providers, agents, tools, memory, rag, middleware, exceptions, utils, main.py).
-- Planned: Document package responsibilities and import boundaries for Temporada 1 (chat API).
-- Future: Document how reserved packages (agents, rag, memory, tools) activate in later seasons.
+- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), and `api` (router + health route). Docker and `pyproject.toml` at `backend/`.
+- Planned: Fill `exceptions/`, `middleware/`, `services/`, then `db/` / `repositories/` / `models/` / `schemas/`.
+- Future: `providers/`, `agents/`, `tools/`, `memory/`, `rag/`.
+
+## Layout (simplified)
+
+```text
+backend/
+├── app/
+│   ├── main.py              # FastAPI app + lifespan
+│   ├── api/
+│   │   ├── router.py        # mounts v1 routers
+│   │   └── routes/          # endpoint modules
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── logging.py
+│   │   └── security.py      # scaffold
+│   ├── db/ …                # scaffold
+│   ├── models/ schemas/ repositories/ services/ …
+│   └── …
+├── Dockerfile
+├── docker-compose.yml
+├── pyproject.toml
+├── .env.example
+└── README.md
+```
+
+## Rules of thumb
+
+- Routes stay thin; business logic will live in `services/` when introduced.
+- Persistence stays out of routes (repositories + DB session, Fase 3+).
+- Do not migrate to feature-based, hexagonal, CQRS, or DDD layouts ([ADR-002](../adr/ADR-002-project-structure.md)).
 
 ## TODO
 
-- Map each `app/` package to a single responsibility and ownership rule.
-- Define allowed dependency directions between layers (api → services → repositories → models).
-- Document what must not live in each package (e.g. business logic in routes).
-- Keep the layout layered; do not migrate to feature-based, hexagonal, CQRS, or DDD.
+- Update the active/reserved table when new packages gain real code.
+- Keep aligned with [architecture/backend.md](../architecture/backend.md).

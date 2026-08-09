@@ -1,0 +1,14 @@
+[project]
+name = "gallaai-backend"
+version = "0.1.0"
+description = "GallaAI backend API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]",
+    "pydantic-settings",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+]

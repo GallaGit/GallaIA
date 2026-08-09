@@ -16,17 +16,16 @@ Draft
 | Accepted | Decision stands for the project |
 | Deprecated | Superseded or withdrawn |
 
-Documentation draft status (Draft / Final) is separate from ADR decision status.
-
 ## Index
 
 | ID | Title | Decision status | Doc status |
 |----|-------|-----------------|------------|
-| [ADR-001](ADR-001-fastapi.md) | Use FastAPI for the backend HTTP API | Proposed | Draft |
-| [ADR-002](ADR-002-postgresql.md) | Use PostgreSQL for persistence | Proposed | Draft |
+| [ADR-001](ADR-001-fastapi.md) | Use FastAPI for the backend HTTP API | Accepted | Final |
+| [ADR-002](ADR-002-project-structure.md) | Layered project structure under `app/` | Accepted | Final |
+| [ADR-003](ADR-003-postgresql.md) | Use PostgreSQL for persistence | Proposed | Draft |
 
 ## TODO
 
-- Move ADRs to Accepted when the corresponding implementation starts and the team confirms the choice.
-- Add new ADRs for other significant choices (e.g. ORM, auth, vector store) when those decisions are made.
+- Accept ADR-003 when the database phase starts.
+- Add new ADRs for other significant choices (ORM details, auth, vector store) when those decisions are made.
 - Keep each ADR focused on context, decision, and consequences—not implementation tutorials.

@@ -2,21 +2,38 @@
 
 ## Purpose
 
-Describe how an HTTP request will move through FastAPI middleware, dependencies, routes, services, and responses—so contributors share one mental model before code exists.
+Describe how an HTTP request moves through the app today, so contributors share one mental model before DB, auth, and services exist.
 
 ## Status
 
-Draft
+Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Empty `app/main.py`, `app/middleware/`, and `app/api/` scaffold only.
-- Planned: Document the Temporada 1 chat request path (HTTP → route → service → AI provider → response).
-- Future: Persistence, auth, and RAG steps in the lifecycle when those seasons begin.
+- Existing: Uvicorn → FastAPI app → (optional route dependency) → handler → JSON response; lifespan configures logging at startup.
+- Planned: middleware, global exception handlers, DB session dependency, auth dependency, service layer.
+- Future: provider calls, RAG, agents in the path for chat features.
+
+## Current happy path
+
+```text
+HTTP request
+  → Uvicorn
+  → FastAPI routing
+  → Depends(get_settings) when declared
+  → route handler
+  → JSON response
+```
+
+Example: `GET /api/v1/health` resolves via `api_router` → `health.router` → `api_health()`, which reads `Settings` through `Depends`.
+
+## Lifespan
+
+On startup: `setup_logging` (from import side) + lifespan `INFO` log.  
+On shutdown: lifespan logs shutdown.  
+No DB connect/disconnect yet.
 
 ## TODO
 
-- Diagram the planned happy-path lifecycle for a chat message.
-- List extension points (middleware, dependencies, exception handlers).
-- Clarify where validation, orchestration, and side effects belong.
-- Update this doc when `main.py` and the first route are implemented.
+- Extend the diagram when middleware and exception handlers are added.
+- Document failure paths (validation errors, app errors) with [error-handling.md](error-handling.md).
