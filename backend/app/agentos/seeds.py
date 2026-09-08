@@ -55,7 +55,7 @@ class AgentSeed:
     prompt_origin: str = PROMPT_ORIGIN
     skills: tuple[str, ...] = ()
     mcp: tuple[str, ...] = ("agentos", "inbox")
-    runner_preference: Literal["mock", "anthropic", "inherit"] = "inherit"
+    runner_preference: Literal["mock", "anthropic", "openrouter", "inherit"] = "inherit"
     collaboration: tuple[str, ...] = ()
     one_job: str = ""
 

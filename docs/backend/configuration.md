@@ -10,7 +10,7 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); optional `ANTHROPIC_*` for Messages stub.
+- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); optional `OPENROUTER_*` (Chat Completions) and `ANTHROPIC_*` (Messages stub).
 - Planned: Secret refs / richer runner settings when Isolation starts — [ROADMAP.md](../ROADMAP.md).
 - Future: multi-environment profiles; Postgres URL when ADR-003 is accepted.
 ## How it works
@@ -27,6 +27,11 @@ Draft (reflects current implementation)
 | `APP_ENV` | `app_env` | e.g. `development` |
 | `APP_DEBUG` | `app_debug` | Debug flag |
 | `LOG_LEVEL` | `log_level` | Logging level (`INFO`, `DEBUG`, …) |
+| `ANTHROPIC_API_KEY` | `anthropic_api_key` | Optional Messages stub; empty → skip Anthropic |
+| `ANTHROPIC_MODEL` | `anthropic_model` | Default `claude-sonnet-4-5` |
+| `OPENROUTER_API_KEY` | `openrouter_api_key` | Optional Chat Completions; empty → skip OpenRouter |
+| `OPENROUTER_MODEL` | `openrouter_model` | Default `nvidia/nemotron-3-ultra-550b-a55b:free` |
+| `OPENROUTER_BASE_URL` | `openrouter_base_url` | Default `https://openrouter.ai/api/v1` |
 
 ## Conventions
 

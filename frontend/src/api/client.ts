@@ -3,7 +3,7 @@
 const BASE = `${(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')}/api/v1/agentos`
 
 export type KanbanStatus = 'todo' | 'doing' | 'review' | 'done'
-export type RunnerKind = 'mock' | 'anthropic'
+export type RunnerKind = 'mock' | 'anthropic' | 'openrouter'
 
 export type Agent = {
   name: string
@@ -51,6 +51,7 @@ export type Session = {
 export type RunResponse = {
   runner: RunnerKind
   used_anthropic: boolean
+  used_openrouter?: boolean
   summary: string
   task: Task
   session: Session
@@ -149,7 +150,7 @@ export const api = {
   /** Run now — do NOT create a session first; session is in the response */
   runTask: (
     id: string,
-    body: { agent_name?: string; runner?: RunnerKind } = { runner: 'mock' },
+    body: { agent_name?: string; runner?: RunnerKind } = {},
   ) =>
     request<RunResponse>(`/tasks/${encodeURIComponent(id)}/run`, {
       method: 'POST',

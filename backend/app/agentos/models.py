@@ -11,7 +11,7 @@ KanbanStatus = Literal["todo", "doing", "review", "done"]
 SessionStatus = Literal[
     "starting", "running", "waiting-inbox", "destroyed", "failed"
 ]
-RunnerKind = Literal["mock", "anthropic"]
+RunnerKind = Literal["mock", "anthropic", "openrouter"]
 
 
 def _utcnow() -> datetime:

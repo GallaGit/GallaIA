@@ -61,15 +61,16 @@ El `docker-compose.yml` de esta carpeta es solo API (legado).
 | GET/POST | `/tasks` | Listar / crear |
 | GET/PATCH/DELETE | `/tasks/{id}` | CRUD parcial |
 | PATCH | `/tasks/{id}/status` | Cambiar status Kanban |
-| POST | `/tasks/{id}/run` | Sesión simulada (mock o Claude stub) |
+| POST | `/tasks/{id}/run` | Sesión (mock, OpenRouter o Claude stub) |
 | GET | `/sessions`, `/sessions/{id}` | Sesiones + tool log |
 | GET | `/inbox` | Mensajes inbox |
 | POST | `/inbox/{id}/reply` | Respuesta stub (no reanuda contenedor real) |
 
-## Runtime: mock vs Claude
+## Runtime: mock vs LLM
 
-- Sin `ANTHROPIC_API_KEY`: runner **mock** que actualiza la tarea (`doing` → `done`/`review`) y escribe eventos de herramientas falsos.
-- Con `ANTHROPIC_API_KEY`: stub de Anthropic Messages API (no es el Agent SDK completo ni contenedores efímeros).
+- Sin claves: runner **mock** que actualiza la tarea (`doing` → `done`/`review`) y escribe eventos de herramientas falsos.
+- Con `OPENROUTER_API_KEY`: stub de OpenRouter Chat Completions (modelo por defecto Nemotron free). La UI usa este camino si la clave está presente.
+- Con `ANTHROPIC_API_KEY` y sin OpenRouter: stub de Anthropic Messages API (no es el Agent SDK completo ni contenedores efímeros).
 
 Los prompts de agentes están **reconstruidos** a partir del talk de Danny Postma — no son sus archivos verbatim.
 

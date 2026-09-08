@@ -23,7 +23,7 @@ Browser (React + Vite atelier)
         → GET /health, GET /api/v1/health
         → /api/v1/{projects,agents,tasks,sessions,inbox}  (SQLite)
         → /api/v1/agentos/*                               (in-memory package)
-        → mock runner | Anthropic Messages stub
+        → mock runner | OpenRouter Chat Completions | Anthropic Messages stub
 ```
 
 Product map: [product/AGENTOS.md](../product/AGENTOS.md). Module boundaries: [product/MODULE_BOUNDARIES.md](../product/MODULE_BOUNDARIES.md).

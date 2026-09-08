@@ -19,7 +19,9 @@
 | `DATABASE_URL` | MVP: `sqlite:///./data/gallaia.db` |
 | `CORS_ORIGINS` | Necesario sobre todo con Vite `:5173`; en Docker same-origin suele bastar |
 | `STATIC_DIR` | En imagen Docker: `/app/static` |
-| `ANTHROPIC_API_KEY` | Opcional; sin clave → runner mock |
+| `ANTHROPIC_API_KEY` | Opcional; stub Messages si no hay OpenRouter |
+| `OPENROUTER_API_KEY` | Opcional; Chat Completions (prioridad sobre Anthropic en la UI) |
+| `OPENROUTER_MODEL` | Default `nvidia/nemotron-3-ultra-550b-a55b:free` |
 | `VITE_API_URL` | Vacío en build Docker → `/api` same-origin |
 
 Nunca commitear `.env` con secretos.

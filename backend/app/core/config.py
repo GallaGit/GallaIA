@@ -19,9 +19,12 @@ class Settings(BaseSettings):
     # MVP: SQLite. Postgres later: postgresql+psycopg://gallaai:gallaai@localhost:5432/gallaai
     database_url: str = "sqlite:///./data/gallaia.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
-    # Optional AgentOS LLM — empty means mock runner only. Never hardcode secrets.
+    # Optional AgentOS LLM — empty keys mean mock runner only. Never hardcode secrets.
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-5"
+    openrouter_api_key: str = ""
+    openrouter_model: str = "nvidia/nemotron-3-ultra-550b-a55b:free"
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -8,7 +8,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 KanbanStatus = Literal["todo", "doing", "review", "done"]
-RunnerKind = Literal["mock", "anthropic"]
+RunnerKind = Literal["mock", "anthropic", "openrouter"]
 
 
 class AgentSeedOut(BaseModel):
@@ -73,6 +73,7 @@ class RunRequest(BaseModel):
 class RunResponse(BaseModel):
     runner: RunnerKind
     used_anthropic: bool
+    used_openrouter: bool = False
     summary: str
     task: TaskOut
     session: SessionOut

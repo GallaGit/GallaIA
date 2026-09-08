@@ -197,6 +197,7 @@ def run_task(task_id: str, body: RunRequest | None = None) -> RunResponse:
     return RunResponse(
         runner=result.runner,
         used_anthropic=result.used_anthropic,
+        used_openrouter=result.used_openrouter,
         summary=result.summary,
         task=_task_out(result.task),
         session=_session_out(result.session),

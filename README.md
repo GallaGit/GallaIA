@@ -7,7 +7,7 @@ Plataforma de aprendizaje + **AgentOS MVP**: control plane web (Kanban, sesiones
 | **Branch** | `feat/agentos-mvp` (desde `master`) |
 | **Plataformas** | Windows / Linux / macOS — navegador + API |
 | **UI** | Atelier (cream / indigo / coral). No es el tema Linear de Leads_CRM. |
-| **Runtime default** | Mock. Opcional Anthropic Messages stub. |
+| **Runtime default** | Mock. Opcional OpenRouter (Nemotron) o Anthropic Messages stub. |
 
 **No** Electron, Tauri ni exclusividad Mac. **No** Cursor Cloud Agents como runtime de este MVP.
 
@@ -95,16 +95,21 @@ npm run dev
 
 UI: http://127.0.0.1:5173/ (proxy /api → FastAPI :8000).
 
-### Claude Messages stub (opcional)
+### LLM stub (opcional)
 
 En backend/.env (nunca commitear la clave):
 
 ```env
-ANTHROPIC_API_KEY=
-ANTHROPIC_MODEL=claude-sonnet-4-5
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+# Fallback si no usas OpenRouter:
+# ANTHROPIC_API_KEY=
+# ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-Sin clave → runner mock. Con clave + runner=anthropic → stub Messages API (no Agent SDK completo).
+Sin claves → runner mock. Con `OPENROUTER_API_KEY` → Chat Completions (UI). Anthropic Messages solo si no hay clave OpenRouter.
 
 ## Dos superficies API
 
