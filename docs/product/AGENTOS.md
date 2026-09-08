@@ -2,7 +2,7 @@
 
 Documento de producto del **control plane** AgentOS en GallaIA. Inspirado en el talk de Danny Postma (*How I Built My Own AgentOS on Claude's Agent SDK*), adaptado a un stack web multiplataforma.
 
-> **Estado local:** draft en `feat/agentos-mvp` @ `61ba264` (push remoto pendiente).
+> **Estado:** en `feat/agentos-mvp` @ `6800d54` / [PR #4](https://github.com/GallaGit/GallaIA/pull/4). Telemetria Fase 1 sigue como propuesto/pendiente.
 
 | Estado | Alcance |
 |--------|---------|
