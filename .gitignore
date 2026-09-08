@@ -23,8 +23,14 @@ htmlcov/
 dist/
 build/
 
-# Frontend (future)
+# Frontend
 node_modules/
+frontend/dist/
+
+# SQLite / local data
+backend/data/*.db
+backend/data/*.db-*
+*.db
 
 # Logs
 *.log
@@ -32,3 +38,4 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+frontend/_*.sh

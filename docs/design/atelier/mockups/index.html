@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atelier mockups · AgentOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  body { padding: 40px 28px; max-width: 720px; margin: 0 auto; }
+  h1 { font-family: var(--font-display); font-size: 28px; margin: 0 0 8px; }
+  .lead { color: var(--atelier-ink-muted); margin-bottom: 24px; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  li a {
+    display: block; padding: 14px 16px; background: var(--atelier-paper);
+    border: 1px solid var(--atelier-line); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card); font-weight: 600;
+  }
+  li a:hover { border-color: var(--atelier-indigo); color: var(--atelier-indigo); }
+  li span { display: block; font-weight: 400; color: var(--atelier-ink-muted); font-size: 13px; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <h1>Atelier · AgentOS</h1>
+  <p class="lead">Wireframes HTML (crema + índigo/coral). Abrir en cualquier navegador — Windows / Linux / Mac.</p>
+  <ul>
+    <li><a href="agents.html">Agents<span>Catálogo y estado del fleet</span></a></li>
+    <li><a href="kanban.html">Kanban Tasks<span>Backlog · Doing · Blocked · Done</span></a></li>
+    <li><a href="sessions.html">Sessions<span>Runs mock + failed alert</span></a></li>
+    <li><a href="inbox.html">Inbox<span>Handoff · alert · mention</span></a></li>
+  </ul>
+</body>
+</html>

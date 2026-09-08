@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sessions · Atelier AgentOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/lucide@0.469.0"></script>
+<style>
+table { width: 100%; border-collapse: collapse; background: var(--atelier-paper); border: 1px solid var(--atelier-line); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--atelier-line); font-size: 14px; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--atelier-ink-muted); background: color-mix(in srgb, var(--atelier-cream) 80%, white); }
+tr:last-child td { border-bottom: 0; }
+tr.fail td { background: color-mix(in srgb, var(--atelier-coral-soft) 45%, white); }
+.alert { margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--atelier-coral-soft); color: var(--atelier-coral); font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">A</span> Atelier</div>
+    <nav class="nav">
+      <a href="agents.html" class=""><i data-lucide="bot"></i> Agents</a>
+      <a href="kanban.html" class=""><i data-lucide="columns-3"></i> Tasks</a>
+      <a href="sessions.html" class="active"><i data-lucide="radio"></i> Sessions</a>
+      <a href="inbox.html" class=""><i data-lucide="inbox"></i> Inbox</a>
+    </nav>
+  </aside>
+  <div class="main">
+
+    <header class="topbar">
+      <div>
+        <h1>Sessions</h1>
+        <div class="sub">Runs activos e históricos · datos mock</div>
+      </div>
+      <div class="actions">
+        <button class="btn">Refresh</button>
+      </div>
+    </header>
+    <div class="content">
+      <table>
+        <thead><tr><th>Session</th><th>Agent</th><th>Started</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ses_9f2a</td><td>Researcher</td><td>11:02</td><td>4m 12s</td><td><span class="chip chip-ok">running</span></td></tr>
+          <tr><td class="mono">ses_8c11</td><td>Writer</td><td>10:41</td><td>18m</td><td><span class="chip chip-off">ended</span></td></tr>
+          <tr class="fail"><td class="mono">ses_7b04</td><td>Ops Scout</td><td>09:58</td><td>1m 02s</td><td><span class="chip chip-urgent">failed</span></td></tr>
+          <tr><td class="mono">ses_6a90</td><td>Researcher</td><td>Ayer</td><td>22m</td><td><span class="chip chip-off">ended</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert">ses_7b04 failed — tool timeout (stub). Abrir timeline en panel detalle.</div>
+      <p class="note">Detalle: timeline started → tool stubs → ended/failed. Sin auth en Fase 1.</p>
+    </div>
+
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

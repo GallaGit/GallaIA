@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inbox · Atelier AgentOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/lucide@0.469.0"></script>
+<style>
+.layout { display: grid; grid-template-columns: 340px 1fr; gap: 14px; min-height: 420px; }
+.list { background: var(--atelier-paper); border: 1px solid var(--atelier-line); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
+.item { display: grid; grid-template-columns: 4px 1fr; gap: 0; border-bottom: 1px solid var(--atelier-line); cursor: default; }
+.item:last-child { border-bottom: 0; }
+.item .bar { background: transparent; }
+.item.unread .bar { background: var(--atelier-indigo); }
+.item .body { padding: 12px 14px; }
+.item.active { background: var(--atelier-indigo-soft); }
+.item h4 { margin: 0 0 4px; font-size: 14px; }
+.item p { margin: 0; font-size: 13px; color: var(--atelier-ink-muted); }
+.item .when { margin-top: 6px; font-size: 11px; color: var(--atelier-ink-muted); }
+.detail { padding: 18px; }
+.detail h2 { margin: 0 0 8px; font-family: var(--font-display); font-size: 22px; }
+.detail p { color: var(--atelier-ink-muted); }
+.detail .actions { margin-top: 18px; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">A</span> Atelier</div>
+    <nav class="nav">
+      <a href="agents.html" class=""><i data-lucide="bot"></i> Agents</a>
+      <a href="kanban.html" class=""><i data-lucide="columns-3"></i> Tasks</a>
+      <a href="sessions.html" class=""><i data-lucide="radio"></i> Sessions</a>
+      <a href="inbox.html" class="active"><i data-lucide="inbox"></i> Inbox</a>
+    </nav>
+  </aside>
+  <div class="main">
+
+    <header class="topbar">
+      <div>
+        <h1>Inbox</h1>
+        <div class="sub">Handoffs · alerts · mentions</div>
+      </div>
+      <div class="actions"><button class="btn">Mark all read</button></div>
+    </header>
+    <div class="content">
+      <div class="layout">
+        <div class="list">
+          <div class="item unread active"><div class="bar"></div><div class="body">
+            <h4><span class="chip chip-urgent">alert</span> Ops Scout session failed</h4>
+            <p>ses_7b04 · tool timeout</p>
+            <div class="when">hace 12 min</div>
+          </div></div>
+          <div class="item unread"><div class="bar"></div><div class="body">
+            <h4><span class="chip chip-warn">handoff</span> Researcher pide humano</h4>
+            <p>Fuente ambigua en brief de cliente</p>
+            <div class="when">hace 34 min</div>
+          </div></div>
+          <div class="item"><div class="bar"></div><div class="body">
+            <h4><span class="chip chip-ok">mention</span> @operador en task Wire Agents</h4>
+            <p>Revisar densidad del grid</p>
+            <div class="when">hace 2 h</div>
+          </div></div>
+        </div>
+        <article class="card detail">
+          <h2>Ops Scout session failed</h2>
+          <p class="mono">ses_7b04 · agt_03</p>
+          <p>El run terminó en failed por timeout de tool (dato mock). Abrir Sessions o Acknowledge para limpiar la cola.</p>
+          <div class="actions">
+            <button class="btn btn-primary">Open session</button>
+            <button class="btn">Acknowledge</button>
+            <button class="btn">Snooze</button>
+          </div>
+        </article>
+      </div>
+      <p class="note">Inbox = atención humana. No es chat de producto Temporada 1.</p>
+    </div>
+
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

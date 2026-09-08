@@ -1,73 +1,59 @@
-# GallaAI Backend
+# GallaAI Backend — AgentOS control plane
 
-API HTTP del proyecto (FastAPI). Fase 1 Foundation y Fase 2 API Base completadas.
+API HTTP (FastAPI) del control plane AgentOS (Phase 0 + Phase 1 MVP).
 
 ## Requisitos
 
-- Python 3.11+ (local)
-- Git Bash o terminal equivalente en Windows
-- Docker Desktop (opcional, para Compose)
+- Python 3.11+
+- SQLite (incluido; archivo en `data/gallaia.db`)
 
-## Setup local (venv)
+Postgres queda documentado para fases posteriores (`DATABASE_URL=postgresql+psycopg://...`).
 
-Desde este directorio (`backend/`):
+## Setup local
 
 ```bash
+cd backend
 python -m venv .venv
-source .venv/Scripts/activate   # Git Bash en Windows
+source .venv/bin/activate   # Windows Git Bash: source .venv/Scripts/activate
 pip install -U pip
-pip install "fastapi[standard]" pydantic-settings
-cp .env.example .env            # si aún no tienes .env
+pip install -e .
+cp .env.example .env
 ```
 
-El prompt debe mostrar `(.venv)`. `python` y `pip` deben apuntar a `backend/.venv/...`.
-
-Si mueves el repositorio de carpeta, borra `.venv` y vuelve a crearlo (los venv de Windows guardan rutas absolutas).
-
-## Arranque local
+## Arranque
 
 ```bash
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
+source .venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 - App: http://127.0.0.1:8000/
-- Docs OpenAPI: http://127.0.0.1:8000/docs
+- OpenAPI: http://127.0.0.1:8000/docs
 
-## Arranque con Docker
+Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `default`, `plan`, `senior-dev`.
 
-Con Docker Desktop en marcha, y **sin** uvicorn local en el puerto 8000:
-
-```bash
-docker compose up --build
-docker compose down
-```
-
-## Endpoints actuales
+## Endpoints AgentOS (`/api/v1`)
 
 | Método | Ruta | Rol |
 |--------|------|-----|
-| GET | `/` | Ping simple |
-| GET | `/health` | Health de infra (sin versionar) |
-| GET | `/api/v1/health` | Health dentro de la API v1 |
-| GET | `/api/v1/demo-error` | Demo de error 404 (aprendizaje; quitar luego) |
+| GET | `/health` | Health + ping DB |
+| GET | `/projects`, `/projects/{id}` | Proyectos |
+| GET | `/agents`, `/agents/{id}` | Agentes (prompts reconstruidos) |
+| GET/POST | `/tasks` | Listar / crear |
+| GET/PATCH/DELETE | `/tasks/{id}` | CRUD parcial |
+| PATCH | `/tasks/{id}/status` | Cambiar status Kanban |
+| POST | `/tasks/{id}/run` | Sesión simulada (mock o Claude stub) |
+| GET | `/sessions`, `/sessions/{id}` | Sesiones + tool log |
+| GET | `/inbox` | Mensajes inbox |
+| POST | `/inbox/{id}/reply` | Respuesta stub (no reanuda contenedor real) |
 
-## Errores y request id
+## Runtime: mock vs Claude
 
-- Errores de aplicación → JSON `{ "error": { "code", "message" } }` (ver `app/exceptions/`).
-- Cada respuesta incluye cabecera `X-Request-ID` (middleware).
+- Sin `ANTHROPIC_API_KEY`: runner **mock** que actualiza la tarea (`doing` → `done`/`review`) y escribe eventos de herramientas falsos.
+- Con `ANTHROPIC_API_KEY`: stub de Anthropic Messages API (no es el Agent SDK completo ni contenedores efímeros).
+
+Los prompts de agentes están **reconstruidos** a partir del talk de Danny Postma — no son sus archivos verbatim.
 
 ## Configuración
 
-- Variables en `backend/.env` (no se sube a git).
-- Plantilla pública: `backend/.env.example`.
-- Lectura centralizada: `app/core/config.py` (`Settings` + `get_settings()`).
-- Inyección en rutas: `SettingsDep` en `app/api/dependencies/settings.py`.
-
-Variables actuales: `APP_NAME`, `APP_ENV`, `APP_DEBUG`, `LOG_LEVEL`.
-
-## Documentación
-
-- Roadmap técnico: [docs/ROADMAP.md](../docs/ROADMAP.md)
-- Arquitectura backend: [docs/architecture/backend.md](../docs/architecture/backend.md)
-- Deep-dives: [docs/backend/](../docs/backend/)
+Ver `.env.example`. CORS por defecto para Vite (`localhost:5173`).

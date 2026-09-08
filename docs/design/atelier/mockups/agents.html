@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agents · Atelier AgentOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<script src="https://unpkg.com/lucide@0.469.0"></script>
+<style>
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.agent-card { display: flex; flex-direction: column; gap: 12px; }
+.agent-top { display: flex; gap: 12px; align-items: flex-start; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 12px; background: var(--atelier-indigo-soft);
+  color: var(--atelier-indigo); display: grid; place-items: center; font-weight: 600;
+}
+.agent-card h3 { margin: 0; font-size: 16px; }
+.agent-card .role { color: var(--atelier-ink-muted); font-size: 13px; }
+.meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--atelier-ink-muted); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">A</span> Atelier</div>
+    <nav class="nav">
+      <a href="agents.html" class="active"><i data-lucide="bot"></i> Agents</a>
+      <a href="kanban.html" class=""><i data-lucide="columns-3"></i> Tasks</a>
+      <a href="sessions.html" class=""><i data-lucide="radio"></i> Sessions</a>
+      <a href="inbox.html" class=""><i data-lucide="inbox"></i> Inbox</a>
+    </nav>
+  </aside>
+  <div class="main">
+
+    <header class="topbar">
+      <div>
+        <h1>Agents</h1>
+        <div class="sub">Fleet del control plane · mock Fase 1</div>
+      </div>
+      <div class="actions">
+        <div class="search"><i data-lucide="search" style="width:16px;height:16px"></i><input placeholder="Buscar agente" value="" readonly /></div>
+        <button class="btn btn-primary">Registrar agente</button>
+      </div>
+    </header>
+    <div class="content">
+      <div class="pills">
+        <span class="pill active">All · 4</span>
+        <span class="pill">Healthy · 2</span>
+        <span class="pill">Degraded · 1</span>
+        <span class="pill">Offline · 1</span>
+      </div>
+      <div class="grid">
+        <article class="card agent-card">
+          <div class="agent-top"><div class="avatar">R</div><div><h3>Researcher</h3><div class="role">Web research · summaries</div></div></div>
+          <span class="chip chip-ok">healthy</span>
+          <div class="meta"><span>Last active 2m ago</span><span class="mono">agt_01</span></div>
+        </article>
+        <article class="card agent-card">
+          <div class="agent-top"><div class="avatar">W</div><div><h3>Writer</h3><div class="role">Docs · drafts</div></div></div>
+          <span class="chip chip-ok">healthy</span>
+          <div class="meta"><span>Last active 14m ago</span><span class="mono">agt_02</span></div>
+        </article>
+        <article class="card agent-card">
+          <div class="agent-top"><div class="avatar">O</div><div><h3>Ops Scout</h3><div class="role">Monitoring · handoffs</div></div></div>
+          <span class="chip chip-warn">degraded</span>
+          <div class="meta"><span>Last active 1h ago</span><span class="mono">agt_03</span></div>
+        </article>
+        <article class="card agent-card">
+          <div class="agent-top"><div class="avatar" style="opacity:.55">C</div><div><h3>Coder</h3><div class="role">Patches · PRs</div></div></div>
+          <span class="chip chip-off">offline</span>
+          <div class="meta"><span>Last active 2d ago</span><span class="mono">agt_04</span></div>
+        </article>
+      </div>
+      <p class="note">Wireframe Atelier · click card → drawer detalle (sessions + tasks filtradas) en implementación.</p>
+    </div>
+
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>
