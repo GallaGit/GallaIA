@@ -1,7 +1,8 @@
-"""Session runner: mock kanban advance + tool-event log; optional Anthropic.
+"""Session runner: mock kanban advance + tool-event log; optional LLM.
 
-Anthropic is used only when ANTHROPIC_API_KEY is set in the environment.
-The key is never hardcoded. Without a key, the mock runner always runs.
+OpenRouter is used when OPENROUTER_API_KEY is set (Chat Completions).
+Anthropic is used only when ANTHROPIC_API_KEY is set and requested.
+Keys are never hardcoded. Without a key, the mock runner always runs.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from app.agentos.models import Session, Task, ToolEvent
 from app.agentos.seeds import AgentSeed, get_seed
 from app.agentos.store import AgentOSStore, store as default_store
 
-RunnerKind = Literal["mock", "anthropic"]
+RunnerKind = Literal["mock", "anthropic", "openrouter"]
 
 
 @dataclass
@@ -27,6 +28,7 @@ class RunResult:
     used_anthropic: bool
     summary: str
     tool_events: list[ToolEvent] = field(default_factory=list)
+    used_openrouter: bool = False
 
 
 def _utcnow() -> datetime:
@@ -46,18 +48,22 @@ def _anthropic_key() -> str:
     return (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 
 
+def _openrouter_key() -> str:
+    from app.providers.openrouter import openrouter_api_key
+
+    return openrouter_api_key()
+
+
 def resolve_runner(preferred: str | None = None) -> RunnerKind:
-    """Pick runner. Anthropic only if env key present; else mock."""
-    key = _anthropic_key()
+    """Pick runner. LLM only if the matching key is present; else mock."""
+    or_key = _openrouter_key()
+    an_key = _anthropic_key()
     if preferred == "mock":
         return "mock"
-    if preferred == "anthropic" and key:
+    if preferred == "anthropic" and an_key:
         return "anthropic"
-    if preferred in (None, "inherit", "anthropic") and key:
-        # Prefer mock for MVP determinism unless explicitly anthropic
-        # and key present — ticket: optional Anthropic if key in env.
-        if preferred == "anthropic":
-            return "anthropic"
+    if preferred in (None, "inherit", "openrouter", "anthropic") and or_key:
+        return "openrouter"
     return "mock"
 
 
@@ -120,9 +126,13 @@ class SessionRunner:
         )
 
         used_anthropic = False
+        used_openrouter = False
         summary: str
 
-        if kind == "anthropic":
+        if kind == "openrouter":
+            summary, or_events, used_openrouter = self._run_openrouter(seed, task)
+            events.extend(or_events)
+        elif kind == "anthropic":
             summary, anthropic_events, used_anthropic = self._run_anthropic(seed, task)
             events.extend(anthropic_events)
         else:
@@ -173,6 +183,7 @@ class SessionRunner:
             task=task,
             runner=kind,
             used_anthropic=used_anthropic,
+            used_openrouter=used_openrouter,
             summary=summary,
             tool_events=events,
         )
@@ -219,6 +230,69 @@ class SessionRunner:
         else:
             summary = f"Mock default agent completed {task.name!r}"
         return summary, events
+
+    def _run_openrouter(
+        self, seed: AgentSeed, task: Task
+    ) -> tuple[str, list[ToolEvent], bool]:
+        from app.providers.openrouter import (
+            OpenRouterError,
+            complete,
+            openrouter_api_key,
+            openrouter_model,
+        )
+
+        events: list[ToolEvent] = []
+        if not openrouter_api_key():
+            summary, mock_events = self._run_mock(seed, task)
+            events.append(
+                ToolEvent(
+                    name="openrouter.skip",
+                    input={},
+                    output={"reason": "OPENROUTER_API_KEY not set; fell back to mock"},
+                )
+            )
+            events.extend(mock_events)
+            return summary, events, False
+
+        model = openrouter_model()
+        user_msg = (
+            f"Task name: {task.name}\n"
+            f"Description: {task.description or '(none)'}\n"
+            "Respond with a short actionable result for this role only. "
+            "Do not invent tools you were not given."
+        )
+        events.append(
+            ToolEvent(
+                name="openrouter.chat.completions",
+                input={"model": model, "max_tokens": 512},
+                output={"status": "calling"},
+            )
+        )
+        try:
+            result = complete(
+                system=f"{seed.foundational_prompt}\n\n{seed.role_prompt}",
+                user=user_msg,
+            )
+            summary = result.text
+            events.append(
+                ToolEvent(
+                    name="openrouter.chat.completions",
+                    input={"model": result.model},
+                    output={"ok": True, "preview": summary[:400]},
+                )
+            )
+            return summary, events, True
+        except OpenRouterError as exc:
+            events.append(
+                ToolEvent(
+                    name="openrouter.error",
+                    input={"model": model},
+                    output={"error": str(exc)},
+                )
+            )
+            summary, mock_events = self._run_mock(seed, task)
+            events.extend(mock_events)
+            return f"OpenRouter failed ({exc}); mock: {summary}", events, False
 
     def _run_anthropic(
         self, seed: AgentSeed, task: Task

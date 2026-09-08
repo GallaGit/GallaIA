@@ -23,7 +23,7 @@ Qué enseñó Postma en el video y el orden de réplica: [POSTMA_WALKTHROUGH.md]
 
 AgentOS es el **plano de control** donde defines agentes, creas tareas en un tablero Kanban y lanzas ejecuciones ("Ejecutar ahora"). Cada run produce una **Session** con log de tool-calls; el **Inbox** canaliza interrupciones humanas (decisiones, bloqueos, gates de aprobación).
 
-El runtime por defecto es **mock**. Con `ANTHROPIC_API_KEY` opcional se puede usar un **stub** de la Messages API (no es el Agent SDK completo ni Cursor Cloud Agents).
+El runtime por defecto es **mock**. Con `OPENROUTER_API_KEY` se usa un stub de Chat Completions (Nemotron vía OpenRouter). Con `ANTHROPIC_API_KEY` (y sin OpenRouter en la UI) se usa un stub de Messages API. Ninguno es el Agent SDK completo ni Cursor Cloud Agents.
 
 ---
 
@@ -62,6 +62,7 @@ Todos los prompts del MVP están en `backend/app/services/prompts.py`.
 | Modo | Condición | Comportamiento |
 |------|-----------|----------------|
 | **Mock** (default) | Sin clave o runner mock | Avanza Kanban y appendea tool-event log |
+| **OpenRouter stub** | `OPENROUTER_API_KEY` | Chat Completions (modelo default Nemotron free) |
 | **Anthropic stub** | `ANTHROPIC_API_KEY` + runner anthropic | Llamada Messages API (stub); no Agent SDK completo |
 
 ### Superficies API (ambas montadas)

@@ -14,7 +14,7 @@ Shared staging on the box: `/workspace/gallaia-agentos/`
 | POST | `/tasks` | `{ "name", "description"?, "assignee_agent"? }` → status `todo` |
 | GET | `/tasks` | |
 | GET | `/tasks/{id}` | |
-| POST | `/tasks/{id}/run` | `{ "agent_name"?, "runner"?: "mock"\|"anthropic" }` |
+| POST | `/tasks/{id}/run` | `{ "agent_name"?, "runner"?: "mock"\|"anthropic"\|"openrouter" }` |
 | GET | `/sessions` | List sessions |
 | GET | `/sessions/{id}` | Includes `tool_events[]` |
 
@@ -37,6 +37,7 @@ Do **not** create a session first — the run endpoint creates the session and r
 {
   "runner": "mock",
   "used_anthropic": false,
+  "used_openrouter": false,
   "summary": "string",
   "task": { "id", "name", "description", "assignee_agent", "status", "activity", "created_at", "updated_at" },
   "session": {
@@ -50,11 +51,14 @@ Do **not** create a session first — the run endpoint creates the session and r
 ## Env
 
 ```env
+OPENROUTER_API_KEY=     # optional; never hardcode / never commit
+OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ANTHROPIC_API_KEY=     # optional; never hardcode / never commit
 ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-Without key (or `runner=mock`) → mock path only.
+Without keys (or `runner=mock`) → mock path only. OpenRouter Chat Completions if `OPENROUTER_API_KEY` is set. Anthropic Messages if `runner=anthropic` and that key is set.
 
 ## Prompts
 
@@ -67,7 +71,8 @@ Every seed `foundational_prompt` / `role_prompt` labeled:
 - `backend/app/agentos/{__init__,seeds,models,store,runner,schemas}.py`
 - `backend/app/api/routes/agentos.py`
 - `backend/app/api/router.py` (includes agentos)
-- `backend/app/core/config.py` (+ anthropic settings)
+- `backend/app/core/config.py` (+ OpenRouter / Anthropic settings)
+- `backend/app/providers/openrouter.py`
 - `backend/.env.example`
 - `backend/tests/test_agentos_runner.py`
 - `docs/agentos/{README,PHASE2_PLUS}.md`

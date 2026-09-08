@@ -120,7 +120,6 @@ export default function TasksPage() {
       // ONLY POST /tasks/{id}/run — session comes in the response
       const result = await api.runTask(task.id, {
         agent_name: task.assignee_agent || undefined,
-        runner: 'mock',
       })
       rememberSessionId(result.session.id)
       setLastSummary(result.summary || result.session.summary)
@@ -142,7 +141,7 @@ export default function TasksPage() {
       <div className="page-header">
         <div>
           <h2>Tareas</h2>
-          <p>Kanban Backlog · Doing · Review · Done. Run now → POST /tasks/:id/run (mock).</p>
+          <p>Kanban Backlog · Doing · Review · Done. Ejecutar ahora → OpenRouter si hay clave, si no mock.</p>
         </div>
         <button
           className="btn btn-primary"
