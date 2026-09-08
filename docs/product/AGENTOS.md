@@ -7,7 +7,8 @@ Documento de producto del **control plane** AgentOS en GallaIA. Inspirado en el 
 | Estado | Alcance |
 |--------|---------|
 | **Confirmado (Phase 1 MVP)** | Seeds, Kanban, sesiones, inbox, mock runner, stub Anthropic Messages |
-| **Solo documentación (Phase 2+)** | Isolation/ACL, R2, goals, triggers, YAML CLI — ver [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) |
+| **Solo documentación (Phase 2+)** | Isolation → Templates → Goals → Triggers → YAML → PWA — ver [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md) |
+| **Sidebar futuro (doc only)** | Activity, Goals, Skills, Environment, Templates, Knowledge, Ripples, Connections, Admin — [CONTROL_PLANE_NAV.md](CONTROL_PLANE_NAV.md) |
 
 > **No es Mac-only.** No Electron, Tauri ni exclusividad de SO. Corre en **Windows / Linux / macOS** vía navegador + API.
 > **UI:** atelier propio (React + Lucide; paleta cream / indigo / coral). **No** reutiliza el tema Linear de Leads_CRM.
@@ -80,21 +81,29 @@ No eliminar ninguna superficie sin coordinación. Convergencia de runners → m�
 
 ### UI (atelier)
 
-Frontend React + Vite + TypeScript + Lucide. Estética **atelier**: cream / indigo / coral. Páginas de projects, agents, tasks (Kanban), sessions e inbox consumen las rutas SQLAlchemy vía `frontend/src/api/client.ts`.
+Frontend React + Vite + TypeScript + Lucide. Estética **atelier**: cream / indigo / coral. Páginas de agents, tasks (Kanban), sessions e inbox consumen las rutas SQLAlchemy vía `frontend/src/api/client.ts`.
+
+### Sidebar (implementado vs doc-only)
+
+| Nav | Estado |
+|-----|--------|
+| Agents, Tasks, Sessions, Inbox | Implementado (Phase 1) |
+| Files, Settings | Placeholder EmptyState |
+| Activity, Goals, Skills, Environment, Templates, Knowledge, Ripples, Connections, Admin | **Solo documentación** — [CONTROL_PLANE_NAV.md](CONTROL_PLANE_NAV.md) |
 
 ---
 
 ## Phase 2+ — solo documentación (no implementar en este MVP)
 
-Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md). Incluye, entre otros:
+Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) (numeración = [ROADMAP.md](../ROADMAP.md)). Incluye, entre otros:
 
-| Tema | Notas |
-|------|--------|
-| Isolation / ACL | Grants MCP/repo/env; least privilege |
-| R2 / Files | Placeholder docs; MCP filesystem real más tarde |
-| Goals | Gauntlet / DoD / orchestrator |
-| Triggers | Webhooks firmados → task + session |
-| YAML CLI | Fuera de scope Phase 1 |
+| Fase | Tema | Notas |
+|------|------|--------|
+| 2 | Isolation / ACL | Grants MCP/repo/env; Environment + Connections + Files reales |
+| 3 | Templates + gates | Cadena 9 pasos; Skills CRUD mínimo |
+| 4 | Goals | Gauntlet / DoD / orchestrator |
+| 5 | Triggers | Webhooks firmados → task + session; Ripples |
+| 6–7 | YAML CLI / PWA | Admin sync; Activity feed + live viewer |
 
 **Non-goals actuales:** Cursor Cloud Agents como runtime; runners solo-Mac; LangGraph / multi-tenant SaaS como camino del MVP.
 
@@ -109,7 +118,8 @@ Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md). Incluye, ent
 | Session tool log | Eventos persistidos (SQL) / in-memory (agentos) | Live SSE + Agent SDK |
 | Inbox | List + reply stub | Resume session, PWA push |
 | Isolation / R2 | Docs + placeholder Files | ACL real + R2 MCP |
-| Goals / triggers / YAML CLI | Fuera de scope | Ver PHASE2_PLUS |
+| Goals / templates / triggers / YAML CLI | Fuera de scope | Ver PHASE2_PLUS + CONTROL_PLANE_NAV |
+| Activity / Ripples / Knowledge / Admin | Fuera de scope | Doc only — CONTROL_PLANE_NAV |
 
 ---
 
@@ -137,6 +147,6 @@ Lista mínima (7 items):
 |------|-----------------|
 | Backend | Persistencia SQLAlchemy, seeds, runner mock/stub, rutas `/api/v1/*` y `/api/v1/agentos/*` |
 | Frontend | Atelier UI, Kanban, cliente HTTP hacia control plane SQLAlchemy |
-| Docs | Este mapa, MODULE_BOUNDARIES, agentos CONTRACT / PHASE2_PLUS |
+| Docs | Este mapa, MODULE_BOUNDARIES, CONTROL_PLANE_NAV, agentos CONTRACT / PHASE2_PLUS / ROADMAP |
 
 Arranque local: ver [README.md](../../README.md) (venv + uvicorn `:8000`, Vite `:5173`).

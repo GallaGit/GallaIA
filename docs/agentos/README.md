@@ -41,6 +41,6 @@ Every seed file and prompt string starts with / documents:
 
 ## Out of scope here
 
-Isolation ACLs, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) (sketch only).
+Isolation ACLs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md) (sketch only). Sidebar map (doc only): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
 
 Walkthrough del video de Postma (qué construyó y en qué orden replicarlo): [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md).

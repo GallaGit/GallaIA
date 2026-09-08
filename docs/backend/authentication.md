@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Record how authentication and authorization will be introduced when user accounts become in scope—without treating auth as part of Temporada 1.
+Record how authentication and authorization will be introduced for a **single operator**—without treating auth as part of AgentOS Phase 1.
 
 ## Status
 
@@ -10,16 +10,17 @@ Draft
 
 ## Scope
 
-- Existing: Empty `app/core/security.py` scaffold only.
-- Planned: Out of Temporada 1 (see `docs/alcance.md`). Design deferred until persistence/users are needed.
-- Future: Authn/authz mechanisms (e.g. tokens, session strategy), password/OAuth choices, and protected routes.
+- Existing: Empty / light `app/core/security.py` scaffold only. Phase 1 runs without login (localhost / Docker).
+- Planned: Out of Phase 1 (see [alcance.md](../alcance.md)). Design deferred until a single-operator gate is needed (CLI token, session cookie).
+- Future: Authn/authz for one human; **not** multi-tenant SaaS RBAC as the MVP path.
 
 ## Notes
 
-This document is outside the Temporada 1 backend core topics. It exists so authentication has a home when Temporada 2+ unlocks it.
+This document is outside the AgentOS Phase 1 core topics. It exists so authentication has a home when the roadmap unlocks it ([ROADMAP.md](../ROADMAP.md) — infra/Future, not “Fase 4 chat-era JWT”).
 
 ## TODO
 
-- Decide auth approach when users are in scope (do not invent premature design).
+- Decide auth approach when a public surface or CLI needs a personal token.
 - Document how security helpers in `app/core/security.py` will be used.
 - Align with middleware and dependency-injection docs when auth lands.
+- Do not invent multi-user billing roles for GallaIA MVP.

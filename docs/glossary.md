@@ -12,17 +12,33 @@ Draft
 
 ## Scope
 
-- Existing: Product terms already used in `alcance.md`, `context.md`, and the root README (Temporada, GallaAI, stack names).
-- Planned: Terms for Temporada 1 chat flow (message, provider, streaming if adopted).
-- Future: RAG, agent, tool, embedding, MCP, and related platform terms.
+- Existing: AgentOS control-plane terms used in [AGENTOS.md](product/AGENTOS.md), [ROADMAP.md](ROADMAP.md), and the root README.
+- Planned: Terms for Isolation / templates / goals / triggers as those phases are documented and built.
+- Future: RAG, embedding, product-chat terms when those packages activate.
 
-## Seed entries (to expand)
+## Seed entries
 
 | Term | Working definition |
 |------|--------------------|
-| Temporada | A scoped delivery phase on the product roadmap |
-| Existing / Planned / Future | Documentation status labels for what is in the repo vs intended vs later |
-| Layered architecture | Package layout by technical layer (`api`, `services`, `repositories`, …), not by feature |
+| **Temporada / Fase** | Entrega acotada del [ROADMAP](ROADMAP.md). **Fase N = AgentOS** (no “Fase 3 = Postgres”). |
+| **Existing / Planned / Future** | Etiquetas de madurez de docs: en el repo vs previsto vs más tarde |
+| **Layered architecture** | Layout por capa técnica (`api`, `services`, `repositories`, …), no por feature ([ADR-002](adr/ADR-002-project-structure.md)) |
+| **Agent** | Rol con prompts fundacional + de rol; un solo trabajo |
+| **Task** | Card Kanban: `todo` \| `doing` \| `review` \| `done` |
+| **Session** | Un run de agente + log de tool-calls |
+| **Inbox** | Canal de interrupción / decisión humana |
+| **Activity** | Feed global cronológico (≠ Inbox, ≠ Session) |
+| **Goal** | Loop abierto con DoD aprobado + orquestador (≠ Task) |
+| **Skill** | Capacidad reutilizable `prompt`\|`file` (≠ Agent) |
+| **Environment** | Política de red + env inyectado al start |
+| **Template** | Receta que instancia una cadena de tasks con gates |
+| **Knowledge** | Corpus / wiki del operador (RAG = Future) |
+| **Ripple** | Grafo causa→efecto (≠ Activity) |
+| **Connection** | MCP / repo / secret ref nombrado; grants por agente |
+| **Isolation** | Default deny: grants MCP/repo/env/fs + muro de red |
+| **Admin** | Gobierno del único operador (absorbe Settings) |
+
+Detalle de pantallas: [CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md).
 
 ## TODO
 

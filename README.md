@@ -13,7 +13,9 @@ Plataforma de aprendizaje + **AgentOS MVP**: control plane web (Kanban, sesiones
 
 ## Docs
 
+- Roadmap (fases 0–7): [docs/ROADMAP.md](docs/ROADMAP.md)
 - Mapa: [docs/product/AGENTOS.md](docs/product/AGENTOS.md)
+- Sidebar (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md)
 - Modulos: [docs/product/MODULE_BOUNDARIES.md](docs/product/MODULE_BOUNDARIES.md)
 - AgentOS slice: [docs/agentos/README.md](docs/agentos/README.md)
 - Walkthrough Postma: [docs/agentos/POSTMA_WALKTHROUGH.md](docs/agentos/POSTMA_WALKTHROUGH.md)
@@ -113,4 +115,4 @@ Detalle: docs/product/MODULE_BOUNDARIES.md.
 
 ## Phase 2+ (no implementar en este MVP)
 
-Isolation/ACL, R2, goals, triggers, YAML CLI: solo sketch en docs/agentos/PHASE2_PLUS.md.
+Isolation → Templates → Goals → Triggers → YAML/CLI → PWA: sketch en [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md) y calendario en [docs/ROADMAP.md](docs/ROADMAP.md). Sidebar futuro (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md).

@@ -11,40 +11,39 @@ Draft
 ## Scope
 
 - Existing (active code):
-  - `app/main.py` — FastAPI app, lifespan, middleware, exception handlers, `/`, `/health`, mounts `/api/v1`
-  - `app/core/config.py` — `Settings` / `get_settings()`
+  - `app/main.py` — FastAPI app, lifespan, middleware, exception handlers, `/`, `/health`, mounts `/api/v1`, static UI when built
+  - `app/core/config.py` — `Settings` / `get_settings()` (incl. optional Anthropic)
   - `app/core/logging.py` — `setup_logging` / `get_logger`
-  - `app/api/router.py` — aggregates v1 routers
-  - `app/api/routes/health.py` — `GET /api/v1/health` (+ demo-error)
-  - `app/api/dependencies/settings.py` — `SettingsDep`
-  - `app/exceptions/` — `AppError` + handlers
-  - `app/middleware/request_id.py` — `X-Request-ID` + request logging
-  - `Dockerfile`, `docker-compose.yml`, `.env.example` under `backend/` (API-only legado)
+  - `app/api/router.py` — aggregates v1 routers (health, projects, agents, tasks, sessions, inbox, agentos)
+  - `app/agentos/` — in-memory AgentOS package (seeds, runner, store, schemas)
+  - `app/models`, `schemas`, `services`, routes under `api/routes/` — SQLAlchemy control plane + SQLite
+  - `app/exceptions/`, `app/middleware/request_id.py`
   - Root `Dockerfile` + `docker-compose.yml`: UI + API in one container (see [docs/deployment/docker.md](../deployment/docker.md))
-- Existing (reserved scaffold only): `db/`, `models/`, `schemas/`, `repositories/`, `services/`, `providers/`, `agents/`, `tools/`, `memory/`, `rag/`, `utils/`, `core/security.py`
-- Planned: DB/auth/chat layers (Fase 3+).
-- Future: activate reserved AI packages per roadmap.
+- Existing (reserved / light scaffold): `providers/`, `agents/`, `tools/`, `memory/`, `rag/`, `utils/`, `core/security.py`
+- Planned: AgentOS Phase 2+ Isolation and beyond ([ROADMAP.md](../ROADMAP.md)) — doc first.
+- Future: activate reserved AI packages (RAG, etc.) per roadmap; Postgres per [ADR-003](../adr/ADR-003-postgresql.md).
 
 ## Package roles
 
 | Package | Role | State |
 |---------|------|-------|
 | `api/` | HTTP routes, router, dependencies | Active |
+| `agentos/` | In-memory AgentOS MVP package | Active |
 | `core/` | Config, logging, security helpers | Config + logging active |
 | `exceptions/` | App errors + HTTP handlers | Active |
 | `middleware/` | Cross-cutting HTTP middleware | Active (request-id) |
-| `db/` | Engine/session and migrations | Scaffold (Fase 3+) |
-| `models/` | ORM models | Scaffold |
-| `schemas/` | Pydantic API schemas | Scaffold |
-| `repositories/` | Data access | Scaffold |
-| `services/` | Use-case orchestration | Scaffold |
-| `providers/` | External AI provider adapters | Scaffold |
+| `db/` | Engine/session and migrations | Active for SQLite control plane (Alembic/Postgres later) |
+| `models/` | ORM models | Active (control plane) |
+| `schemas/` | Pydantic API schemas | Active |
+| `repositories/` | Data access | As used by control plane |
+| `services/` | Use-case orchestration / prompts / runners | Active for AgentOS MVP |
+| `providers/` | External AI provider adapters | Scaffold / stub path |
 | `agents/`, `tools/`, `memory/`, `rag/` | Later seasons | Reserved |
 | `utils/` | Helpers | Scaffold |
 
 ## Deep-dives
 
-See [docs/backend/](../backend/).
+See [docs/backend/](../backend/). Product: [AGENTOS.md](../product/AGENTOS.md).
 
 ## TODO
 

@@ -10,13 +10,13 @@ Draft
 
 ## Scope
 
-- Existing: Empty `app/models/`, `app/schemas/`, and empty `app/db/` scaffold (`base.py`, `session.py`, `migrations/`).
-- Planned: Pydantic request/response schemas for Temporada 1 chat; SQLAlchemy models from Temporada 2.
-- Future: Additional entities (users, documents, embeddings) as seasons unlock them.
+- Existing: SQLAlchemy models and Pydantic schemas for the AgentOS control plane (projects, agents, tasks, sessions, inbox) plus in-memory AgentOS package schemas under `app/agentos/`.
+- Planned: Models/schemas for Isolation grants, templates, goals, triggers when those phases start — [ROADMAP.md](../ROADMAP.md).
+- Future: Users (single-operator auth), documents/embeddings if RAG lands.
 
 ## TODO
 
 - Document naming conventions for schemas vs ORM models.
 - Explain when a schema may mirror a model and when it must differ.
-- Align with `docs/architecture/database.md` and `docs/database/` when those are filled.
-- Do not document concrete tables as Existing until migrations exist.
+- Align with [docs/architecture/database.md](../architecture/database.md).
+- Do not document Postgres tables as Existing until ADR-003 is implemented.

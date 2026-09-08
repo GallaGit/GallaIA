@@ -2,82 +2,73 @@
 
 ## Resumen
 
-**GallaAI** es la marca y el nombre del producto. Es una plataforma de Inteligencia Artificial de largo plazo, orientada a aprendizaje profesional. El alcance del producto completo es modular y evolutivo; el alcance de cada temporada se limita a lo necesario para completar esa fase antes de avanzar.
+**GallaAI** es la marca y el nombre del producto. Es una plataforma de aprendizaje + **control plane AgentOS**, orientada a operar agentes (Kanban, sesiones, inbox) y a crecer por fases. El alcance de cada fase se limita a lo necesario antes de avanzar.
 
 Este documento define **qué entra**, **qué no entra** y **cómo se acota** el trabajo, con énfasis en la fase actual.
+
+Calendario canónico: [ROADMAP.md](ROADMAP.md). Mapa de producto: [product/AGENTOS.md](product/AGENTOS.md).
 
 ---
 
 ## Alcance del producto (visión a largo plazo)
 
-La plataforma pretende evolucionar hacia un producto comparable, a nivel conceptual, a soluciones como ChatGPT, Claude Projects o Notion AI. No se busca copiarlas, sino aprender su arquitectura y buenas prácticas.
+La plataforma puede evolucionar hacia capacidades de chat, RAG, memoria e integraciones. **No** se busca clonar ChatGPT ni un SaaS multi-tenant en esta etapa. El aprendizaje se materializa hoy como **AgentOS** (plano de control sobre runners mock / stub).
 
-### Dentro del alcance futuro (por roadmap)
+Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md) lo indique):
 
-| Temporada | Enfoque |
-|-----------|---------|
-| 1 | Chat con IA |
-| 2 | Persistencia e historial |
-| 3 | RAG y documentos |
-| 4 | Agentes inteligentes |
-| 5 | Automatizaciones |
-| 6 | Dashboard y administración |
-
-Capacidades previstas a lo largo del ciclo de vida (solo cuando el roadmap lo indique):
-
-- Chat con IA y API REST
-- Usuarios, historial y base de datos
-- Memoria, RAG y embeddings
-- Agentes, tool calling y MCP
-- Automatizaciones, dashboard e integraciones externas
+- Control plane: agentes, tasks, sessions, inbox
+- Isolation, templates, goals, triggers, YAML/CLI
+- Persistencia más fuerte (Postgres cuando SQLite no baste)
+- Auth de un operador, PWA, live viewer
+- Más adelante: RAG, embeddings, chat de producto, automatizaciones ricas
 
 ### Fuera del alcance general del proyecto
 
 - Proyectos desechables o demos aisladas que no se integren a la aplicación única
 - Complejidad innecesaria o funcionalidades “por adelantado”
-- Replicar de forma completa cualquier producto comercial existente
-- Definir una visión de producto comercial cerrada en esta etapa (sigue en evolución; ver `docs/product-vision/`)
+- Replicar de forma completa cualquier producto comercial (Postma, Linear, ChatGPT)
+- Cursor Cloud Agents, runners solo-Mac, Electron/Tauri, LangGraph como camino del MVP
+- Multi-tenant / billing SaaS
 
 ---
 
-## Alcance de la fase actual: Temporada 1
+## Alcance de la fase actual: AgentOS Phase 1
 
-**Objetivo:** chat con IA completamente funcional.
+**Objetivo:** control plane AgentOS usable en local (Kanban + seeds + run + session log + inbox).
 
-**Versión de referencia:** v0.1.0 (en planificación).
+**Versión de referencia:** MVP en rama `feat/agentos-mvp` (ver [product/AGENTOS.md](product/AGENTOS.md)).
 
 ### Incluido
 
-- Configuración del repositorio y del entorno de desarrollo
-- Backend con **FastAPI** (Python)
-- Frontend con **Next.js** + **React** + **TypeScript**
-- Conexión con **un** proveedor de IA (OpenAI, Anthropic o Groq)
-- Envío y recepción de mensajes
-- Interfaz básica de chat
-- Flujo: Usuario → Frontend → Backend → Proveedor de IA → Respuesta al usuario
+- Backend **FastAPI** (Python) con `/api/v1` y `/api/v1/agentos`
+- Frontend **React + Vite + TypeScript + Lucide** (estética atelier)
+- Persistencia **SQLite** (`data/gallaia.db`) para el control plane SQLAlchemy
+- Seeds: `default`, `plan`, `senior-dev` (prompts RECONSTRUCTED)
+- Kanban `todo → doing → review → done` + **Ejecutar ahora**
+- Sessions con tool-event log; Inbox list + reply stub
+- Runner **mock** (default); stub Anthropic Messages opcional
+- Docker / Compose (UI + API)
 
-### Excluido (hasta completar Temporada 1)
+### Excluido (hasta completar Phase 1 / no implementar Phase 2+ ahora)
 
-- Autenticación y gestión de usuarios
-- Base de datos y persistencia del historial
-- RAG, embeddings y carga de documentos
-- Agentes, tool calling y MCP
-- Automatizaciones
-- Dashboard / administración
-- Integraciones externas no necesarias para el chat básico
-- Multi-proveedor simultáneo o selección avanzada de modelos
-- Streaming avanzado, memoria a largo plazo u otras mejoras no imprescindibles para el criterio de éxito
+- Isolation real (ACL MCP/red/filesystem, secret store)
+- Templates con gates, Goals + orquestador, Triggers/webhooks
+- YAML CLI, PWA push, live SSE / Activity feed completo
+- RAG, embeddings, chat tipo ChatGPT como producto
+- Auth multi-usuario, PostgreSQL obligatorio, multi-tenant
+- Agent SDK / Managed Agents completo (solo stub Messages)
+
+Detalle Phase 2+: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Sidebar futuro (doc only): [product/CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md).
 
 ### Criterio de éxito (definición de “hecho”)
 
-La Temporada 1 se considera completada cuando el usuario pueda:
+La Phase 1 se considera completada cuando el operador pueda:
 
-1. Abrir la aplicación
-2. Escribir un mensaje
-3. Enviarlo al modelo de IA
-4. Recibir la respuesta en tiempo real
-
-No se añadirá ninguna otra funcionalidad antes de alcanzar este objetivo.
+1. Abrir la aplicación (local o Docker)
+2. Ver agentes seed / crear una task en Kanban
+3. Lanzar **Ejecutar ahora** (mock o stub)
+4. Ver la session con tool log y el avance de estado en el tablero
+5. Ver items relevantes en Inbox cuando aplique (review / waiting-inbox)
 
 ---
 
@@ -86,12 +77,13 @@ No se añadirá ninguna otra funcionalidad antes de alcanzar este objetivo.
 | Capa | Tecnología |
 |------|------------|
 | Backend | Python, FastAPI |
-| Frontend | React, Next.js, TypeScript |
-| Base de datos | PostgreSQL *(a partir de Temporada 2)* |
-| IA | OpenAI / Anthropic / Groq |
+| Frontend | React, Vite, TypeScript, Lucide |
+| Persistencia actual | SQLite |
+| Persistencia futura | PostgreSQL ([ADR-003](adr/ADR-003-postgresql.md), Proposed) |
+| IA | Mock; opcional Anthropic Messages stub |
 | DevOps | Docker, Docker Compose |
 
-La base de datos forma parte del stack del proyecto, pero **no** del alcance implementable de la Temporada 1.
+**No** Next.js en el stack actual del control plane.
 
 ---
 
@@ -101,6 +93,7 @@ La base de datos forma parte del stack del proyecto, pero **no** del alcance imp
 - Cada entrega debe quedar integrada, documentada y funcional antes de la siguiente
 - Documentar decisiones importantes
 - Priorizar comprensión del problema y del diseño antes que velocidad
+- Phase 2+ = **documentación primero**; no implementar Isolation/Goals/Triggers en el MVP
 
 ---
 
@@ -108,17 +101,20 @@ La base de datos forma parte del stack del proyecto, pero **no** del alcance imp
 
 | Documento | Rol |
 |-----------|-----|
-| `README.md` | Visión general, stack y roadmap |
-| `docs/context.md` | Propósito, filosofía, principios y fase actual |
-| `docs/product-vision/` | Visión de producto (en evolución) |
-| `docs/alcance.md` | Este documento: límites de qué se construye y cuándo |
+| [README.md](../README.md) | Arranque y visión corta |
+| [ROADMAP.md](ROADMAP.md) | Calendario AgentOS (fases 0–7) |
+| [context.md](context.md) | Propósito, filosofía, fase actual |
+| [product/AGENTOS.md](product/AGENTOS.md) | Mapa de producto Phase 1 |
+| [product-vision/](product-vision/) | Visión de producto (en evolución) |
+| [alcance.md](alcance.md) | Este documento: límites de qué se construye y cuándo |
 
 ---
 
 ## Notas de mantenimiento
 
-Cuando se cierre una temporada o se amplíe el alcance, actualizar este archivo para:
+Cuando se cierre una fase o se amplíe el alcance, actualizar este archivo para:
 
-1. Marcar la temporada activa
+1. Marcar la fase AgentOS activa
 2. Ajustar incluidos / excluidos
 3. Redefinir el criterio de éxito de la nueva fase
+4. Mantener numeración alineada con [ROADMAP.md](ROADMAP.md) (no reintroducir “Fase 3 = Postgres”)

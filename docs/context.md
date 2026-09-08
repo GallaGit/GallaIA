@@ -15,7 +15,7 @@ Este proyecto nace con un doble objetivo:
 
 El proyecto NO pretende ser un ejercicio aislado.
 
-Cada módulo deberá integrarse con los anteriores hasta formar una única aplicación.
+Cada módulo deberá integrarse con los anteriores hasta formar una única aplicación. Hoy esa aplicación es el **control plane AgentOS** (agentes, Kanban, sesiones, inbox).
 
 ---
 
@@ -41,65 +41,59 @@ Antes de implementar cualquier funcionalidad se debe comprender:
 - Mantener el código limpio y modular.
 - Documentar las decisiones importantes.
 - Priorizar la comprensión antes que la velocidad.
+- Phase 2+ se documenta antes de implementarse ([PHASE2_PLUS.md](agentos/PHASE2_PLUS.md)).
 
 ---
 
 ## Objetivo Final
 
-Desarrollar una plataforma de IA modular que permita incorporar progresivamente funcionalidades como:
+Desarrollar una plataforma de IA modular. El camino **actual** es AgentOS (plano de control). Capacidades que pueden llegar más adelante, solo cuando el [ROADMAP](ROADMAP.md) lo indique:
 
-- Chat con IA
-- API REST
-- Usuarios
-- Historial
-- Base de datos
-- Memoria
-- RAG
-- Embeddings
-- Agentes
-- Tool Calling
-- MCP
-- Automatizaciones
-- Dashboard
-- Integraciones externas
+- Agents, Tasks (Kanban), Sessions, Inbox
+- Isolation / ACL, Templates, Goals, Triggers
+- YAML / CLI, PWA, Activity feed
+- Persistencia (SQLite hoy; Postgres cuando haga falta)
+- Memoria, RAG, embeddings
+- Chat de producto / API REST más rica
+- Automatizaciones e integraciones externas
 
-Estas funcionalidades no se desarrollarán desde el inicio.
-
-Cada una se implementará únicamente cuando corresponda dentro del roadmap.
+Estas funcionalidades no se desarrollarán todas desde el inicio.
 
 ---
 
 ## Fase Actual
 
-## Temporada 1
+## AgentOS Phase 1 (MVP)
 
 ### Objetivo
 
-Construir un Chat con IA completamente funcional.
+Operar un control plane AgentOS: ver agentes, crear tareas, lanzar runs (mock/stub), inspeccionar sesiones e inbox.
 
 ### Alcance
 
-Esta fase únicamente incluye:
+Esta fase incluye:
 
-- configuración del proyecto;
-- backend con FastAPI;
-- frontend con Next.js;
-- conexión con un proveedor de IA;
-- envío y recepción de mensajes;
-- interfaz básica de chat.
+- configuración del proyecto y Docker;
+- backend con FastAPI (`/api/v1`, `/api/v1/agentos`);
+- frontend con React + Vite + Lucide (atelier);
+- SQLite para el control plane;
+- seeds, Kanban, sessions, inbox;
+- runner mock y stub Anthropic Messages opcional.
 
-No se implementarán funcionalidades adicionales hasta completar esta fase.
+No se implementan Isolation real, Goals, Templates, Triggers ni RAG hasta las fases documentadas en el roadmap.
+
+Calendario: [ROADMAP.md](ROADMAP.md). Producto: [product/AGENTOS.md](product/AGENTOS.md). Alcance: [alcance.md](alcance.md).
 
 ---
 
 ## Arquitectura Inicial
 
 ```text
-Usuario
+Operador (navegador)
 
 ↓
 
-Frontend (Next.js)
+Frontend (React + Vite + atelier)
 
 ↓
 
@@ -107,12 +101,14 @@ Backend (FastAPI)
 
 ↓
 
-Proveedor de IA
+SQLite + runner mock / stub Anthropic
 
 ↓
 
-Respuesta al usuario
+Kanban / Session / Inbox
 ```
+
+Plataformas: Windows / Linux / macOS vía navegador + API. **No** Electron, Tauri ni exclusividad Mac.
 
 ---
 
@@ -129,13 +125,14 @@ Cada nueva funcionalidad deberá:
 
 ---
 
-## Definición de Éxito de la Fase 1
+## Definición de Éxito de la Phase 1
 
-La primera fase se considerará completada cuando el usuario pueda:
+La Phase 1 se considera completada cuando el operador pueda:
 
 - abrir la aplicación;
-- escribir un mensaje;
-- enviarlo al modelo de IA;
-- recibir la respuesta en tiempo real.
+- crear o seleccionar una task;
+- lanzar **Ejecutar ahora**;
+- ver el avance del Kanban y el log de tool-calls en la session;
+- usar el Inbox para atención humana cuando aplique.
 
-No se añadirá ninguna otra funcionalidad antes de alcanzar este objetivo.
+Detalle y non-goals: [alcance.md](alcance.md), [product/AGENTOS.md](product/AGENTOS.md).
