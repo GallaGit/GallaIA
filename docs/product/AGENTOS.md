@@ -14,6 +14,8 @@ Documento de producto del **control plane** AgentOS en GallaIA. Inspirado en el 
 
 Límites de módulo y dos superficies API: [MODULE_BOUNDARIES.md](MODULE_BOUNDARIES.md).
 
+Qué enseñó Postma en el video y el orden de réplica: [POSTMA_WALKTHROUGH.md](../agentos/POSTMA_WALKTHROUGH.md).
+
 ---
 
 ## Visión (confirmado)

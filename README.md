@@ -16,9 +16,11 @@ Plataforma de aprendizaje + **AgentOS MVP**: control plane web (Kanban, sesiones
 - Mapa: [docs/product/AGENTOS.md](docs/product/AGENTOS.md)
 - Modulos: [docs/product/MODULE_BOUNDARIES.md](docs/product/MODULE_BOUNDARIES.md)
 - AgentOS slice: [docs/agentos/README.md](docs/agentos/README.md)
+- Walkthrough Postma: [docs/agentos/POSTMA_WALKTHROUGH.md](docs/agentos/POSTMA_WALKTHROUGH.md)
 - Phase 2+: [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md)
 - Backend: [backend/README.md](backend/README.md)
 - Frontend: [frontend/README.md](frontend/README.md)
+- Docker (UI+API un contenedor): [docs/deployment/docker.md](docs/deployment/docker.md) · [docker-compose.md](docs/deployment/docker-compose.md)
 
 ## Vision
 
@@ -35,7 +37,28 @@ Seeds: `default`, `plan`, `senior-dev`. Prompts en `backend/app/services/prompts
 - Node.js para el frontend
 - SQLite (incluido; backend/data/gallaia.db)
 
-## Arranque local
+## Arranque con Docker (recomendado)
+
+Una imagen, un contenedor (UI + API). Desde la **raíz** del repo:
+
+```bash
+cp backend/.env.example backend/.env
+# Windows: copy backend\.env.example backend\.env
+npm --prefix frontend ci
+npm --prefix frontend run build
+docker compose up --build
+```
+
+O con el script: `bash scripts/docker-up.sh` (añade `-d` para segundo plano).
+
+- App (UI + API): http://127.0.0.1:8000/
+- OpenAPI: http://127.0.0.1:8000/docs
+
+El build de Vite se hace en el host (npm dentro de Docker Build falla en algunos entornos Windows/proxy); el **runtime** es un solo contenedor.
+
+Detalle: [docs/deployment/docker-compose.md](docs/deployment/docker-compose.md).
+
+## Arranque local (sin Docker)
 
 ### Backend (puerto 8000)
 

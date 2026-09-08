@@ -32,6 +32,25 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `default`, `plan`, `senior-dev`.
 
+## Docker (UI + API, un contenedor)
+
+Flujo recomendado desde la **raíz** del repo (no desde `backend/`):
+
+```bash
+cp backend/.env.example backend/.env
+npm --prefix frontend ci && npm --prefix frontend run build
+docker compose up --build
+```
+
+- App (UI + API): **http://127.0.0.1:8000/** (no `:5173`)
+- OpenAPI: http://127.0.0.1:8000/docs
+- SQLite: `backend/data/` montado en el contenedor
+
+Documentación de los cambios: [docs/deployment/docker.md](../docs/deployment/docker.md).  
+Runbook Compose: [docs/deployment/docker-compose.md](../docs/deployment/docker-compose.md).
+
+El `docker-compose.yml` de esta carpeta es solo API (legado).
+
 ## Endpoints AgentOS (`/api/v1`)
 
 | Método | Ruta | Rol |

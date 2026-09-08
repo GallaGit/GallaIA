@@ -1,0 +1,17 @@
+.git
+.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/*.egg-info
+**/.env
+!**/.env.example
+backend/.venv
+backend/data/*.db
+backend/data/*.db-*
+frontend/node_modules
+docs
+*.md
+!README.md
+.cursor
+.vscode

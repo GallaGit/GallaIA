@@ -17,7 +17,11 @@ Optional: copy .env.example to .env and set VITE_API_URL.
 
 ## Build
 
+```bash
 npm run build
+```
+
+Salida en `dist/`. Ese artefacto lo copia el `Dockerfile` de la raíz a `/app/static` para el contenedor único (UI + API en http://127.0.0.1:8000/). Ver [docs/deployment/docker.md](../docs/deployment/docker.md).
 
 ## Routes
 
