@@ -26,3 +26,5 @@ Salida en `dist/`. Ese artefacto lo copia el `Dockerfile` de la raíz a `/app/st
 ## Routes
 
 Agents, Tasks (Kanban), Sessions, Inbox, Files (placeholder), Settings (placeholder).
+
+Future nav (doc only — do not implement yet): [CONTROL_PLANE_NAV.md](../docs/product/CONTROL_PLANE_NAV.md).

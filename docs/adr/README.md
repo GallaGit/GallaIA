@@ -26,6 +26,6 @@ Draft
 
 ## TODO
 
-- Accept ADR-003 when the database phase starts.
+- Accept ADR-003 when cutting over from SQLite to PostgreSQL (infra/Future — not AgentOS “Fase 3”).
 - Add new ADRs for other significant choices (ORM details, auth, vector store) when those decisions are made.
 - Keep each ADR focused on context, decision, and consequences—not implementation tutorials.

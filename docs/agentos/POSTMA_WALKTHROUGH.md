@@ -67,6 +67,8 @@ App de un operador, desktop-first, inbox también en móvil (PWA + push):
 12. Sessions (live + historial)
 13. Activity feed
 
+**Mapping GallaIA (no clonar nombres a ciegas):** MCPs + Repos → **Connections**; wiki/`librarian` + corpus → **Knowledge**; Triggers + Automations + fan-out → **Ripples**; Settings + YAML/CLI → **Admin**. Nav implementado vs doc-only: [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). Calendario de fases: [ROADMAP.md](../ROADMAP.md).
+
 ### 2.2 Agents
 
 Cada agente es un rol con **un solo trabajo**:

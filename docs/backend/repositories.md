@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Explain why data access will be isolated behind repositories, keeping persistence details out of services and routes.
+Explain why data access is isolated behind repositories (or equivalent data helpers), keeping persistence details out of routes where practical.
 
 ## Status
 
@@ -10,13 +10,12 @@ Draft
 
 ## Scope
 
-- Existing: Empty `app/repositories/` directory; no database runtime.
-- Planned: Repository pattern when persistence starts (Temporada 2 per `docs/alcance.md`).
-- Future: Richer query helpers, transactions spanning multiple aggregates if needed.
+- Existing: SQLite-backed control plane data access for AgentOS entities (see `app/models`, services, routes). In-memory store for `/api/v1/agentos/*`.
+- Planned: Clearer repository boundaries as Isolation / templates / goals schemas grow — [ROADMAP.md](../ROADMAP.md).
+- Future: Postgres session patterns when ADR-003 is accepted.
 
 ## TODO
 
 - Document repository interface conventions (methods, return types).
 - Clarify relationship to SQLAlchemy models and sessions.
-- State that Temporada 1 may run without repositories until persistence is in scope.
-- Avoid implying a live database exists today.
+- Avoid implying PostgreSQL is required for Phase 1.

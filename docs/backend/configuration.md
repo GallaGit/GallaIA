@@ -10,10 +10,9 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`).
-- Planned: DB URL, secrets for JWT/AI providers when those phases start.
-- Future: multi-environment profiles beyond local `.env`.
-
+- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); optional `ANTHROPIC_*` for Messages stub.
+- Planned: Secret refs / richer runner settings when Isolation starts — [ROADMAP.md](../ROADMAP.md).
+- Future: multi-environment profiles; Postgres URL when ADR-003 is accepted.
 ## How it works
 
 1. `Settings` subclasses `BaseSettings` and reads `backend/.env` when the process cwd is `backend/` (as with `uvicorn` / Compose).
@@ -41,4 +40,4 @@ Draft (reflects current implementation)
 
 ## TODO
 
-- Document new settings as Fase 3+ adds database and auth.
+- Document new settings as AgentOS phases add Isolation secrets / runners; Postgres URL only when ADR-003 lands.

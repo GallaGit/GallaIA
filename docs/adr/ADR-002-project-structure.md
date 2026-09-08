@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The backend must grow from a minimal FastAPI app into chat, persistence, and later AI features without constant folder reshuffles. Educational clarity matters more than enterprise patterns (hexagonal, CQRS, DDD, feature-based packages).
+The backend must grow from a minimal FastAPI app into the AgentOS control plane and later AI features without constant folder reshuffles. Educational clarity matters more than enterprise patterns (hexagonal, CQRS, DDD, feature-based packages).
 
 ## Decision
 
@@ -14,9 +14,9 @@ Keep a **layered** layout under `backend/app/` (`api`, `core`, `db`, `models`, `
 
 ## Consequences
 
-- Clear ownership: routes vs config vs (future) services/repositories.
+- Clear ownership: routes vs config vs services/repositories / `agentos/`.
 - Reserved folders (`agents/`, `rag/`, …) may exist before they have code; docs must label them Future/scaffold.
-- Avoids premature abstraction while still preparing for Fase 3+.
+- Avoids premature abstraction while still preparing for AgentOS growth and later persistence (SQLite today; Postgres per ADR-003 when needed).
 
 ## References
 

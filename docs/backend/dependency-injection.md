@@ -10,10 +10,9 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `SettingsDep` in `app/api/dependencies/settings.py` (`Annotated[Settings, Depends(get_settings)]`); used by health routes and infra `/health`. `get_settings()` is also called at import time in `main.py` for app title and logging setup.
-- Planned: DB session dependency (`app/api/dependencies/db.py`), auth/current-user dependency.
+- Existing: `SettingsDep` in `app/api/dependencies/settings.py` (`Annotated[Settings, Depends(get_settings)]`); used by health routes and infra `/health`. `get_settings()` is also called at import time in `main.py` for app title and logging setup. Control-plane routes may use DB session dependencies as implemented.
+- Planned: Clearer DB session / future single-operator auth dependencies when those land.
 - Future: provider clients and other request-scoped resources.
-
 ## Pattern today
 
 ```python
@@ -39,5 +38,6 @@ FastAPI resolves `Depends(get_settings)` from the annotation, caches via `@lru_c
 
 ## TODO
 
-- Add `db.py` / `auth.py` dependency modules in Fase 3–4.
+- Document `db` / future `auth` dependency modules when they are first-class.
 - Document dependency lifetimes (request vs app scoped) with real examples.
+- Do not schedule “Fase 3–4 JWT” from the old chat roadmap.

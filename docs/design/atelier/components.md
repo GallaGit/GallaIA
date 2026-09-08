@@ -6,8 +6,8 @@
 
 - **AppShell:** sidebar izquierda (logo Atelier / GallaAI + nav) + top bar mínima (título de vista + acciones) + main cream.
 - **NavItem:** icono Lucide + label; activo = indigo + soft fill.
-- Nav Fase 1 (orden): Agents, Tasks, Sessions, Inbox, then divider, then **Files** + **Settings** (placeholders only).
-
+- Nav Phase 1 (implementado): Agents, Tasks, Sessions, Inbox; divider; **Files** + **Settings** (placeholders).
+- Nav futuro (doc only, no implementar ahora): Activity, Goals, Skills, Environment, Templates, Knowledge, Ripples, Connections, Admin — ver [CONTROL_PLANE_NAV.md](../../product/CONTROL_PLANE_NAV.md). Agrupar mentalmente Operate / Configure / Govern.
 ## Datos
 
 - **AgentCard:** avatar inicial, nombre, rol corto, status chip (healthy / degraded / offline), last activity.

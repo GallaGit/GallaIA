@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Frame how the Next.js frontend will talk to the backend API for chat, and why UI concerns stay out of the FastAPI layer.
+Frame how the React + Vite atelier UI talks to the FastAPI control plane, and why UI concerns stay out of the FastAPI layer.
 
 ## Status
 
@@ -10,13 +10,14 @@ Draft
 
 ## Scope
 
-- Existing: `frontend/` directory present at repo root (implementation not documented here; backend-planning focus).
-- Planned: Temporada 1 chat UI calling the backend over HTTP.
-- Future: Auth UX, history views, RAG/document UI, dashboard.
+- Existing: `frontend/` — React + Vite + TypeScript + Lucide; atelier theme; routes Agents, Tasks, Sessions, Inbox; Files/Settings placeholders; `src/api/client.ts` calling control-plane APIs (see [MODULE_BOUNDARIES.md](../product/MODULE_BOUNDARIES.md)).
+- Planned: EmptyStates / shell for doc-only nav items only when explicitly scheduled; Isolation-era Files browser; no Phase 2+ product features in the Phase 1 MVP.
+- Future: Auth UX (single operator), PWA inbox, live session viewer, Activity feed — [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md), [ROADMAP.md](../ROADMAP.md).
+
+**Not** Next.js. **Not** a Temporada-1 chat UI as the current product surface.
 
 ## TODO
 
-- Document the planned client → API contract for chat once endpoints exist.
-- Clarify env-based API base URL conventions.
-- Link to backend routing and API docs when filled.
-- Avoid documenting UI frameworks or folder details as Existing until verified.
+- Keep API base URL conventions (`VITE_API_URL`, Docker static proxy) documented in [frontend/README.md](../../frontend/README.md).
+- Link screens to [design/atelier/screens.md](../design/atelier/screens.md).
+- Do not add nav routes for Phase 2+ until the matching phase is in scope.

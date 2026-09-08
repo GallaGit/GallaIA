@@ -10,10 +10,9 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), `api` (router, routes, dependencies), `exceptions/`, and `middleware/`. Docker and `pyproject.toml` at `backend/`.
-- Planned: `services/`, then `db/` / `repositories/` / `models/` / `schemas/`.
-- Future: `providers/`, `agents/`, `tools/`, `memory/`, `rag/`.
-
+- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), `api` (router, routes, dependencies), `agentos/`, `exceptions/`, `middleware/`, plus control-plane `models` / `schemas` / `services` and SQLite. Docker and `pyproject.toml` at `backend/` (root Compose serves UI+API).
+- Planned: Isolation grants, templates, goals per [ROADMAP.md](../ROADMAP.md).
+- Future: `providers/` richness, `memory/`, `rag/`; Postgres per [ADR-003](../adr/ADR-003-postgresql.md).
 ## Layout (simplified)
 
 ```text
@@ -30,7 +29,8 @@ backend/
 │   │   └── security.py         # scaffold
 │   ├── exceptions/             # AppError + handlers
 │   ├── middleware/             # request-id
-│   ├── db/ …                   # scaffold (Fase 3+)
+│   ├── db/ …                   # SQLite control plane (Postgres = Future ADR-003)
+│   ├── agentos/ …              # in-memory AgentOS MVP package
 │   ├── models/ schemas/ repositories/ services/ …
 │   └── …
 ├── Dockerfile
@@ -42,8 +42,8 @@ backend/
 
 ## Rules of thumb
 
-- Routes stay thin; business logic will live in `services/` when introduced.
-- Persistence stays out of routes (repositories + DB session, Fase 3+).
+- Routes stay thin; business logic lives in `services/` / `agentos/`.
+- Persistence stays out of routes where practical (repositories + DB session).
 - Do not migrate to feature-based, hexagonal, CQRS, or DDD layouts ([ADR-002](../adr/ADR-002-project-structure.md)).
 
 ## TODO

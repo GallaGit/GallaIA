@@ -67,8 +67,26 @@ Tipos:
 
 ## 5. Files (`/files`) — placeholder
 
-EmptyState: “Files llega en una fase posterior” + sin upload real. Solo shell + empty.
+EmptyState: “Files llega en Isolation (Fase 2)” + sin upload real. Solo shell + empty.
 
 ## 6. Settings (`/settings`) — placeholder
 
-Lista mínima (tema Atelier locked, API base URL mock read-only). Sin auth forms.
+Lista mínima (tema Atelier locked, API base URL mock read-only). Sin auth forms. Futuro: absorbido por **Admin**.
+
+## 7–15. Pantallas futuras (EmptyState / doc only)
+
+No implementar rutas ni CRUD. Spec de producto: [CONTROL_PLANE_NAV.md](../../product/CONTROL_PLANE_NAV.md).
+
+| # | Ruta | Job corto | Fase |
+|---|------|-----------|------|
+| 7 | `/activity` | Feed global | 7 |
+| 8 | `/goals` | Gauntlet / DoD | 4 |
+| 9 | `/skills` | Capacidades reutilizables | 3 |
+| 10 | `/environment` | Red + env secrets | 2 |
+| 11 | `/templates` | Cadenas + gates | 3 |
+| 12 | `/knowledge` | Corpus / wiki | 2+ (RAG Future) |
+| 13 | `/ripples` | Grafo causa→efecto | 5 |
+| 14 | `/connections` | MCP + repos + secret refs | 2 |
+| 15 | `/admin` | Gobierno operador (absorbe Settings) | 1 copy → 2/6 |
+
+Cada una, si aparece en shell, usa **EmptyState** (“Documentado — no implementado”) + pill atelier. Sin API.
