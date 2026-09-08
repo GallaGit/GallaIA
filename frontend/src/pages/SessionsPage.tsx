@@ -1,23 +1,48 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { api, type Session } from '../api/client'
+import {
+  api,
+  ApiUnavailableError,
+  rememberSessionId,
+  type Session,
+} from '../api/client'
 
 export default function SessionsPage() {
   const { id } = useParams()
   const [sessions, setSessions] = useState<Session[]>([])
   const [selected, setSelected] = useState<Session | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [apiDown, setApiDown] = useState(false)
 
   useEffect(() => {
-    api
-      .sessions()
-      .then((data) => {
-        setSessions(data)
-        if (id) setSelected(data.find((s) => String(s.id) === id) ?? null)
-        else setSelected(null)
-      })
-      .catch((e: Error) => setError(e.message))
+    setError(null)
+    setApiDown(false)
+
+    const load = async () => {
+      try {
+        if (id) {
+          const s = await api.session(id)
+          setSelected(s)
+          rememberSessionId(s.id)
+          return
+        }
+        setSelected(null)
+        const list = await api.sessions()
+        setSessions(Array.isArray(list) ? list : [])
+        for (const s of list ?? []) rememberSessionId(s.id)
+      } catch (e) {
+        setSelected(null)
+        setSessions([])
+        if (e instanceof ApiUnavailableError) {
+          setApiDown(true)
+          setError('API no disponible')
+        } else {
+          setError((e as Error).message)
+        }
+      }
+    }
+    void load()
   }, [id])
 
   if (selected) {
@@ -25,15 +50,19 @@ export default function SessionsPage() {
       <div>
         <div className="page-header">
           <div>
-            <Link to="/sessions" className="muted" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+            <Link
+              to="/sessions"
+              className="muted"
+              style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
+            >
               <ArrowLeft size={16} /> Volver
             </Link>
-            <h2 style={{ marginTop: '0.5rem' }}>Sesión #{selected.id}</h2>
+            <h2 style={{ marginTop: '0.5rem' }}>Sesión {selected.id}</h2>
             <p>
               <span className="pill">{selected.status}</span>{' '}
               <span className="pill">runner: {selected.runner}</span>{' '}
-              <span className="pill">agent #{selected.agent_id}</span>
-              {selected.task_id != null && <span className="pill"> task #{selected.task_id}</span>}
+              <span className="pill">{selected.agent_name}</span>{' '}
+              <span className="pill">task {selected.task_id}</span>
             </p>
           </div>
         </div>
@@ -44,16 +73,20 @@ export default function SessionsPage() {
           </div>
         )}
         <div className="card">
-          <h3>Tool-call log</h3>
+          <h3>Tool events</h3>
           <div className="tool-log">
-            {(selected.tool_call_log ?? []).map((ev, i) => (
-              <div key={`${ev.ts}-${i}`} className="tool-row">
-                <span className="muted mono">{ev.ts}</span>
-                <span className="pill">{ev.tool}</span>
-                <span>{ev.detail}</span>
+            {(selected.tool_events ?? []).map((ev, i) => (
+              <div key={`${ev.at}-${i}`} className="tool-row">
+                <span className="muted mono">{ev.at}</span>
+                <span className="pill">{ev.name}</span>
+                <span className="mono" style={{ fontSize: '0.8rem' }}>
+                  {JSON.stringify(ev.output)}
+                </span>
               </div>
             ))}
-            {!selected.tool_call_log?.length && <div className="empty">Sin eventos</div>}
+            {!selected.tool_events?.length && (
+              <div className="empty">Sin eventos</div>
+            )}
           </div>
         </div>
       </div>
@@ -65,21 +98,34 @@ export default function SessionsPage() {
       <div className="page-header">
         <div>
           <h2>Sesiones</h2>
-          <p>Historial de ejecuciones (mock / Claude stub) con log de herramientas.</p>
+          <p>Listado GET /sessions · detalle GET /sessions/:id</p>
         </div>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="list">
         {sessions.map((s) => (
-          <Link key={s.id} to={`/sessions/${s.id}`} className="card" style={{ display: 'block' }}>
-            <strong>Sesión #{s.id}</strong>
+          <Link
+            key={s.id}
+            to={`/sessions/${encodeURIComponent(s.id)}`}
+            className="card"
+            style={{ display: 'block' }}
+          >
+            <strong>{s.id}</strong>
             <div className="muted">
-              {s.status} · {s.runner} · agent #{s.agent_id}
-              {s.task_id != null ? ` · task #${s.task_id}` : ''} · {s.started_at}
+              {s.status} · {s.runner} · {s.agent_name} · task {s.task_id} ·{' '}
+              {s.started_at}
             </div>
+            {s.summary && <div style={{ marginTop: 6 }}>{s.summary}</div>}
           </Link>
         ))}
-        {!sessions.length && !error && <div className="card empty">Aún no hay sesiones — ejecuta una tarea</div>}
+        {!sessions.length && !error && (
+          <div className="card empty">
+            Aún no hay sesiones — ejecuta una tarea desde Tasks (Run now)
+          </div>
+        )}
+        {apiDown && !sessions.length && (
+          <div className="card empty">API no disponible</div>
+        )}
       </div>
     </div>
   )

@@ -15,6 +15,7 @@ Shared staging on the box: `/workspace/gallaia-agentos/`
 | GET | `/tasks` | |
 | GET | `/tasks/{id}` | |
 | POST | `/tasks/{id}/run` | `{ "agent_name"?, "runner"?: "mock"\|"anthropic" }` |
+| GET | `/sessions` | List sessions |
 | GET | `/sessions/{id}` | Includes `tool_events[]` |
 
 

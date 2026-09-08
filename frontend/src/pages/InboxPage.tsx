@@ -1,78 +1,87 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { api, type InboxMessage } from '../api/client'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { api, ApiUnavailableError, type InboxItem } from '../api/client'
 
 export default function InboxPage() {
-  const [messages, setMessages] = useState<InboxMessage[]>([])
-  const [replies, setReplies] = useState<Record<number, string>>({})
+  const [items, setItems] = useState<InboxItem[]>([])
   const [error, setError] = useState<string | null>(null)
-
-  const load = () =>
-    api
-      .inbox()
-      .then(setMessages)
-      .catch((e: Error) => setError(e.message))
+  const [apiDown, setApiDown] = useState(false)
 
   useEffect(() => {
-    load()
+    api
+      .inbox()
+      .then((data) => {
+        setItems(data)
+        setApiDown(false)
+      })
+      .catch((e: Error) => {
+        setItems([])
+        if (e instanceof ApiUnavailableError) {
+          setApiDown(true)
+          setError('API no disponible')
+        } else {
+          setError(e.message)
+        }
+      })
   }, [])
-
-  const onReply = async (e: FormEvent, id: number) => {
-    e.preventDefault()
-    const body = replies[id]?.trim()
-    if (!body) return
-    setError(null)
-    try {
-      await api.replyInbox(id, body)
-      setReplies((r) => ({ ...r, [id]: '' }))
-      await load()
-    } catch (err) {
-      setError((err as Error).message)
-    }
-  }
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h2>Inbox</h2>
-          <p>Canal de interrupción humana. Reply es stub en Phase 1 (no reanuda contenedor real).</p>
+          <p>
+            Sesiones en waiting-inbox y tareas en review (GET /inbox).
+          </p>
         </div>
       </div>
       {error && <div className="error">{error}</div>}
       <div className="list">
-        {messages.map((m) => (
-          <div key={m.id} className="card">
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-              <span className="pill">{m.from_role}</span>
-              <span className={m.status === 'open' ? 'pill-coral pill' : 'pill-green pill'}>{m.status}</span>
-              {m.task_id != null && <span className="pill">task #{m.task_id}</span>}
+        {items.map((m) => (
+          <div key={`${m.kind}-${m.id}`} className="card">
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+                marginBottom: 8,
+              }}
+            >
+              <span className="pill">{m.kind}</span>
+              <span
+                className={
+                  m.status === 'waiting-inbox' || m.status === 'review'
+                    ? 'pill-coral pill'
+                    : 'pill'
+                }
+              >
+                {m.status}
+              </span>
+              <span className="pill">task {m.task_id}</span>
             </div>
-            <p style={{ marginTop: 0 }}>{m.body}</p>
-            {m.reply_body && (
-              <p className="muted">
-                <strong>Respuesta:</strong> {m.reply_body}
-              </p>
-            )}
-            {m.status === 'open' && (
-              <form onSubmit={(e) => onReply(e, m.id)} style={{ marginTop: 12 }}>
-                <div className="field">
-                  <label htmlFor={`reply-${m.id}`}>Responder</label>
-                  <textarea
-                    id={`reply-${m.id}`}
-                    rows={2}
-                    value={replies[m.id] ?? ''}
-                    onChange={(e) => setReplies((r) => ({ ...r, [m.id]: e.target.value }))}
-                  />
-                </div>
-                <button className="btn btn-primary" type="submit">
-                  Enviar respuesta
-                </button>
-              </form>
+            <strong>{m.title}</strong>
+            <p style={{ marginTop: 6 }}>{m.message}</p>
+            <p className="muted" style={{ fontSize: '0.8rem' }}>
+              {m.created_at}
+            </p>
+            {m.kind === 'session' && (
+              <Link
+                to={`/sessions/${encodeURIComponent(m.id)}`}
+                className="btn btn-ghost"
+                style={{ marginTop: 8, display: 'inline-flex' }}
+              >
+                Ver sesión
+              </Link>
             )}
           </div>
         ))}
-        {!messages.length && !error && (
-          <div className="card empty">Inbox vacío — aparece cuando un agent usa approval gate</div>
+        {!items.length && !error && (
+          <div className="card empty">
+            Inbox vacío — aparece con sesiones waiting-inbox o tareas en review
+          </div>
+        )}
+        {apiDown && !items.length && (
+          <div className="card empty">API no disponible</div>
         )}
       </div>
     </div>

@@ -9,7 +9,9 @@ export default function PlaceholderPage({ title, blurb }: Props) {
           <p>{blurb}</p>
         </div>
       </div>
-      <div className="card empty">Ruta reservada · fuera de alcance de este MVP</div>
+      <div className="card empty">
+        <span className="pill-coral pill">atelier</span> Próximamente
+      </div>
     </div>
   )
 }

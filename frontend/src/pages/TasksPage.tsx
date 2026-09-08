@@ -5,16 +5,23 @@ import {
   ApiUnavailableError,
   rememberSessionId,
   type Agent,
+  type KanbanStatus,
   type Task,
 } from '../api/client'
 
-const COLUMNS: Task['status'][] = ['todo', 'doing', 'review', 'done']
-const LABELS: Record<Task['status'], string> = {
+const COLUMNS: KanbanStatus[] = ['todo', 'doing', 'review', 'done']
+const LABELS: Record<KanbanStatus, string> = {
   todo: 'Por hacer',
   doing: 'En curso',
   review: 'Revisión',
   done: 'Hecho',
 }
+
+const FALLBACK_AGENTS = [
+  { name: 'default', title: 'Default' },
+  { name: 'plan', title: 'Plan' },
+  { name: 'senior-dev', title: 'Senior Dev' },
+]
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -27,6 +34,8 @@ export default function TasksPage() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [lastSummary, setLastSummary] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+
+  const agentOptions = agents.length ? agents : FALLBACK_AGENTS
 
   const load = async () => {
     try {
@@ -55,7 +64,7 @@ export default function TasksPage() {
   }, [])
 
   const byStatus = useMemo(() => {
-    const map: Record<Task['status'], Task[]> = {
+    const map: Record<KanbanStatus, Task[]> = {
       todo: [],
       doing: [],
       review: [],
@@ -88,11 +97,27 @@ export default function TasksPage() {
     }
   }
 
+  const onAssign = async (taskId: string, assignee_agent: string) => {
+    setError(null)
+    try {
+      const updated = await api.patchTask(taskId, { assignee_agent })
+      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+    } catch (err) {
+      if (err instanceof ApiUnavailableError) {
+        setApiDown(true)
+        setError('API no disponible')
+      } else {
+        setError((err as Error).message)
+      }
+    }
+  }
+
   const onRun = async (task: Task) => {
     setBusyId(task.id)
     setError(null)
     setLastSummary(null)
     try {
+      // ONLY POST /tasks/{id}/run — session comes in the response
       const result = await api.runTask(task.id, {
         agent_name: task.assignee_agent || undefined,
         runner: 'mock',
@@ -117,7 +142,7 @@ export default function TasksPage() {
       <div className="page-header">
         <div>
           <h2>Tareas</h2>
-          <p>Kanban todo → doing → review → done. Run now usa runner mock.</p>
+          <p>Kanban todo → doing → review → done. Run now → POST /tasks/:id/run (mock).</p>
         </div>
         <button
           className="btn btn-primary"
@@ -160,16 +185,9 @@ export default function TasksPage() {
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
               >
-                {(agents.length
-                  ? agents
-                  : [
-                      { name: 'default', title: 'Default' },
-                      { name: 'plan', title: 'Plan' },
-                      { name: 'senior-dev', title: 'Senior Dev' },
-                    ]
-                ).map((a) => (
+                {agentOptions.map((a) => (
                   <option key={a.name} value={a.name}>
-                    {'title' in a ? `${a.title} (${a.name})` : a.name}
+                    {a.title} ({a.name})
                   </option>
                 ))}
               </select>
@@ -207,16 +225,20 @@ export default function TasksPage() {
               <div key={task.id} className="task-card">
                 <h4>{task.name}</h4>
                 <p>{task.description || 'Sin descripción'}</p>
-                <div
-                  style={{
-                    marginTop: 8,
-                    display: 'flex',
-                    gap: 6,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span className="pill">{task.assignee_agent}</span>
-                  <span className="pill">{task.status}</span>
+                <div className="field" style={{ marginTop: 8, marginBottom: 0 }}>
+                  <label htmlFor={`assign-${task.id}`}>Asignar agente</label>
+                  <select
+                    id={`assign-${task.id}`}
+                    value={task.assignee_agent}
+                    disabled={apiDown}
+                    onChange={(e) => onAssign(task.id, e.target.value)}
+                  >
+                    {agentOptions.map((a) => (
+                      <option key={a.name} value={a.name}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="task-actions">
                   {col !== 'done' && (

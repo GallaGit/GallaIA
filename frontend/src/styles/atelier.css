@@ -1,13 +1,13 @@
 :root {
-  --bg: #faf7f2;
-  --bg-elevated: #fffdf9;
+  --bg: #FAF6F1;
+  --bg-elevated: #FFFDF9;
   --bg-muted: #f3eee6;
-  --ink: #1c1917;
-  --ink-soft: #57534e;
-  --line: #e7e0d5;
-  --indigo: #3730a3;
-  --indigo-soft: #e0e7ff;
-  --coral: #f97066;
+  --ink: #1C1917;
+  --ink-soft: #78716C;
+  --line: #E7E0D6;
+  --indigo: #4338CA;
+  --indigo-soft: #E0E7FF;
+  --coral: #E07A5F;
   --coral-soft: #ffe4e1;
   --green: #15803d;
   --green-soft: #dcfce7;

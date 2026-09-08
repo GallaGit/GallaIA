@@ -203,6 +203,12 @@ def run_task(task_id: str, body: RunRequest | None = None) -> RunResponse:
     )
 
 
+
+
+@router.get("/sessions", response_model=list[SessionOut])
+def list_sessions() -> list[SessionOut]:
+    return [_session_out(s) for s in store.list_sessions()]
+
 @router.get("/sessions/{session_id}", response_model=SessionOut)
 def get_session(session_id: str) -> SessionOut:
     session = store.get_session(session_id)

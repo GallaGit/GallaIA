@@ -155,6 +155,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  sessions: () => request<Session[]>('/sessions'),
   session: (id: string) =>
     request<Session>(`/sessions/${encodeURIComponent(id)}`),
   inbox: () => request<InboxItem[]>('/inbox'),

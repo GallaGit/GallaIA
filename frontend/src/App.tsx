@@ -10,9 +10,9 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/tasks" replace />} />
+        <Route index element={<Navigate to="/agents" replace />} />
         <Route path="agents" element={<AgentsPage />} />
-        <Route path="agents/:id" element={<AgentsPage />} />
+        <Route path="agents/:name" element={<AgentsPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="sessions/:id" element={<SessionsPage />} />
@@ -22,7 +22,7 @@ export default function App() {
           element={
             <PlaceholderPage
               title="Archivos"
-              blurb="Navegador R2 / filesystem MCP — Phase 2+. Placeholder en Phase 1."
+              blurb="Próximamente — navegador de archivos / MCP filesystem."
             />
           }
         />
@@ -31,7 +31,7 @@ export default function App() {
           element={
             <PlaceholderPage
               title="Ajustes"
-              blurb="YAML sync, runners, secretos — más adelante. Phase 1 usa SQLite + mock runner."
+              blurb="Próximamente — runners, secretos y sync."
             />
           }
         />
