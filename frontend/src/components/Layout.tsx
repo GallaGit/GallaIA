@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import {
   Bot,
-  CheckSquare,
+  Columns3,
   Files,
   Inbox,
   Moon,
@@ -11,11 +11,14 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-const links = [
+const primaryLinks = [
   { to: '/agents', label: 'Agentes', icon: Bot },
-  { to: '/tasks', label: 'Tareas', icon: CheckSquare },
+  { to: '/tasks', label: 'Tareas', icon: Columns3 },
   { to: '/sessions', label: 'Sesiones', icon: Activity },
   { to: '/inbox', label: 'Inbox', icon: Inbox },
+]
+
+const secondaryLinks = [
   { to: '/files', label: 'Archivos', icon: Files },
   { to: '/settings', label: 'Ajustes', icon: Settings },
 ]
@@ -42,13 +45,24 @@ export default function Layout() {
           </div>
         </div>
         <nav className="nav">
-          {links.map(({ to, label, icon: Icon }) => (
+          {primaryLinks.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) => (isActive ? 'active' : undefined)}
             >
-              <Icon size={18} />
+              <Icon size={18} strokeWidth={1.75} />
+              {label}
+            </NavLink>
+          ))}
+          <hr className="nav-divider" />
+          {secondaryLinks.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => (isActive ? 'active' : undefined)}
+            >
+              <Icon size={18} strokeWidth={1.75} />
               {label}
             </NavLink>
           ))}
@@ -63,7 +77,7 @@ export default function Layout() {
             {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
           </button>
           <p style={{ marginTop: '0.75rem' }}>
-            Estética atelier · web multiplataforma (Windows / Linux / macOS)
+            Estética atelier · light theme canónico
           </p>
         </div>
       </aside>

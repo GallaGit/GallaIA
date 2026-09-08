@@ -11,10 +11,10 @@ import {
 
 const COLUMNS: KanbanStatus[] = ['todo', 'doing', 'review', 'done']
 const LABELS: Record<KanbanStatus, string> = {
-  todo: 'Por hacer',
-  doing: 'En curso',
-  review: 'Revisión',
-  done: 'Hecho',
+  todo: 'Backlog',
+  doing: 'Doing',
+  review: 'Review',
+  done: 'Done',
 }
 
 const FALLBACK_AGENTS = [
@@ -142,7 +142,7 @@ export default function TasksPage() {
       <div className="page-header">
         <div>
           <h2>Tareas</h2>
-          <p>Kanban todo → doing → review → done. Run now → POST /tasks/:id/run (mock).</p>
+          <p>Kanban Backlog · Doing · Review · Done. Run now → POST /tasks/:id/run (mock).</p>
         </div>
         <button
           className="btn btn-primary"
