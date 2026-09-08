@@ -1,15 +1,15 @@
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
-from app.core.config import Settings, get_settings
+from app.core.config import get_settings
 from app.core.logging import get_logger, setup_logging
-
+from app.db.init_db import init_db
 from app.exceptions.base import AppError
 from app.exceptions.handlers import app_error_handler, unhandled_error_handler
 from app.middleware.request_id import RequestIdMiddleware
-
 from app.api.dependencies.settings import SettingsDep
 
 settings = get_settings()
@@ -25,17 +25,26 @@ async def lifespan(app: FastAPI):
         settings.app_env,
         settings.app_debug,
     )
+    init_db()
+    logger.info("Database ready (SQLite MVP; Postgres later)")
     yield
     logger.info("Shutting down %s", settings.app_name)
 
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
-    description="Backend de GallaAI — Fase 1 Foundation",
+    version="0.2.0",
+    description="GallaAI AgentOS — control plane MVP (Phase 0+1)",
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIdMiddleware)
 app.include_router(api_router, prefix="/api/v1")
 
@@ -43,7 +52,7 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 def root():
     logger.debug("GET /")
-    return {"message": f"{settings.app_name} is running"}
+    return {"message": f"{settings.app_name} is running", "product": "AgentOS MVP"}
 
 
 @app.get("/health")
@@ -54,6 +63,7 @@ def health(settings: SettingsDep):
         "app": settings.app_name,
         "env": settings.app_env,
     }
+
 
 app.add_exception_handler(AppError, app_error_handler)
 app.add_exception_handler(Exception, unhandled_error_handler)

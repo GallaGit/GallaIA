@@ -1,123 +1,74 @@
-# GallaAI
+# GallaIA — AgentOS control plane
 
-> Plataforma de IA desarrollada como proyecto de aprendizaje con enfoque profesional.
+Plataforma de aprendizaje + AgentOS MVP: control plane web (Kanban, sesiones, inbox),
+inspirado en el talk de Danny Postma, con FastAPI + React.
 
-## Descripción
+**Multiplataforma:** Windows / Linux / macOS — solo navegador + API.
+Sin Electron, Tauri ni exclusividad Mac.
 
-GallaAI es un proyecto de largo plazo cuyo objetivo es construir una plataforma moderna de Inteligencia Artificial similar, a nivel conceptual, a soluciones como ChatGPT, Claude Projects o Notion AI.
+## Vision
 
-El propósito principal no es copiar estas herramientas, sino aprender las tecnologías, patrones de arquitectura y buenas prácticas utilizadas para desarrollar productos de IA reales.
+Defines agentes, creas tareas, Ejecutar ahora. Sesion mock (o stub Anthropic Messages),
+tool-call log, status doing -> done/review. Inbox para decisiones humanas.
 
-Este proyecto crecerá por módulos, donde cada nueva funcionalidad se integrará sobre la anterior sin crear proyectos desechables.
+Mas detalle: [docs/product/AGENTOS.md](docs/product/AGENTOS.md)
+Limites de modulo: [docs/product/MODULE_BOUNDARIES.md](docs/product/MODULE_BOUNDARIES.md)
 
----
+## Stack
 
-## Objetivos
+- Backend: Python 3.11+, FastAPI, SQLAlchemy, SQLite (Postgres later)
+- Frontend: React + Vite + TypeScript + Lucide, estetica atelier
+- Runtime: mock por defecto; opcional ANTHROPIC_API_KEY
 
-- Aprender desarrollo de aplicaciones con IA.
-- Construir una arquitectura escalable y mantenible.
-- Aplicar buenas prácticas de ingeniería de software.
-- Crear un portafolio profesional basado en un producto real.
+## Como arrancar (Windows / Linux / macOS)
 
----
-
-## Estado del proyecto
-
-**Versión actual:** v0.1.0
-
-- **Fase 1 — Foundation:** completada (FastAPI, Settings, logging, `/health`, Docker).
-- **Fase 2 — API Base:** completada (router `/api/v1`, errores globales, middleware request-id, dependencias comunes).
-- **Siguiente:** Fase 3 — Base de datos (PostgreSQL).
-
-Checklist:
-
-- [x] Planificación inicial
-- [x] Estructura de carpetas y documentación base
-- [x] Configuración del proyecto (dependencias, entorno)
-- [x] Backend runnable (FastAPI + Docker)
-- [ ] Frontend
-- [ ] Integración con LLM
-- [ ] Chat funcional
-
-Roadmap técnico detallado: [docs/ROADMAP.md](docs/ROADMAP.md).
-
----
-
-## Stack tecnológico
-
-### Backend (Existing)
-
-- Python
-- FastAPI
-- Docker / Docker Compose
-
-### Backend (Planned)
-
-- SQLAlchemy (Fase 3+)
-- PostgreSQL (Fase 3+)
-
-### Frontend (Planned)
-
-- React
-- Next.js
-- TypeScript
-
-### IA (Planned)
-
-- OpenAI, Anthropic o Groq (un proveedor cuando llegue el chat)
-
----
-
-## Roadmap de producto
-
-### Temporada 1
-
-Construcción del Chat con IA.
-
-### Temporada 2
-
-Persistencia de datos e historial.
-
-### Temporada 3
-
-RAG y documentos.
-
-### Temporada 4
-
-Agentes inteligentes.
-
-### Temporada 5
-
-Automatizaciones.
-
-### Temporada 6
-
-Dashboard y administración.
-
----
-
-## Estructura del repositorio
+### Backend
 
 ```
-backend/          # API FastAPI (Fase 1 + inicio Fase 2)
-frontend/         # Frontend (pendiente)
-docs/             # Documentación
-README.md
+cd backend
+python -m venv .venv
 ```
 
-Cómo arrancar el backend: **[backend/README.md](backend/README.md)**.
+Windows PowerShell: `.\.venv\Scripts\Activate.ps1`  
+Linux/macOS: `source .venv/bin/activate`
 
-Docker vive bajo `backend/` (`Dockerfile`, `docker-compose.yml`).
+```
+python -m pip install -U pip
+python -m pip install -e .
+```
 
----
+Copia `.env.example` a `.env`, luego:
 
-## Documentación
+```
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-Índice: **[docs/README.md](docs/README.md)**.
+- API: http://127.0.0.1:8000/
+- Docs: http://127.0.0.1:8000/docs
 
-Producto: `docs/alcance.md`, `docs/context.md`, `docs/product-vision/`.
+### Frontend
 
----
+```
+cd frontend
+npm install
+npm run dev
+```
+
+UI: http://127.0.0.1:5173/ (Vite proxy `/api` -> FastAPI; o `VITE_API_URL`)
+
+Build: `npm run build`
+
+## Creditos / runtime
+
+- Prompts RECONSTRUCTED del talk — no verbatim de Danny Postma
+- Sin ANTHROPIC_API_KEY: mock runner
+- Con clave: stub Messages API (no Agent SDK completo)
+
+## Estado
+
+- [x] Phase 0 skeleton
+- [x] Phase 1 MVP (projects/agents/tasks/sessions/inbox)
+- [ ] Isolation, R2, goals, triggers, YAML CLI
 
 ## Licencia
 

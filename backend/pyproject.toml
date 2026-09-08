@@ -1,7 +1,7 @@
 [project]
 name = "gallaai-backend"
-version = "0.1.0"
-description = "GallaAI backend API"
+version = "0.2.0"
+description = "GallaAI AgentOS control plane API"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]",
@@ -13,3 +13,7 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["data*"]
