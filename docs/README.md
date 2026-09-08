@@ -28,6 +28,18 @@ Do not treat Planned or Future items as working software.
 
 ---
 
+## AgentOS
+
+| Document | Description |
+|----------|-------------|
+| [product/AGENTOS.md](product/AGENTOS.md) | Mapa de producto Phase 0–1 |
+| [agentos/README.md](agentos/README.md) | Slice MVP actual |
+| [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md) | Qué construyó Postma en el video y orden de réplica |
+| [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) | Sketch Isolation / Goals / Triggers (no implementar ahora) |
+| [agentos/CONTRACT.md](agentos/CONTRACT.md) | Contrato API `/api/v1/agentos` |
+
+---
+
 ## Architecture
 
 | Document | Focus |
@@ -79,7 +91,18 @@ Run instructions: [backend/README.md](../backend/README.md).
 
 Directories outside the frozen core tree (or empty topic files) may still exist from earlier scaffolding. Do not assume documented behavior until filled:
 
-- `api/`, `database/`, `ai/`, `deployment/` (if present)
+- `api/`, `database/`, `ai/` (if present)
+
+---
+
+## Deployment
+
+| Document | Description |
+|----------|-------------|
+| [deployment/docker.md](deployment/docker.md) | Imagen única UI+API: cambios, archivos, arquitectura |
+| [deployment/docker-compose.md](deployment/docker-compose.md) | Runbook `docker compose up` |
+| [deployment/environments.md](deployment/environments.md) | Local vs Docker y variables |
+| [deployment/ci-cd.md](deployment/ci-cd.md) | CI/CD (placeholder) |
 
 ---
 

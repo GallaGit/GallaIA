@@ -19,7 +19,8 @@ Draft
   - `app/api/dependencies/settings.py` — `SettingsDep`
   - `app/exceptions/` — `AppError` + handlers
   - `app/middleware/request_id.py` — `X-Request-ID` + request logging
-  - `Dockerfile`, `docker-compose.yml`, `.env.example`
+  - `Dockerfile`, `docker-compose.yml`, `.env.example` under `backend/` (API-only legado)
+  - Root `Dockerfile` + `docker-compose.yml`: UI + API in one container (see [docs/deployment/docker.md](../deployment/docker.md))
 - Existing (reserved scaffold only): `db/`, `models/`, `schemas/`, `repositories/`, `services/`, `providers/`, `agents/`, `tools/`, `memory/`, `rag/`, `utils/`, `core/security.py`
 - Planned: DB/auth/chat layers (Fase 3+).
 - Future: activate reserved AI packages per roadmap.

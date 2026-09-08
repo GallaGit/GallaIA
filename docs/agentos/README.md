@@ -42,3 +42,5 @@ Every seed file and prompt string starts with / documents:
 ## Out of scope here
 
 Isolation ACLs, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) (sketch only).
+
+Walkthrough del video de Postma (qué construyó y en qué orden replicarlo): [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md).

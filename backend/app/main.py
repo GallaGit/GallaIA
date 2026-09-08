@@ -1,7 +1,11 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -16,6 +20,8 @@ settings = get_settings()
 setup_logging(settings.log_level)
 logger = get_logger(__name__)
 
+STATIC_DIR = Path(os.environ.get("STATIC_DIR", "static")).resolve()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,6 +33,8 @@ async def lifespan(app: FastAPI):
     )
     init_db()
     logger.info("Database ready (SQLite MVP; Postgres later)")
+    if (STATIC_DIR / "index.html").is_file():
+        logger.info("Serving UI from %s", STATIC_DIR)
     yield
     logger.info("Shutting down %s", settings.app_name)
 
@@ -49,12 +57,6 @@ app.add_middleware(RequestIdMiddleware)
 app.include_router(api_router, prefix="/api/v1")
 
 
-@app.get("/")
-def root():
-    logger.debug("GET /")
-    return {"message": f"{settings.app_name} is running", "product": "AgentOS MVP"}
-
-
 @app.get("/health")
 def health(settings: SettingsDep):
     logger.debug("GET /health")
@@ -63,6 +65,48 @@ def health(settings: SettingsDep):
         "app": settings.app_name,
         "env": settings.app_env,
     }
+
+
+def _spa_index() -> FileResponse | None:
+    index = STATIC_DIR / "index.html"
+    if index.is_file():
+        return FileResponse(index)
+    return None
+
+
+@app.get("/")
+def root():
+    spa = _spa_index()
+    if spa is not None:
+        return spa
+    logger.debug("GET /")
+    return {"message": f"{settings.app_name} is running", "product": "AgentOS MVP"}
+
+
+_assets_dir = STATIC_DIR / "assets"
+if _assets_dir.is_dir():
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+
+
+@app.get("/{full_path:path}")
+def spa_fallback(full_path: str):
+    """Serve Vite SPA assets and client-side routes when STATIC_DIR is present."""
+    if full_path.startswith("api/") or full_path in {
+        "docs",
+        "redoc",
+        "openapi.json",
+        "health",
+    }:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    candidate = STATIC_DIR / full_path
+    if candidate.is_file():
+        return FileResponse(candidate)
+
+    spa = _spa_index()
+    if spa is not None:
+        return spa
+    raise HTTPException(status_code=404, detail="Not Found")
 
 
 app.add_exception_handler(AppError, app_error_handler)
