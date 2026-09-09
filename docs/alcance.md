@@ -60,6 +60,25 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 
 Detalle Phase 2+: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Sidebar futuro (doc only): [product/CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md).
 
+**Planned (doc only, fuera de Phase 1):** Lead Intake — trigger `lead-status-nuevo` + template de 2 agentes + score CRM (`&lt; 60` descartado / `&gt;= 60` pendiente a revisar). Spec: [product/LEAD_INTAKE.md](product/LEAD_INTAKE.md). No implementar hasta Fases 2/3/5.
+
+### Gaps conocidos de Phase 1
+
+Ver [PHASE1_GAPS.md](PHASE1_GAPS.md) para análisis completo.
+
+**Resumen de gaps críticos:**
+
+| # | Gap | Impacto |
+|---|-----|---------|
+| C1 | Frontend solo usa endpoints AgentOS (in-memory); capa SQL invisible | Sin persistencia real |
+| C2 | Dos runners divergentes (in-memory vs SQL) | Approval gate roto |
+| C3 | Approval gate sin UI funcional | Feature core muerta |
+| C4 | Inbox desconectado (SQL invisible, AgentOS ephemeral) | Canal humano roto |
+| C5 | Cero tests de rutas API | Sin regresión safety |
+| C6 | Seeds duplicados con configuración divergente | Config inconsistente |
+
+**Nota:** Estos gaps **no bloquean** Phase 2 (Isolation), que es un tema diferente. El MVP es funcional para aprendizaje.
+
 ### Criterio de éxito (definición de “hecho”)
 
 La Phase 1 se considera completada cuando el operador pueda:

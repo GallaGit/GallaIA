@@ -134,10 +134,10 @@ Hoy `plan` declara `skills=("plan-mode",)` como string en seeds.
 ### Templates (`/templates`) — Fase 3
 
 **Job:** receta que instancia una cadena de tasks; N+1 bloqueada hasta N `done`; gates en API.  
-Seed: `compound-engineer-workflow` (9 pasos, `branchName`).  
+Seeds: `compound-engineer-workflow` (9 pasos, `branchName`); segundo workflow de producto **documentado**: `lead-intake-workflow` (2 pasos, `leadId`) — [LEAD_INTAKE.md](LEAD_INTAKE.md).  
 **No es:** Goal (loop abierto).  
-**Done when:** instantiate → 9 cards; token de agente no puede `PATCH done` en paso gated.  
-**Non-goal:** inventar un segundo workflow de producto distinto al del walkthrough sin documentarlo.
+**Done when:** instantiate → 9 cards (compound) o 2 cards (lead-intake); token de agente no puede `PATCH done` en paso gated.  
+**Non-goal:** inventar un tercer workflow de producto distinto a compound-engineer / lead-intake sin documentarlo primero.
 
 ### Knowledge (`/knowledge`) — Fase 2+ (wiki); RAG = Future
 

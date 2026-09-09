@@ -101,10 +101,12 @@ Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) (numeración 
 | Fase | Tema | Notas |
 |------|------|--------|
 | 2 | Isolation / ACL | Grants MCP/repo/env; Environment + Connections + Files reales |
-| 3 | Templates + gates | Cadena 9 pasos; Skills CRUD mínimo |
+| 3 | Templates + gates | Cadena 9 pasos; Skills CRUD mínimo; seed doc `lead-intake-workflow` |
 | 4 | Goals | Gauntlet / DoD / orchestrator |
-| 5 | Triggers | Webhooks firmados → task + session; Ripples |
+| 5 | Triggers | Webhooks firmados → task + session; Ripples; seed doc `lead-status-nuevo` |
 | 6–7 | YAML CLI / PWA | Admin sync; Activity feed + live viewer |
+
+Workflow comercial Planned (doc only): [LEAD_INTAKE.md](LEAD_INTAKE.md).
 
 **Non-goals actuales:** Cursor Cloud Agents como runtime; runners solo-Mac; LangGraph / multi-tenant SaaS como camino del MVP.
 
@@ -120,6 +122,7 @@ Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) (numeración 
 | Inbox | List + reply stub | Resume session, PWA push |
 | Isolation / R2 | Docs + placeholder Files | ACL real + R2 MCP |
 | Goals / templates / triggers / YAML CLI | Fuera de scope | Ver PHASE2_PLUS + CONTROL_PLANE_NAV |
+| Lead Intake (CRM `nuevo` → 2 agents + score) | Fuera de scope | Doc only — [LEAD_INTAKE.md](LEAD_INTAKE.md) |
 | Activity / Ripples / Knowledge / Admin | Fuera de scope | Doc only — CONTROL_PLANE_NAV |
 
 ---

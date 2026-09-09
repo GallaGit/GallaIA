@@ -33,6 +33,7 @@ Do not treat Planned or Future items as working software. **Fase N = AgentOS** â
 | Document | Description |
 |----------|-------------|
 | [product/AGENTOS.md](product/AGENTOS.md) | Mapa de producto Phase 0â€“1 |
+| [product/LEAD_INTAKE.md](product/LEAD_INTAKE.md) | Lead Intake: trigger + 2 agentes + score (Planned, doc only) |
 | [product/CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md) | Sidebar: implementado vs doc-only |
 | [product/MODULE_BOUNDARIES.md](product/MODULE_BOUNDARIES.md) | Dos superficies API + ownership |
 | [agentos/README.md](agentos/README.md) | Slice MVP actual |
