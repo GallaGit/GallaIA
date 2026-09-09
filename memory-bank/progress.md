@@ -14,6 +14,7 @@ Referencia de producto: `docs/product/AGENTOS.md`. Calendario: `docs/ROADMAP.md`
 
 ## Branch actual
 
+- `feature/phase1-gaps-docs` (nueva, documentación de gaps Phase 1)
 - `feature/docs-update` (local, adelantado a origin por 3 commits)
 - README/rama origen del MVP: `feat/agentos-mvp` (desde `master`)
 
@@ -38,6 +39,23 @@ Referencia de producto: `docs/product/AGENTOS.md`. Calendario: `docs/ROADMAP.md`
 - Documentar/implementar según `docs/ROADMAP.md` (Phase 2+ solo documentada por ahora).
 - Seguir con la definición de éxito de Phase 1 (crear task → Ejecutar ahora → Kanban avanza → session con tool log → Inbox).
 - Postgres / auth / RAG / chat: visión larga, no el sprint actual.
+
+## Gaps Phase 1 identificados (9 septiembre 2026)
+
+6 gaps críticos documentados en `docs/PHASE1_GAPS.md`:
+
+| # | Gap | Impacto |
+|---|-----|---------|
+| C1 | Frontend solo usa AgentOS in-memory (SQL invisible) | Sin persistencia real |
+| C2 | Dos runners divergentes (in-memory vs SQL) | Approval gate roto |
+| C3 | Approval gate sin UI funcional | Feature core muerta |
+| C4 | Inbox desconectado (SQL invisible, AgentOS ephemeral) | Canal humano roto |
+| C5 | Cero tests de rutas API | Sin regresión safety |
+| C6 | Seeds duplicados con configuración divergente | Config inconsistente |
+
+12 gaps menores (N1-N12) — nice-to-have para MVP.
+
+**Nota:** Estos gaps **no bloquean** Phase 2 (Isolation). El MVP es funcional para aprendizaje.
 
 ## Notas / Riesgos
 
