@@ -19,10 +19,11 @@ Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Kn
 - `TaskTemplate` + instantiate
 - Approval gates enforced in API and MCP (not honor-system prompts)
 - Follow-up chain scheduler; seed `compound-engineer-workflow` (9 steps)
+- Product seed (doc): `lead-intake-workflow` (2 steps, `leadId`) — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md); agents `lead-researcher` / `lead-solutions`
 - Schedule-at / recurring cron on tasks
 - Skills catalog CRUD mínimo (e.g. `plan-mode` ceases to be a bare seed string only)
 
-**Done when:** instantiating the template creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`.
+**Done when:** instantiating the template creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
 
 ## Phase 4 — Goals (gauntlet loop)
 
@@ -36,6 +37,7 @@ Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Kn
 
 - Public webhook + secret → scoped task + session
 - Seed shapes: support-inbound, bug-report → diagnostic then (on human OK) fix chain
+- Product seed (doc): `lead-status-nuevo` → instantiate `lead-intake-workflow` — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
 - Named cron automations
 - **Ripples** UI can show cause→effect edges (trigger → task → session, template step → next)
 - No Mac-only workers required; runner stays `mock` | Anthropic API | later Linux VM

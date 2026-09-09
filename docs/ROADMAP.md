@@ -28,9 +28,9 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md).
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **2** | Isolation | Grants MCP/repo/env (default deny), network `open`\|`limited`, filesystem MCP + ACL, secret refs | Agente support con Front fake no llama GitHub ni lee carpeta ajena |
-| **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
+| **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
-| **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug | Secreto malo → 401; bueno → task+sesión |
+| **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
 
@@ -72,6 +72,7 @@ docs/
 │
 ├── product/
 │   ├── AGENTOS.md
+│   ├── LEAD_INTAKE.md         ← Lead Intake (Planned, doc only)
 │   ├── CONTROL_PLANE_NAV.md
 │   └── MODULE_BOUNDARIES.md
 │

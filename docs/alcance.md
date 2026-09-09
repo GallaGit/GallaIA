@@ -60,6 +60,8 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 
 Detalle Phase 2+: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Sidebar futuro (doc only): [product/CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md).
 
+**Planned (doc only, fuera de Phase 1):** Lead Intake — trigger `lead-status-nuevo` + template de 2 agentes + score CRM (`&lt; 60` descartado / `&gt;= 60` pendiente a revisar). Spec: [product/LEAD_INTAKE.md](product/LEAD_INTAKE.md). No implementar hasta Fases 2/3/5.
+
 ### Gaps conocidos de Phase 1
 
 Ver [PHASE1_GAPS.md](PHASE1_GAPS.md) para análisis completo.
