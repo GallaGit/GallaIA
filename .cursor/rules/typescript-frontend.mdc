@@ -1,0 +1,14 @@
+---
+description: TypeScript y rendimiento React en el frontend GallaAI
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript + React frontend
+
+Al editar o crear código bajo `frontend/`:
+
+1. Lee `.agents/skills/typescript-advanced-types/SKILL.md` para tipos estrictos, uniones discriminadas y clientes API tipados (`frontend/src/api/client.ts`).
+2. Lee `.agents/skills/vercel-react-best-practices/SKILL.md` para rendimiento (bundle, re-renders, waterfalls). **Ignora** reglas de Next.js / RSC / App Router — el stack es React 19 + Vite.
+
+Preferencias del proyecto: sin `any` innecesario; tipar límites de API; componentes funcionales.

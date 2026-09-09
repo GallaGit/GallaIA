@@ -1,0 +1,14 @@
+---
+description: Accesibilidad y guías de UI para el frontend Atelier
+globs: frontend/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# Frontend accessibility
+
+Al tocar UI, estilos o interacción bajo `frontend/`:
+
+1. Lee `.agents/skills/web-design-guidelines/SKILL.md` (foco, teclado, semántica, UX).
+2. Lee `.agents/skills/accessibility/SKILL.md` (WCAG 2.2, contraste, labels, axe/Lighthouse).
+
+Prioriza HTML semántico y roles ARIA solo cuando haga falta. Kanban, sessions e inbox deben ser usables con teclado y nombres accesibles en botones icon-only (Lucide).
