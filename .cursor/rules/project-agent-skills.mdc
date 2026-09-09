@@ -1,0 +1,24 @@
+---
+description: Índice de agent skills del proyecto GallaAI — cuándo leer cada SKILL.md
+alwaysApply: true
+---
+
+# Project agent skills
+
+Skills viven en `.agents/skills/<nombre>/SKILL.md`. Léelas cuando el trabajo coincida; no copies packs enteros ni inventes reglas Next.js (este frontend es React + Vite).
+
+| Skill | Cuándo leerla |
+| ----- | ------------- |
+| `vercel-react-best-practices` | Rendimiento React: bundle, re-renders, waterfalls, data fetching. Ignora reglas RSC/App Router. |
+| `web-design-guidelines` | Auditoría UX/a11y de UI (Kanban, inbox, foco, semántica). |
+| `accessibility` | WCAG 2.2, axe/Lighthouse, contraste, teclado, labels. |
+| `typescript-advanced-types` | Tipos estrictos, uniones discriminadas, cliente API tipado. |
+| `playwright-best-practices` | Cómo escribir tests Playwright (locators, waits, aislamiento). |
+| `webapp-testing` | Cómo correr Playwright contra Vite (`:5173`) + API (`:8000`). |
+| `archify` | Diagramas de arquitectura / workflow / sequence / dataflow / lifecycle. |
+
+## Seguridad
+
+- No instalar pack entero de `vercel-labs/agent-skills` (incluye skills que buscan tokens en `.env`).
+- No testear contra producción con claves LLM reales en la UI.
+- Secretos solo en `backend/.env` (nunca commit); plantilla en `backend/.env.example`.
