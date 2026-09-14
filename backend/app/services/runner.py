@@ -25,6 +25,7 @@ from app.services.filesystem import filesystem_acl_for_agent
 from app.services.grants import grant_set_for_agent
 from app.services.network import network_policy_for_agent
 from app.services.secrets import resolve_agent_secrets, secret_refs_for_agent
+from app.services.templates import assert_prior_step_done
 
 
 def _now() -> datetime:
@@ -130,6 +131,7 @@ def _control_plane_runner() -> str:
 
 def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
     """Start a (mock or LLM) session for a task and update status."""
+    assert_prior_step_done(db, task)
     runner_name = _control_plane_runner()
     grants = grant_set_for_agent(agent)
     network = network_policy_for_agent(agent)

@@ -19,3 +19,6 @@ class Project(Base):
 
     agents = relationship("Agent", back_populates="project", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    templates = relationship(
+        "TaskTemplate", back_populates="project", cascade="all, delete-orphan"
+    )

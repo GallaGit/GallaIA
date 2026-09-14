@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -20,6 +20,14 @@ class Task(Base):
         ForeignKey("agents.id"), nullable=True, index=True
     )
     approval_gate: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    template_id: Mapped[int | None] = mapped_column(
+        ForeignKey("task_templates.id"), nullable=True, index=True
+    )
+    template_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    step_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    depends_on_task_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tasks.id"), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -30,3 +38,5 @@ class Task(Base):
     project = relationship("Project", back_populates="tasks")
     assignee_agent = relationship("Agent", back_populates="tasks")
     sessions = relationship("AgentSession", back_populates="task", cascade="all, delete-orphan")
+    template = relationship("TaskTemplate", back_populates="tasks")
+    depends_on = relationship("Task", remote_side=[id], foreign_keys=[depends_on_task_id])

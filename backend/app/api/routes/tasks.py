@@ -7,6 +7,7 @@ from app.models import Agent, Project, Task
 from app.models.task import TASK_STATUSES
 from app.schemas import SessionOut, TaskCreate, TaskOut, TaskStatusUpdate, TaskUpdate
 from app.services.runner import run_task_session
+from app.services.templates import assert_prior_step_done
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -83,6 +84,9 @@ def patch_task_status(task_id: int, payload: TaskStatusUpdate, db: DbSession):
         raise NotFoundError(f"Task {task_id} not found")
     if payload.status not in TASK_STATUSES:
         raise BadRequestError(f"Invalid status: {payload.status}")
+    # Starting work on a gated step requires the prior card to be done.
+    if payload.status in {"doing", "review", "done"}:
+        assert_prior_step_done(db, task)
     task.status = payload.status
     db.commit()
     db.refresh(task)
@@ -105,6 +109,7 @@ def run_task(task_id: int, db: DbSession):
         raise NotFoundError(f"Task {task_id} not found")
     if task.assignee_agent_id is None:
         raise BadRequestError("Task has no assigned agent")
+    assert_prior_step_done(db, task)
     agent = db.get(Agent, task.assignee_agent_id)
     if agent is None:
         raise NotFoundError(f"Agent {task.assignee_agent_id} not found")

@@ -7,6 +7,12 @@ from app.schemas.project import ProjectOut
 from app.schemas.secret import AgentSecretsOut, AgentSecretsUpdate, SecretRefItem
 from app.schemas.session import SessionOut
 from app.schemas.task import TaskCreate, TaskOut, TaskStatusUpdate, TaskUpdate
+from app.schemas.template import (
+    TemplateInstantiateIn,
+    TemplateInstantiateOut,
+    TemplateOut,
+    TemplateStepOut,
+)
 
 __all__ = [
     "ProjectOut",
@@ -26,6 +32,10 @@ __all__ = [
     "TaskUpdate",
     "TaskStatusUpdate",
     "TaskOut",
+    "TemplateStepOut",
+    "TemplateOut",
+    "TemplateInstantiateIn",
+    "TemplateInstantiateOut",
     "SessionOut",
     "InboxMessageOut",
     "InboxReplyIn",
