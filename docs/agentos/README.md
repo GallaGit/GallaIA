@@ -44,6 +44,8 @@ Every seed file and prompt string starts with / documents:
 
 ## Out of scope here
 
-Isolation ACLs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md) (sketch only). Sidebar map (doc only): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
+Isolation ACLs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md). **Siguiente implementación:** Phase 2 Isolation (spec hasta un PR de runtime). Sidebar map (doc only): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
+
+Skills de Cursor/skills.sh (no el catálogo AgentOS `/skills`): [SKILLS.md](SKILLS.md).
 
 Walkthrough del video de Postma (qué construyó y en qué orden replicarlo): [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md).

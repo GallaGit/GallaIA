@@ -118,6 +118,8 @@ Sin claves → runner mock. Con `OPENROUTER_API_KEY` → Chat Completions (UI). 
 
 Detalle: docs/product/MODULE_BOUNDARIES.md.
 
-## Phase 2+ (no implementar en este MVP)
+## Phase 2+ (siguiente implementación: Isolation)
 
-Isolation → Templates → Goals → Triggers → YAML/CLI → PWA: sketch en [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md) y calendario en [docs/ROADMAP.md](docs/ROADMAP.md). Sidebar futuro (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md).
+**Siguiente implementación:** Phase 2 Isolation (spec; no runtime en PRs de higiene). Después: Templates → Goals → Triggers → YAML/CLI → PWA. Sketch: [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md). Calendario y operación autónoma: [docs/ROADMAP.md](docs/ROADMAP.md). Sidebar futuro (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md).
+
+Skills de código en Cursor (`npx skills add`, **no** commitear `.agents/skills`): [docs/agentos/SKILLS.md](docs/agentos/SKILLS.md).

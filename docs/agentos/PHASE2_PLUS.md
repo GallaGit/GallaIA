@@ -1,10 +1,14 @@
-# AgentOS Phase 2+ — sketch only (do not implement in this PR)
+# AgentOS Phase 2+ — Isolation is the next implementation candidate
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** — do not implement in the Phase 1 MVP.
+**Siguiente implementación:** **Phase 2 Isolation** (abajo). Sigue siendo spec hasta un PR de runtime dedicado. **No** implementar Isolation, Templates, Goals ni Triggers en PRs de higiene/docs.
 
-## Phase 2 — Isolation
+Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
+
+Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMAP.md](../ROADMAP.md) § Operación autónoma.
+
+## Phase 2 — Isolation *(next implementation — not in this docs PR)*
 
 - Per-agent MCP / repo / env grants (default deny)
 - Network policy `open` | `limited` + host allowlist at runner proxy

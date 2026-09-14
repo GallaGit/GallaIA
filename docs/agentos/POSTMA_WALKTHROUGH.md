@@ -8,7 +8,7 @@ Este documento reconstruye **el sistema que enseñó en el video**, no su códig
 
 Blueprint de referencia (inglés, spec de implementación): [gist iannuttall/agentos-blueprint](https://gist.github.com/iannuttall/8152098b5ce8e6c1a7499ee561ed93f4).
 
-GallaIA ya cubre un **MVP Phase 1** (Kanban + seeds + mock/stub). Este doc es el mapa completo de lo que él llegó a tener tras ~6 meses. No implementar Phase 2+ en el PR actual; ver [PHASE2_PLUS.md](PHASE2_PLUS.md).
+GallaIA ya cubre un **MVP Phase 1** (Kanban + seeds + mock/stub). Este doc es el mapa completo de lo que él llegó a tener tras ~6 meses. **Siguiente implementación:** Fase 2 Isolation ([PHASE2_PLUS.md](PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md)). No meter Isolation runtime en PRs de higiene/docs.
 
 ---
 
@@ -314,6 +314,8 @@ Runtime real (cuando toque sustituir el stub):
 - Local: worker en VM Linux (no Mac-only) que ejecute Claude Code con skip-permissions / Grok yolo, detrás de la misma interfaz `provision / streamToolCalls / injectReply / destroy`.
 
 ### Fase 2 — Isolation (lo más importante y lo más difícil)
+
+**Candidato de implementación siguiente en GallaIA.** Spec only until a dedicated runtime PR; first slice should pick one wall (grants XOR network XOR filesystem ACL), not the whole list.
 
 1. Default deny en el **session manifest**.
 2. Grants por agente: MCP, repo, env, filesystem, collaboration list.

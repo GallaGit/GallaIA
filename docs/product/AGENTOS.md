@@ -7,7 +7,8 @@ Documento de producto del **control plane** AgentOS en GallaIA. Inspirado en el 
 | Estado | Alcance |
 |--------|---------|
 | **Confirmado (Phase 1 MVP)** | Seeds, Kanban, sesiones, inbox, mock runner, stub Anthropic Messages |
-| **Solo documentación (Phase 2+)** | Isolation → Templates → Goals → Triggers → YAML → PWA — ver [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md) |
+| **Siguiente implementación (spec hasta un PR de runtime)** | **Phase 2 Isolation** — ver [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md) |
+| **Solo documentación (Phase 3+)** | Templates → Goals → Triggers → YAML → PWA |
 | **Sidebar futuro (doc only)** | Activity, Goals, Skills, Environment, Templates, Knowledge, Ripples, Connections, Admin — [CONTROL_PLANE_NAV.md](CONTROL_PLANE_NAV.md) |
 
 > **No es Mac-only.** No Electron, Tauri ni exclusividad de SO. Corre en **Windows / Linux / macOS** vía navegador + API.

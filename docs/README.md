@@ -20,7 +20,7 @@ Do not treat Planned or Future items as working software. **Fase N = AgentOS** �
 
 | Document | Description |
 |----------|-------------|
-| [ROADMAP.md](ROADMAP.md) | **Calendario canónico AgentOS** (fases 0–7) + árbol de docs |
+| [ROADMAP.md](ROADMAP.md) | **Calendario canónico AgentOS** (fases 0–7), operación autónoma, árbol de docs |
 | [alcance.md](alcance.md) | Scope: Phase 1 AgentOS actual vs excluidos |
 | [context.md](context.md) | Project context and principles |
 | [product-vision/product-vision_v01.md](product-vision/product-vision_v01.md) | Evolving product vision (AgentOS first) |
@@ -38,7 +38,8 @@ Do not treat Planned or Future items as working software. **Fase N = AgentOS** �
 | [product/MODULE_BOUNDARIES.md](product/MODULE_BOUNDARIES.md) | Dos superficies API + ownership |
 | [agentos/README.md](agentos/README.md) | Slice MVP actual |
 | [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md) | Qué construyó Postma y orden de réplica |
-| [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) | Sketch Isolation → Templates → Goals → Triggers |
+| [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) | **Siguiente implementación: Isolation**; sketch Templates → Goals → Triggers |
+| [agentos/SKILLS.md](agentos/SKILLS.md) | skills.sh local (`npx skills add`); no vendor `.agents/skills` |
 | [agentos/CONTRACT.md](agentos/CONTRACT.md) | Contrato API `/api/v1/agentos` |
 
 ---
@@ -114,7 +115,6 @@ Directories outside the core tree (or empty topic files) may still exist from ea
 | [deployment/docker.md](deployment/docker.md) | Imagen única UI+API: cambios, archivos, arquitectura |
 | [deployment/docker-compose.md](deployment/docker-compose.md) | Runbook `docker compose up` |
 | [deployment/environments.md](deployment/environments.md) | Local vs Docker y variables |
-| [deployment/ci-cd.md](deployment/ci-cd.md) | CI/CD (placeholder) |
 
 ---
 
@@ -122,3 +122,4 @@ Directories outside the core tree (or empty topic files) may still exist from ea
 
 - Fill remaining Draft/Planned stubs as each AgentOS phase lands.
 - Keep this index and [ROADMAP.md](ROADMAP.md) in sync with code.
+- Smoke de links locales: `python scripts/check-md-links.py` (desde la raíz).

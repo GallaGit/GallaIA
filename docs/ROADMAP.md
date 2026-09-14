@@ -12,6 +12,41 @@ Contrato API MVP: [agentos/CONTRACT.md](agentos/CONTRACT.md).
 
 ---
 
+## Operación autónoma (desde 2026-09-14)
+
+Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cada slice debe ser **pequeño, valorado y testeado**.
+
+| Regla | Detalle |
+| ----- | ------- |
+| **Cadencia** | Cada **2 días a las 09:00 Europe/Berlin** |
+| **Tope** | **Máx. ~1 h por slice** — un PR acotado, no un mega-diff |
+| **Créditos** | Usar créditos **Grok primero** hasta ~**85%**; después Cloud Agents |
+| **Antes del PR** | Documentar **Hecho** y **Por hacer** (este archivo u otro doc de slice) **antes** de abrir el PR |
+| **Merge** | Solo si está **testeado** (docs: `python scripts/check-md-links.py`; código: tests existentes rápidos en verde) |
+| **Parar** | Pedir a Ociel **solo** auth / secrets / permisos. No inventar deploy ni tocar secretos |
+| **Fuera de slice** | No Isolation runtime “de pasada”; no Leads_CRM, Preparto, multiagente, Demo Waitlist |
+
+### Higiene de PRs abiertos
+
+- [x] **PR #12** (`feature/agent-skills`) — **cerrar, no mergear.** ~357 files / +200k líneas; casi todo es árbol vendored en `.agents/skills` (lock + junk). Reemplazo lean: [agentos/SKILLS.md](agentos/SKILLS.md) (`npx skills add`, sin commitear 200k líneas).
+
+### Slice 2026-09-14 (este cambio)
+
+**Hecho**
+
+- Cadencia autónoma y reglas de merge/créditos documentadas aquí.
+- Fase **2 Isolation** marcada como siguiente *implementación* (sigue siendo spec hasta un PR de runtime dedicado).
+- Skills de código: instrucciones `npx skills add` en vez de vendor.
+- Decisión de no mergear #12.
+
+**Por hacer (próximos slices, no este PR)**
+
+- Primer PR de **runtime Isolation** (un solo muro: grants default-deny, network policy, o filesystem ACL).
+- Instalar skills.sh en la máquina local cuando haga falta (no en git).
+- Auth / secrets / deploy solo con Ociel.
+
+---
+
 ## Fases AgentOS
 
 ### Hecho
@@ -23,11 +58,13 @@ Contrato API MVP: [agentos/CONTRACT.md](agentos/CONTRACT.md).
 
 Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md).
 
-### Siguiente (solo documentación — no implementar ahora)
+### Siguiente
+
+**Candidato de implementación siguiente: Fase 2 Isolation.** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. **Este PR de higiene no implementa Isolation.** El primer PR de runtime debe ser un slice acotado (un muro, no grants + red + filesystem + secretos a la vez). Fases 3–7 siguen en sketch.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **2** | Isolation | Grants MCP/repo/env (default deny), network `open`\|`limited`, filesystem MCP + ACL, secret refs | Agente support con Front fake no llama GitHub ni lee carpeta ajena |
+| **2** | Isolation *(siguiente implementación)* | Grants MCP/repo/env (default deny), network `open`\|`limited`, filesystem MCP + ACL, secret refs | Agente support con Front fake no llama GitHub ni lee carpeta ajena |
 | **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
@@ -80,6 +117,7 @@ docs/
 │   ├── README.md
 │   ├── CONTRACT.md
 │   ├── PHASE2_PLUS.md
+│   ├── SKILLS.md              ← skills.sh (Cursor); no vendor
 │   └── POSTMA_WALKTHROUGH.md
 │
 ├── architecture/

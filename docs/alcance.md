@@ -32,7 +32,12 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 
 ---
 
-## Alcance de la fase actual: AgentOS Phase 1
+## Alcance de la fase actual
+
+**Hecho:** AgentOS Phase 0 + Phase 1 (MVP en `master`).  
+**Siguiente implementación:** Phase 2 Isolation — spec en [ROADMAP.md](ROADMAP.md) y [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). No Isolation runtime en slices de higiene/docs.
+
+### Phase 1 (cerrada como MVP de aprendizaje)
 
 **Objetivo:** control plane AgentOS usable en local (Kanban + seeds + run + session log + inbox).
 
@@ -49,9 +54,9 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 - Runner **mock** (default); stub Anthropic Messages opcional
 - Docker / Compose (UI + API)
 
-### Excluido (hasta completar Phase 1 / no implementar Phase 2+ ahora)
+### Excluido de Phase 1 (Isolation = siguiente runtime; no en slices de docs)
 
-- Isolation real (ACL MCP/red/filesystem, secret store)
+- Isolation real (ACL MCP/red/filesystem, secret store) — spec lista; primer PR de runtime aparte
 - Templates con gates, Goals + orquestador, Triggers/webhooks
 - YAML CLI, PWA push, live SSE / Activity feed completo
 - RAG, embeddings, chat tipo ChatGPT como producto
