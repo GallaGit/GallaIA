@@ -17,6 +17,7 @@ from app.models import (  # noqa: F401
     Skill,
     Goal,
     Automation,
+    ActivityEvent,
     TaskTemplate,
     TaskTemplateStep,
 )

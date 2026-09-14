@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente:** Phase 7 PWA / live. **Phase 6 YAML / CLI core done**. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
+**Siguiente:** Phase 7 PWA / live (slice 1 Activity+SSE in progress). **Phase 6 YAML / CLI core done**. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -167,13 +167,20 @@ eview-coordinator, etc.) — optional polish
 
 **Por hacer (Phase 7 / polish)**
 
-- Phase 7 PWA / live; optional YAML skills/grants; goal/task/skill CLI; Ripples UI
+- Phase 7 remaining: PWA inbox, web push, live viewer UI, local routing (slice 7.1 = Activity+SSE)
+- Optional YAML skills/grants; goal/task/skill CLI; Ripples UI
 
 **Done when (full Phase 6):** push produces same agents+template as UI; pull after push is identity (whitespace aside) — **met** (export/import + CLI create/update).
 
-## Later (see ROADMAP Fase 7)
+## Phase 7 - PWA / live *(in progress)*
 
-- **Fase 7** PWA inbox, live viewer, **Activity** feed, local runner routing
+### Slice 7.1 — Activity feed + SSE stub (este PR)
+
+- Append-only ActivityEvent + GET/POST /api/v1/activity + SSE /activity/stream
+- Auto-emit on task create, webhook, automation fire
+- **Por hacer:** Inbox PWA + web push; full live viewer UI; local runner routing
+
+**Done when (full Phase 7):** reply en móvil reanuda sesión — *not yet*.
 
 ## Explicit non-goals for GallaIA now
 
