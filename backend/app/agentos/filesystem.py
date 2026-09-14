@@ -1,6 +1,6 @@
 """Per-agent filesystem MCP ACLs. Default deny outside allowed roots.
 
-Phase 2 Isolation — filesystem wall only (not secret refs).
+Phase 2 Isolation — filesystem wall (per-agent roots, deny `../`).
 Read / write / delete are independent; writing does not imply delete.
 Any `../` path component is denied (no silent resolve).
 """

@@ -22,3 +22,16 @@ class NotFoundError(AppError):
 class BadRequestError(AppError):
     def __init__(self, message: str = "Bad request") -> None:
         super().__init__(message, code="bad_request", status_code=400)
+
+
+class UnresolvedSecretRefError(AppError):
+    """Session start denied because a secret ref has no value in env/fixture."""
+
+    def __init__(self, names: list[str] | tuple[str, ...] | None = None) -> None:
+        listed = ", ".join(names) if names else "(unknown)"
+        super().__init__(
+            f"unresolved secret ref: {listed}",
+            code="unresolved_secret_ref",
+            status_code=403,
+        )
+        self.names = tuple(names or ())

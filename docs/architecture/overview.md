@@ -10,8 +10,8 @@ Draft
 
 ## Scope
 
-- Existing: Repository layout (`backend/`, `frontend/`, `docs/`); FastAPI with Settings, logging, health, Docker Compose (UI+API), `/api/v1`, AgentOS control plane (projects/agents/tasks/sessions/inbox + `/api/v1/agentos`), SQLite, React+Vite atelier UI, mock/stub runners.
-- Planned: AgentOS Phase 2+ (Isolation, Templates, Goals, Triggers) per [ROADMAP.md](../ROADMAP.md) — **documentation first**, not implemented in the Phase 1 MVP.
+- Existing: Repository layout (`backend/`, `frontend/`, `docs/`); FastAPI with Settings, logging, health, Docker Compose (UI+API), `/api/v1`, AgentOS control plane (projects/agents/tasks/sessions/inbox + `/api/v1/agentos`), SQLite, React+Vite atelier UI, mock/stub runners. Phase 2 Isolation walls (grants, network, filesystem, secret refs) are in runtime.
+- Planned: AgentOS Phase 3+ (Templates, Goals, Triggers) per [ROADMAP.md](../ROADMAP.md). Isolation UI Files/Connections are follow-ups.
 - Future: Postgres when SQLite is not enough ([ADR-003](../adr/ADR-003-postgresql.md)), single-operator auth, RAG, product chat, PWA.
 
 ## Current runtime shape

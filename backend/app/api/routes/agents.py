@@ -12,10 +12,13 @@ from app.schemas import (
     AgentNetworkOut,
     AgentNetworkUpdate,
     AgentOut,
+    AgentSecretsOut,
+    AgentSecretsUpdate,
 )
 from app.services.filesystem import fs_out, replace_agent_fs
 from app.services.grants import grants_out, replace_agent_grants, require_agent
 from app.services.network import network_out, replace_agent_network
+from app.services.secrets import replace_agent_secrets, secrets_out
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -71,3 +74,16 @@ def get_agent_fs(agent_id: int, db: DbSession) -> AgentFsOut:
 def put_agent_fs(agent_id: int, payload: AgentFsUpdate, db: DbSession) -> AgentFsOut:
     agent = require_agent(db, agent_id)
     return replace_agent_fs(db, agent, payload.roots)
+
+
+@router.get("/{agent_id}/secrets", response_model=AgentSecretsOut)
+def get_agent_secrets(agent_id: int, db: DbSession) -> AgentSecretsOut:
+    return secrets_out(require_agent(db, agent_id))
+
+
+@router.put("/{agent_id}/secrets", response_model=AgentSecretsOut)
+def put_agent_secrets(
+    agent_id: int, payload: AgentSecretsUpdate, db: DbSession
+) -> AgentSecretsOut:
+    agent = require_agent(db, agent_id)
+    return replace_agent_secrets(db, agent, payload.secrets)

@@ -10,7 +10,7 @@ Draft
 
 ## Scope
 
-- Existing: Backend tests for AgentOS runner / grants / network / filesystem isolation (e.g. `backend/tests/test_agentos_runner.py`, `backend/tests/test_agentos_grants.py`, `backend/tests/test_agentos_network.py`, `backend/tests/test_agentos_filesystem.py`).
+- Existing: Backend tests for AgentOS runner / grants / network / filesystem / secret-refs isolation (e.g. `backend/tests/test_agentos_runner.py`, `backend/tests/test_agentos_grants.py`, `backend/tests/test_agentos_network.py`, `backend/tests/test_agentos_filesystem.py`, `backend/tests/test_agentos_secrets.py`).
 - Planned: Expand API tests for Kanban/inbox/session flows; keep provider calls mocked (no real Anthropic in CI by default).
 - Future: Integration tests with PostgreSQL when cutover happens; contract tests; stronger CI gates.
 

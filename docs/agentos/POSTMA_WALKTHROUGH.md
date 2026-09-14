@@ -315,20 +315,22 @@ Runtime real (cuando toque sustituir el stub):
 
 ### Fase 2 — Isolation (lo más importante y lo más difícil)
 
-**Candidato de implementación siguiente en GallaIA.** Grants + network + filesystem walls: done. Remaining Isolation wall: secret refs — one wall per slice.
+**Candidato de implementación siguiente en GallaIA:** Phase 3 Templates. Isolation (grants + network + filesystem + secret refs) is **done**. UI Files/Connections are follow-ups, not Isolation blockers.
 
 1. Default deny en el **session manifest**.
 2. Grants por agente: MCP, repo, env, filesystem, collaboration list.
 3. Network `open` | `limited` + allowlist en el proxy del runner. **Done** (mock `http.fetch`).
 4. R2 + filesystem MCP con ACL server-side (`canRead`/`canWrite`/`canDelete`, path prefix, deny `../`). **Done** (mock `fs.read`/`fs.write`/`fs.delete`; SQLite ACLs; no R2 yet).
-5. Secret refs; inyección solo al start; DB solo guarda el puntero.
-6. File browser en UI.
+5. Secret refs; inyección solo al start; DB solo guarda el puntero. **Done** (`agent_secret_refs`; resolve from env; no plaintext in SQLite).
+6. File browser en UI. (Follow-up; no bloquea Isolation.)
 
 **Done when:**
 
 - Un agente “support” con un Front fake **no** puede llamar GitHub ni leer `/agents/otro/`.
 - Un `plan` **no** puede usar un GitHub que existe en el proyecto pero no está granted.
 - Delete sin `canDelete` → deny.
+- Secret refs: punteros en DB; valor resuelto al start desde env; unresolved → deny; dump SQLite sin plaintext. **Done.**
+- File browser UI: follow-up, no bloquea Isolation.
 
 ### Fase 3 — Templates, gates, cadenas, schedule
 

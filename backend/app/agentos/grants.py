@@ -1,7 +1,6 @@
 """Per-agent capability grants. Default deny: missing grant → refuse.
 
-Phase 2 Isolation — grants wall only (not network policy, filesystem ACL,
-or secret-ref injection).
+Phase 2 Isolation — grants wall (default deny).
 """
 
 from __future__ import annotations
@@ -22,6 +21,7 @@ CONTROL_PLANE_PREFIXES = frozenset(
         "claude",
         "prompt",
         "mock",
+        "secret",
     }
 )
 

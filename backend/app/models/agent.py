@@ -37,3 +37,6 @@ class Agent(Base):
     fs_acls = relationship(
         "AgentFsAcl", back_populates="agent", cascade="all, delete-orphan"
     )
+    secret_refs = relationship(
+        "AgentSecretRef", back_populates="agent", cascade="all, delete-orphan"
+    )

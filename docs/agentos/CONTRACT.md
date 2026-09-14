@@ -15,6 +15,10 @@ Shared staging on the box: `/workspace/gallaia-agentos/`
 | PUT | `/agents/{name}/grants` | Replace grants `{ "grants": [ { "kind", "name" } ] }` |
 | GET | `/agents/{name}/network` | SQLite network policy (`open` \| `limited` + host allowlist) |
 | PUT | `/agents/{name}/network` | Replace `{ "mode": "open"\|"limited", "allowlist": ["api.front.com"] }` |
+| GET | `/agents/{name}/fs` | SQLite filesystem ACL roots (`can_read` / `can_write` / `can_delete`) |
+| PUT | `/agents/{name}/fs` | Replace `{ "roots": [ { "root", "can_read", "can_write", "can_delete" } ] }` |
+| GET | `/agents/{name}/secrets` | Secret refs (names/keys only — never values) |
+| PUT | `/agents/{name}/secrets` | Replace `{ "secrets": [ { "name", "provider": "env", "key" } ] }` — raw values rejected |
 | POST | `/tasks` | `{ "name", "description"?, "assignee_agent"? }` → status `todo` |
 | GET | `/tasks` | |
 | GET | `/tasks/{id}` | |
@@ -81,4 +85,4 @@ Every seed `foundational_prompt` / `role_prompt` labeled:
 - `backend/tests/test_agentos_runner.py`
 - `docs/agentos/{README,PHASE2_PLUS}.md`
 
-Phase 2 Isolation: grants + network + filesystem walls are implemented (`agent_grants` default-deny; `agent_network_policies` `open`|`limited`; `agent_fs_acls` per-agent roots, deny `../` on mock `fs.read`/`fs.write`/`fs.delete`). Secret refs remain a later slice.
+Phase 2 Isolation: grants + network + filesystem + **secret refs** walls are implemented (`agent_grants` default-deny; `agent_network_policies` `open`|`limited`; `agent_fs_acls` per-agent roots, deny `../` on mock `fs.read`/`fs.write`/`fs.delete`; `agent_secret_refs` name/key pointers resolved from env at session start — no plaintext in SQLite). Leftover UI (Files / Connections) is a follow-up, not blocking Isolation done-when.

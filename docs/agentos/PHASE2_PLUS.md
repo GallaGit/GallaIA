@@ -1,22 +1,22 @@
-# AgentOS Phase 2+ — Isolation is the next implementation candidate
+# AgentOS Phase 2+ — Isolation complete; Templates next
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente implementación:** **Phase 2 Isolation** — grants + network + filesystem walls **done** (este PR). Siguiente muro: secret refs. **No** implementar Templates, Goals ni Triggers en este slice.
+**Siguiente implementación:** **Phase 3 Templates**. Phase 2 Isolation (grants + network + filesystem + secret refs) is **done**. UI Files / Connections are follow-ups, not Isolation blockers. **No** implementar Templates, Goals ni Triggers en este slice.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
 Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMAP.md](../ROADMAP.md) § Operación autónoma.
 
-## Phase 2 — Isolation
+## Phase 2 — Isolation **done**
 
 | Muro | Estado |
 |------|--------|
 | Per-agent MCP / repo / env grants (default deny) | **Done** |
 | Network policy `open` \| `limited` + host allowlist at runner proxy | **Done** |
-| Filesystem MCP with server-side read/write/delete ACLs and per-agent folders | **Done** (este PR) |
-| Secret refs injected at session start only (no raw tokens in DB) | Por hacer — **siguiente muro** |
-| UI surfaces: **Environment**, **Connections**, **Files** (real browser) | Por hacer |
+| Filesystem MCP with server-side read/write/delete ACLs and per-agent folders | **Done** |
+| Secret refs injected at session start only (no raw tokens in DB) | **Done** (este PR) |
+| UI surfaces: **Environment**, **Connections**, **Files** (real browser) | Follow-up — **no bloquea Isolation** |
 
 **Done when (grants wall):** a support-style agent with only a fake Front MCP cannot call GitHub.
 
@@ -24,7 +24,9 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 
 **Done when (filesystem wall):** Agent A cannot `fs.read` Agent B's `/agents/{b}/` folder; `../` is denied.
 
-**Done when (Isolation completa):** secret refs (no raw tokens in DB).
+**Done when (secret refs):** agents store name/key pointers; session start resolves from process env (or test fixture); unresolved ref denies; SQLite dump has no secret plaintext.
+
+**Isolation complete.** Leftover UI (Files / Connections) does not block this phase.
 
 ## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo)
 
