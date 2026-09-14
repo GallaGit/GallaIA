@@ -17,7 +17,18 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.exceptions import BadRequestError, UnauthorizedError
 from app.models import Agent, AgentSession, Project, Task
-from app.schemas.trigger import WebhookShape, WebhookTriggerIn, WebhookTriggerOut
+from app.schemas.trigger import (
+    LeadStatusNuevoIn,
+    LeadStatusNuevoOut,
+    WebhookShape,
+    WebhookTriggerIn,
+    WebhookTriggerOut,
+)
+from app.services.templates import (
+    LEAD_INTAKE_SLUG,
+    get_template,
+    instantiate_template,
+)
 
 # Seed agent preferred per inbound shape (lean Phase 5 slice 1).
 SHAPE_AGENT: dict[str, str] = {
@@ -122,3 +133,37 @@ def handle_webhook_trigger(
         runner=RUNNER,
         agent_name=agent.name,
     )
+
+
+def handle_lead_status_nuevo(
+    db: Session,
+    *,
+    settings: Settings,
+    secret_header: str | None,
+    body: LeadStatusNuevoIn | None = None,
+) -> LeadStatusNuevoOut:
+    """Validate secret + leadId, then instantiate lead-intake-workflow (2 cards)."""
+    verify_webhook_secret(secret_header, settings)
+
+    payload = body or LeadStatusNuevoIn()
+    raw = payload.leadId
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        raise BadRequestError("leadId is required")
+
+    lead_id = str(raw).strip()
+    template = get_template(db, LEAD_INTAKE_SLUG)
+    result = instantiate_template(
+        db,
+        template,
+        name_prefix=f"Lead #{lead_id} — ",
+    )
+    task_ids = [t.id for t in result.tasks]
+    return LeadStatusNuevoOut(
+        lead_id=lead_id,
+        template_id=result.template_id,
+        template_slug=result.template_slug,
+        run_id=result.run_id,
+        task_ids=task_ids,
+        task_count=len(task_ids),
+    )
+

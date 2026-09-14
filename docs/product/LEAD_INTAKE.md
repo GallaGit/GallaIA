@@ -1,6 +1,6 @@
 # Lead Intake — workflow de producto (doc only)
 
-**Status:** Phase 3 template seed **done** (`lead-intake-workflow` + agent seeds). Trigger `lead-status-nuevo` remains Phase 5. CRM/mail runtime still Isolation Connections follow-up.
+**Status:** Phase 3 template seed **done** (`lead-intake-workflow` + agent seeds). Trigger `lead-status-nuevo` **done** (Phase 5 slice 3: `POST /api/v1/triggers/lead-status-nuevo`). CRM/mail runtime still Isolation Connections follow-up.
 
 Segundo workflow de producto encima de AgentOS: un lead en estado CRM `nuevo` dispara una plantilla de 2 pasos. Un agente investiga dolores; otro puntúa, escribe notas/estado en el CRM y deja el abordaje del primer contacto. El correo **no se envía** hasta que el operador configure la plantilla y apruebe en Inbox.
 
@@ -96,14 +96,14 @@ flowchart TD
 
 ## 5. Trigger — `lead-status-nuevo`
 
-**Fase:** 5.
+**Fase:** 5 — **done** (slice 3).
 
+- Endpoint: `POST /api/v1/triggers/lead-status-nuevo` with header `X-Webhook-Secret` and body `{ "leadId": "..." }`.
 - Evento: alta con estado `nuevo` (garantizado por n8n en el ingreso; no un filtro ad hoc de “si por casualidad viene nuevo”).
-- Idempotencia: un `leadId` no instancia dos veces la plantilla mientras haya un run abierto o `done` reciente.
-- Payload al crear las tasks: `lead_id`, nombre, empresa, email, origen, notas actuales, URL CRM.
-- Secreto inválido del webhook → 401 (mismo criterio Phase 5).
-
-Mientras no exista Fase 5: el operador puede crear las 2 tasks a mano. El trigger espera a Phase 5.
+- On success: instantiate seed template `lead-intake-workflow` → **2 task cards** (reuse template instantiate service).
+- Secreto inválido / ausente → **401**; `leadId` ausente / blank → **400**.
+- Idempotencia (por hacer): un `leadId` no instancia dos veces la plantilla mientras haya un run abierto o `done` reciente.
+- Payload enriquecido al crear las tasks (por hacer): nombre, empresa, email, origen, notas actuales, URL CRM.
 
 ---
 
@@ -243,7 +243,7 @@ Progreso rutinario → activity de la task, no Inbox.
 | `lead-researcher` | Investigar dolores → ficha | `agentos`, `inbox`, `crm` (read) | no spawnea |
 | `lead-solutions` | Ficha → score → notas + estado CRM (+ borrador si `>= 60`) | `agentos`, `inbox`, `crm` (notes + status write) | no spawnea |
 
-Lean seeds en `backend/app/agentos/seeds.py` + template en `templates.py`. Prompts **originales de GallaAI** (no Postma). MCP `crm` es grant stub hasta Connections runtime. Trigger sigue en Phase 5.
+Lean seeds en `backend/app/agentos/seeds.py` + template en `templates.py`. Prompts **originales de GallaAI** (no Postma). MCP `crm` es grant stub hasta Connections runtime. Trigger `lead-status-nuevo` aterrizado en Phase 5 slice 3.
 
 ---
 
@@ -253,7 +253,7 @@ Lean seeds en `backend/app/agentos/seeds.py` + template en `templates.py`. Promp
 |------|------------------------------|
 | 2 Isolation + Connections | Grants `crm` / `mail`; default deny |
 | 3 Templates + gates | Cadena 2 cards; gate en paso 2 |
-| 5 Triggers | Evento `nuevo` → instantiate |
+| 5 Triggers | Evento `nuevo` → instantiate — **done** (endpoint + 2 cards) |
 | Knowledge (2+) | Archivo de plantilla de correo |
 | Gmail/HubSpot nativos | Preferir MCP nativo si existe; no duplicar con Zapier |
 

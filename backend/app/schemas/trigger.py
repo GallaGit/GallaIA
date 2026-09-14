@@ -24,3 +24,18 @@ class WebhookTriggerOut(BaseModel):
     shape: WebhookShape
     runner: str = "webhook"
     agent_name: str | None = None
+
+
+class LeadStatusNuevoIn(BaseModel):
+    """Body for POST /triggers/lead-status-nuevo."""
+
+    leadId: str | int | None = Field(default=None, description="CRM lead id")
+
+
+class LeadStatusNuevoOut(BaseModel):
+    lead_id: str
+    template_id: int
+    template_slug: str
+    run_id: str
+    task_ids: list[int]
+    task_count: int
