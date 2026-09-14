@@ -1,4 +1,4 @@
-# AgentOS Phase 2+ — Isolation complete; Phase 3 Templates in progress
+# AgentOS Phase 2+ — Isolation complete; Phase 3 Templates core done
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
@@ -28,7 +28,7 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 
 **Isolation complete.** Leftover UI (Files / Connections) does not block this phase.
 
-## Phase 3 — Templates (+ gates, chains, Skills CRUD) — **in progress**
+## Phase 3 — Templates (+ gates, chains, Skills CRUD) — **core done**
 
 ### Slice 1 — Hecho (merged #18)
 
@@ -56,24 +56,34 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Lean agent seeds `lead-researcher` / `lead-solutions` (GallaAI product prompts)
 - Pytest: instantiate → 2 cards + prior-step gate; assignees resolve
 
-### Slice 5 (este PR) — schedule-at
+### Slice 5 — schedule-at (merged #22)
 
 **Hecho**
 
-- Task.scheduled_at + PATCH /tasks/{id}/schedule + POST /scheduler/tick (optional 
-ow test clock)
-- Due tasks cleared + session stub (
-unner=scheduler, status=queued) when assignee set
+- Task.scheduled_at + PATCH /tasks/{id}/schedule + POST /scheduler/tick (optional now test clock)
+- Due tasks cleared + session stub (runner=scheduler, status=queued) when assignee set
 - Pytest: future not due; past promoted; cron deferred to Phase 5 (skipped test)
 
-### Por hacer (siguientes slices)
+### Slice 6 (este PR) — agent token cannot mark gated done
 
-- Assignee agents for compound steps (missing role seeds: `spec`, `review-coordinator`, etc.)
-- Approval gates also via MCP actor/token (agent cannot PATCH gated `done`)
+**Hecho**
+
+- Lean headers X-Actor-Type: human|agent (default human) + optional X-Agent-Id — no OAuth
+- Agent PATCH status to done on pproval_gate or unmet depends_on → **403**; human allowed
+- Run path belt-and-suspenders; pytest agent denied + human allowed
+- Docs: authentication.md + api/conventions.md
+
+**Phase 3 core done-when: satisfied** (agent cannot mark gated done; schedule-at landed; cron = Phase 5).
+
+### Por hacer (optional / next phases)
+
+- Compound assignee agents (missing role seeds: spec, 
+eview-coordinator, etc.) — optional polish
+- Cron runner / named automations — **Phase 5**
+- Phase 4 Goals
 - UI Templates / Skills surfaces
-- Phase 3 close criteria: agent token cannot mark gated `done`; schedule/cron landed or explicitly deferred
 
-**Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
+**Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 done; an agent token cannot mark a gated step done — **met**. (lead-intake-workflow: 2 cards; score gate documented in LEAD_INTAKE.)
 
 **Slice 2 done when:** instantiate `compound-engineer-workflow` → 9 cards; step 2/3 gated on prior `done`.
 

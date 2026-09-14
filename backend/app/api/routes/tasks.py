@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from sqlalchemy import select
 
+from app.api.dependencies.actor import ActorDep
 from app.api.dependencies.db import DbSession
 from app.exceptions import BadRequestError, NotFoundError
 from app.models import Agent, Project, Task
@@ -9,6 +10,7 @@ from app.schemas import SessionOut, TaskCreate, TaskOut, TaskStatusUpdate, TaskU
 from app.schemas.task import TaskScheduleUpdate
 from app.services.runner import run_task_session
 from app.services.scheduler import set_task_schedule
+from app.services.authz import assert_actor_may_mark_done
 from app.services.templates import assert_prior_step_done
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -89,12 +91,20 @@ def patch_task_schedule(task_id: int, payload: TaskScheduleUpdate, db: DbSession
 
 
 @router.patch("/{task_id}/status", response_model=TaskOut)
-def patch_task_status(task_id: int, payload: TaskStatusUpdate, db: DbSession):
+def patch_task_status(
+    task_id: int,
+    payload: TaskStatusUpdate,
+    db: DbSession,
+    actor: ActorDep,
+):
     task = db.get(Task, task_id)
     if task is None:
         raise NotFoundError(f"Task {task_id} not found")
     if payload.status not in TASK_STATUSES:
         raise BadRequestError(f"Invalid status: {payload.status}")
+    # Agent cannot mark gated / unmet-dependency steps done (403).
+    if payload.status == "done":
+        assert_actor_may_mark_done(db, task, actor)
     if payload.status in {"doing", "review", "done"}:
         assert_prior_step_done(db, task)
     task.status = payload.status

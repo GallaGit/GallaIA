@@ -139,29 +139,40 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 **Por hacer (siguientes slices Phase 3 — no este PR)**
 
 - Assignee agents for compound steps (roles seed faltantes: `spec`, `review-coordinator`, etc.).
-- Gate "token de agente no puede PATCH done" en paso gated (auth/actor).
+- Gate "token de agente no puede PATCH done" en paso gated (auth/actor). → **hecho en slice 3.6**.
 - UI Templates / Skills.
 - Phase 3 close criteria: agent token no marca gated `done`; schedule/cron aterrizado o explícitamente deferred.
 
 
-### Slice Phase 3.5 — schedule-at on tasks (este PR)
+### Slice Phase 3.5 — schedule-at on tasks (merged #22)
 
 **Hecho**
 
 - Campo Task.scheduled_at (datetime opcional, indexado) + ALTER lean en init_db para SQLite existente.
 - API PATCH /api/v1/tasks/{id}/schedule para set/clear; TaskOut expone scheduled_at.
-- Demo tick POST /api/v1/scheduler/tick (body opcional 
-ow para test clock): promueve due (scheduled_at <= now), limpia schedule, crea session stub 
-unner=scheduler / status=queued si hay assignee.
+- Demo tick POST /api/v1/scheduler/tick (body opcional now para test clock): promueve due (scheduled_at <= now), limpia schedule, crea session stub runner=scheduler / status=queued si hay assignee.
 - Pytest: future no due; past promovido + stub; clear; sin assignee sin session. Cron string runner **deferred** a Phase 5 (test skipped documentado).
 
-**Por hacer (siguientes slices Phase 3 — no este PR)**
+### Slice Phase 3.6 — agent token cannot mark gated done (este PR)
 
-- Assignee agents for compound steps (roles seed faltantes: spec, 
-eview-coordinator, etc.).
-- Gate "token de agente no puede PATCH done" en paso gated (auth/actor).
+**Hecho**
+
+- Lean actor headers: X-Actor-Type: human|agent (default human) + optional X-Agent-Id — no OAuth.
+- Authz: agent → **403** on PATCH .../status → done when pproval_gate or unmet depends_on; human still allowed (prior-step gate unchanged).
+- Run→done path: belt-and-suspenders ssert_actor_may_mark_done for agent actor (gated stays in review).
+- Pytest: agent denied + human allowed (+ HTTP 403/200); unmet dependency denied for agent.
+- Docs: [authentication.md](backend/authentication.md), [api/conventions.md](api/conventions.md).
+
+**Phase 3 core done-when: satisfied** (agent token cannot mark gated done; schedule-at landed; cron recurrence = Phase 5).
+
+**Por hacer (optional polish / next phases — no este PR)**
+
+- Compound assignee agents (roles seed faltantes: spec, 
+eview-coordinator, etc.) — optional polish.
+- Cron runner / named automations — **Phase 5**.
+- Phase 4 Goals.
 - UI Templates / Skills.
-- Phase 3 close criteria: agent token no marca gated done; cron recurrencia plena = Phase 5 (schedule-at aterrizado aquí).
+
 
 
 ---
@@ -183,11 +194,11 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**En curso: Fase 3 Templates** (slice 5: schedule-at). Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up. Resto de Phase 3–7: sketch / siguientes slices.
+**Fase 3 Templates: core done** (slice 6: agent token gate). Optional polish: compound assignee seeds. Isolation (Phase 2) **done**. Siguiente implementación: **Fase 4 Goals**; cron = Phase 5. UI Files/Connections follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **3** | Templates *(en curso)* | Slice 1–3 done (templates + Skills). Slice 4: seed `lead-intake-workflow` + agents. Luego: schedule/cron; compound assignee agents ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Lead-intake: 2 cards + gate. Full Phase 3: agent token no marca gated `done` + schedule/cron o deferred |
+| **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |

@@ -25,6 +25,8 @@ from app.services.filesystem import filesystem_acl_for_agent
 from app.services.grants import grant_set_for_agent
 from app.services.network import network_policy_for_agent
 from app.services.secrets import resolve_agent_secrets, secret_refs_for_agent
+from app.core.security import Actor
+from app.services.authz import assert_actor_may_mark_done
 from app.services.templates import assert_prior_step_done
 
 
@@ -282,6 +284,10 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         )
         db.add(inbox)
     else:
+        # Run path is always an agent actor — refuse gated done (belt + suspenders).
+        assert_actor_may_mark_done(
+            db, task, Actor(type="agent", agent_id=agent.id)
+        )
         task.status = "done"
         _append_gated(session, events, grants, "agentos.done", "Task marked done")
 

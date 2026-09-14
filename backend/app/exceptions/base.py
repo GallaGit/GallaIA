@@ -35,3 +35,9 @@ class UnresolvedSecretRefError(AppError):
             status_code=403,
         )
         self.names = tuple(names or ())
+
+
+class ForbiddenError(AppError):
+    def __init__(self, message: str = "Forbidden") -> None:
+        super().__init__(message, code="forbidden", status_code=403)
+

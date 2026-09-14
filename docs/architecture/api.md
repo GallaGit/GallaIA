@@ -20,6 +20,7 @@ Draft
   - Router composition via `app.include_router(api_router, prefix="/api/v1")`
   - Global `AppError` JSON envelope; `X-Request-ID` on responses
 - Planned: Phase 3+ endpoints (templates, goals, webhooks) only when those phases start — [ROADMAP.md](../ROADMAP.md).
+- Lean actor headers on status updates: X-Actor-Type / X-Agent-Id (see [api/conventions.md](../api/conventions.md)) — agent cannot mark gated done (403).
 - Future: pagination, filtering, richer versioning policy; single-operator auth.
 
 ## Related docs
