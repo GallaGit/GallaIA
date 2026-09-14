@@ -17,6 +17,7 @@ class AgentSeedOut(BaseModel):
     model: str
     one_job: str
     skills: list[str]
+    resolved_skills: list[dict[str, str]] = Field(default_factory=list)
     mcp: list[str]
     grants: list[dict[str, str]] = Field(default_factory=list)
     network_mode: Literal["open", "limited"] = "open"

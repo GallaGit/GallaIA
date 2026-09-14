@@ -12,10 +12,12 @@ from app.models import (  # noqa: F401
     InboxMessage,
     Project,
     Task,
+    Skill,
     TaskTemplate,
     TaskTemplateStep,
 )
 from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
+from app.services.skills import ensure_seed_skills
 from app.services.templates import ensure_seed_templates
 
 
@@ -26,5 +28,6 @@ def init_db() -> None:
         seed_if_empty(db)
         ensure_seed_agents_and_grants(db)
         ensure_seed_templates(db)
+        ensure_seed_skills(db)
     finally:
         db.close()

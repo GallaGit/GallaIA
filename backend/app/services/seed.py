@@ -136,8 +136,10 @@ def ensure_seed_agents_and_grants(db: Session) -> None:
         db, newly_created_ids={agent.id for agent, _ in newly_created}
     )
     from app.services.templates import ensure_seed_templates
+    from app.services.skills import ensure_seed_skills
 
     ensure_seed_templates(db)
+    ensure_seed_skills(db)
 
 
 def _upsert_network_policy(db: Session, agent: Agent, seed: AgentSeed) -> None:

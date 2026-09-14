@@ -6,6 +6,7 @@ from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
 from app.schemas.project import ProjectOut
 from app.schemas.secret import AgentSecretsOut, AgentSecretsUpdate, SecretRefItem
 from app.schemas.session import SessionOut
+from app.schemas.skill import SkillCreate, SkillOut, SkillUpdate, SkillUpsert
 from app.schemas.task import TaskCreate, TaskOut, TaskStatusUpdate, TaskUpdate
 from app.schemas.template import (
     TemplateInstantiateIn,
@@ -39,4 +40,8 @@ __all__ = [
     "SessionOut",
     "InboxMessageOut",
     "InboxReplyIn",
+    "SkillOut",
+    "SkillCreate",
+    "SkillUpdate",
+    "SkillUpsert",
 ]
