@@ -20,13 +20,15 @@ Base: `/api/v1/agentos`
 | GET | `/agents/{name}` | One seed |
 | GET | `/agents/{name}/grants` | SQLite grants (mcp / repo / env) |
 | PUT | `/agents/{name}/grants` | Replace grants |
+| GET | `/agents/{name}/network` | SQLite network policy (`open` \| `limited` + allowlist) |
+| PUT | `/agents/{name}/network` | Replace `{ "mode", "allowlist" }` |
 | POST | `/tasks` | `{ name, description?, assignee_agent? }` → task `todo` |
 | GET | `/tasks` | List in-memory tasks |
 | GET | `/tasks/{id}` | |
 | POST | `/tasks/{id}/run` | Optional body `{ agent_name?, runner?: "mock"\|"anthropic"\|"openrouter" }` |
 | GET | `/sessions/{id}` | Includes `tool_events` |
 
-Store is **process memory** (MVP) for tasks/sessions. Agent **grants** persist in SQLite.
+Store is **process memory** (MVP) for tasks/sessions. Agent **grants** and **network policy** persist in SQLite.
 
 ## Env
 
@@ -46,7 +48,7 @@ Every seed file and prompt string starts with / documents:
 
 ## Out of scope here
 
-Network policy, filesystem ACL, secret refs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md). **Grants wall (Phase 2 Isolation):** implemented in this slice. Sidebar map (doc only until those surfaces land): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
+Filesystem ACL, secret refs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md). **Grants + network walls (Phase 2 Isolation):** implemented in this slice. Sidebar map (doc only until those surfaces land): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
 
 Skills de Cursor/skills.sh (no el catálogo AgentOS `/skills`): [SKILLS.md](SKILLS.md).
 

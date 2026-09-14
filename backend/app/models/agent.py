@@ -28,3 +28,9 @@ class Agent(Base):
     grants = relationship(
         "AgentGrant", back_populates="agent", cascade="all, delete-orphan"
     )
+    network_policy = relationship(
+        "AgentNetworkPolicy",
+        back_populates="agent",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

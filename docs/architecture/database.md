@@ -10,7 +10,7 @@ Draft
 
 ## Scope
 
-- Existing: SQLite database for the SQLAlchemy control plane (`data/gallaia.db` / project data path); ORM models and schemas for projects, agents, agent grants, tasks, sessions, inbox. In-memory store for `/api/v1/agentos/*` (separate surface; grants persist in SQLite).
+- Existing: SQLite database for the SQLAlchemy control plane (`data/gallaia.db` / project data path); ORM models and schemas for projects, agents, agent grants, network policy, tasks, sessions, inbox. In-memory store for `/api/v1/agentos/*` (separate surface; grants and network policy persist in SQLite).
 - Planned: Stronger migration workflow (Alembic) as the schema grows with AgentOS phases; **not** “Fase 3 = Postgres” from the old chat roadmap.
 - Future: PostgreSQL when SQLite hurts — [ADR-003](../adr/ADR-003-postgresql.md) (Proposed). Vector/RAG storage = separate Future ADR.
 

@@ -19,6 +19,8 @@ class AgentSeedOut(BaseModel):
     skills: list[str]
     mcp: list[str]
     grants: list[dict[str, str]] = Field(default_factory=list)
+    network_mode: Literal["open", "limited"] = "open"
+    network_allowlist: list[str] = Field(default_factory=list)
     runner_preference: str
     prompt_origin: str
     foundational_prompt: str

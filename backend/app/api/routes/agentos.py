@@ -21,12 +21,18 @@ from app.agentos.seeds import get_seed, list_seeds
 from app.agentos.store import store
 from app.api.dependencies.db import DbSession
 from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate
+from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
 from app.services.grants import (
     grant_set_for_agent,
     grants_out,
     load_agent_by_name,
     replace_agent_grants,
     require_agent_by_name,
+)
+from app.services.network import (
+    network_out,
+    network_policy_for_agent,
+    replace_agent_network,
 )
 
 router = APIRouter(prefix="/agentos", tags=["agentos"])
@@ -41,6 +47,8 @@ def _seed_out(s) -> AgentSeedOut:
         skills=list(s.skills),
         mcp=list(s.mcp),
         grants=s.grant_set().as_list(),
+        network_mode=s.network_mode,
+        network_allowlist=list(s.network_allowlist),
         runner_preference=s.runner_preference,
         prompt_origin=s.prompt_origin,
         foundational_prompt=s.foundational_prompt,
@@ -106,6 +114,19 @@ def put_agent_grants(
 ) -> AgentGrantsOut:
     agent = require_agent_by_name(db, name)
     return replace_agent_grants(db, agent, body.grants)
+
+
+@router.get("/agents/{name}/network", response_model=AgentNetworkOut)
+def get_agent_network(name: str, db: DbSession) -> AgentNetworkOut:
+    return network_out(require_agent_by_name(db, name))
+
+
+@router.put("/agents/{name}/network", response_model=AgentNetworkOut)
+def put_agent_network(
+    name: str, body: AgentNetworkUpdate, db: DbSession
+) -> AgentNetworkOut:
+    agent = require_agent_by_name(db, name)
+    return replace_agent_network(db, agent, body.mode, body.allowlist)
 
 
 @router.post("/tasks", response_model=TaskOut, status_code=201)
@@ -206,6 +227,7 @@ def run_task(
     seed_name = body.agent_name or task.assignee_agent
     stored = load_agent_by_name(db, seed_name)
     grants = grant_set_for_agent(stored) if stored is not None else None
+    network = network_policy_for_agent(stored) if stored is not None else None
     runner = SessionRunner(store)
     try:
         result = runner.run(
@@ -213,6 +235,7 @@ def run_task(
             agent_name=body.agent_name,
             runner=body.runner,
             grants=grants,
+            network=network,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
