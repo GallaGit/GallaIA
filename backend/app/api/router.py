@@ -1,6 +1,17 @@
 from fastapi import APIRouter
 
-from app.api.routes import agentos, agents, health, inbox, projects, sessions, skills, tasks, templates
+from app.api.routes import (
+    agentos,
+    agents,
+    health,
+    inbox,
+    projects,
+    scheduler,
+    sessions,
+    skills,
+    tasks,
+    templates,
+)
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -13,6 +24,7 @@ api_router.include_router(templates.router)
 api_router.include_router(skills.router)
 api_router.include_router(sessions.router)
 api_router.include_router(inbox.router)
+api_router.include_router(scheduler.router)
 
 # Teammate in-memory AgentOS module (contract: /api/v1/agentos/*)
 api_router.include_router(agentos.router)

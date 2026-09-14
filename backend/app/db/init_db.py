@@ -1,5 +1,7 @@
 """Create tables and seed MVP data."""
 
+from sqlalchemy import text
+
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
 from app.models import (  # noqa: F401
@@ -21,8 +23,20 @@ from app.services.skills import ensure_seed_skills
 from app.services.templates import ensure_seed_templates
 
 
+def _ensure_task_schedule_column() -> None:
+    """SQLite create_all does not ADD columns; alter existing tasks table if needed."""
+    with engine.begin() as conn:
+        rows = conn.execute(text("PRAGMA table_info(tasks)")).fetchall()
+        if not rows:
+            return
+        cols = {r[1] for r in rows}
+        if "scheduled_at" not in cols:
+            conn.execute(text("ALTER TABLE tasks ADD COLUMN scheduled_at DATETIME"))
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    _ensure_task_schedule_column()
     db = SessionLocal()
     try:
         seed_if_empty(db)

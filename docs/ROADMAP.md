@@ -128,7 +128,7 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 - Glue mínimo: `AgentSeed.skills` sigue siendo slugs; list/get agentos resuelve `resolved_skills` desde el catálogo.
 - Pytest: seed + CRUD + resolve de slugs de agents.
 
-### Slice Phase 3.4 — lead-intake-workflow seed (este PR)
+### Slice Phase 3.4 — lead-intake-workflow seed (merged #21)
 
 **Hecho**
 
@@ -138,11 +138,30 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 **Por hacer (siguientes slices Phase 3 — no este PR)**
 
-- Schedule/cron on tasks (follow-ups / schedule-at).
 - Assignee agents for compound steps (roles seed faltantes: `spec`, `review-coordinator`, etc.).
 - Gate "token de agente no puede PATCH done" en paso gated (auth/actor).
 - UI Templates / Skills.
 - Phase 3 close criteria: agent token no marca gated `done`; schedule/cron aterrizado o explícitamente deferred.
+
+
+### Slice Phase 3.5 — schedule-at on tasks (este PR)
+
+**Hecho**
+
+- Campo Task.scheduled_at (datetime opcional, indexado) + ALTER lean en init_db para SQLite existente.
+- API PATCH /api/v1/tasks/{id}/schedule para set/clear; TaskOut expone scheduled_at.
+- Demo tick POST /api/v1/scheduler/tick (body opcional 
+ow para test clock): promueve due (scheduled_at <= now), limpia schedule, crea session stub 
+unner=scheduler / status=queued si hay assignee.
+- Pytest: future no due; past promovido + stub; clear; sin assignee sin session. Cron string runner **deferred** a Phase 5 (test skipped documentado).
+
+**Por hacer (siguientes slices Phase 3 — no este PR)**
+
+- Assignee agents for compound steps (roles seed faltantes: spec, 
+eview-coordinator, etc.).
+- Gate "token de agente no puede PATCH done" en paso gated (auth/actor).
+- UI Templates / Skills.
+- Phase 3 close criteria: agent token no marca gated done; cron recurrencia plena = Phase 5 (schedule-at aterrizado aquí).
 
 
 ---
@@ -164,7 +183,7 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**En curso: Fase 3 Templates** (slice 4: lead-intake seed). Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up. Resto de Phase 3–7: sketch / siguientes slices.
+**En curso: Fase 3 Templates** (slice 5: schedule-at). Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up. Resto de Phase 3–7: sketch / siguientes slices.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
