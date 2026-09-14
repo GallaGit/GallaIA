@@ -1,13 +1,14 @@
 from fastapi import APIRouter
 
 from app.api.dependencies.db import DbSession
-from app.schemas.goal import GoalCreate, GoalOut, GoalSpawnOut
+from app.schemas.goal import GoalCreate, GoalOrchestrateOut, GoalOut, GoalSpawnOut
 from app.services.goals import (
     approve_goal,
     create_goal,
     get_goal,
     goal_out,
     list_goals,
+    orchestrate_goal,
     spawn_goal,
 )
 
@@ -37,5 +38,11 @@ def api_approve_goal(goal_id: int, db: DbSession):
 
 @router.post("/{goal_id}/spawn", response_model=GoalSpawnOut, status_code=201)
 def api_spawn_goal(goal_id: int, db: DbSession):
-    """Stub spawn. Returns 400 if goal is not approved (or already active)."""
+    """Stub spawn. 400 if not approved; 403 if spend_cap blocks."""
     return spawn_goal(db, goal_id)
+
+
+@router.post("/{goal_id}/orchestrate", response_model=GoalOrchestrateOut)
+def api_orchestrate_goal(goal_id: int, db: DbSession):
+    """Advance one orchestrator step (complete session → check DoD → spawn/done/stuck)."""
+    return orchestrate_goal(db, goal_id)

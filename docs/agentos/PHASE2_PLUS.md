@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 4 Goals** (slice 1: foundation — Goal + DoD approve + spawn gate). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
+**En curso:** **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -69,7 +69,7 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 **Hecho**
 
 - Lean headers X-Actor-Type: human|agent (default human) + optional X-Agent-Id — no OAuth
-- Agent PATCH status to done on pproval_gate or unmet depends_on → **403**; human allowed
+- Agent PATCH status to done on approval_gate or unmet depends_on → **403**; human allowed
 - Run path belt-and-suspenders; pytest agent denied + human allowed
 - Docs: authentication.md + api/conventions.md
 
@@ -80,29 +80,36 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Compound assignee agents (missing role seeds: spec, 
 eview-coordinator, etc.) — optional polish
 - Cron runner / named automations — **Phase 5**
-- Phase 4 Goals → **started** (slice 1)
+- Phase 4 Goals → **near done** (slice 2 orchestrator+rails)
 - UI Templates / Skills surfaces
 
 **Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 done; an agent token cannot mark a gated step done — **met**. (lead-intake-workflow: 2 cards; score gate documented in LEAD_INTAKE.)
 
 **Slice 2 done when:** instantiate `compound-engineer-workflow` → 9 cards; step 2/3 gated on prior `done`.
 
-## Phase 4 — Goals (gauntlet loop) *(in progress)*
+## Phase 4 — Goals (gauntlet loop) *(near done)*
 
-### Slice 1 — foundation (este PR)
+### Slice 1 — foundation (merged #24)
 
 - SQLite `Goal` + DoD items (JSON list); status `draft|approved|active|done`
 - API create / list / get / approve / spawn stub
 - Spawn blocked until human approve (`draft` → 400)
 - Pytest: unapproved blocked; approve → placeholder session + task link
 
-### Por hacer (later Phase 4 slices)
+### Slice 2 — orchestrator stub + safety rails (este PR)
 
-- Orchestrator after each session picks next specialist or completes
-- Safety rails: spend cap, max wall time, stuck threshold (~19 identical iterations)
+- Rails: `spend_cap` / `spend_accrued` / `max_wall_seconds` / `stuck_threshold` (default 19); `dod_checked`; status `stuck`
+- `POST /api/v1/goals/{id}/orchestrate` advances one step (complete open session → check DoD → spawn next or `done`)
+- Cap `0.00` → **403**; wall exceeded → **400**; last N identical summaries → `stuck`
+- Pytest: 2-item DoD → ≥2 sessions → done; cap + stuck + HTTP
+
+### Por hacer (polish — no este PR)
+
 - Progress log / goal inbox / runnerPreference
+- Real specialist routing + auto-hook after live session end
+- Spend accrual from real provider usage
 
-**Done when (full Phase 4):** a 2-item DoD goal completes via ≥2 specialist sessions; rails stop runaway loops.
+**Done when (full Phase 4):** a 2-item DoD goal completes via ≥2 specialist sessions; rails stop runaway loops — **met on stub path**.
 
 ## Phase 5 — Triggers (+ automations; Ripples leave theory)
 

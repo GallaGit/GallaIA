@@ -158,8 +158,8 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 **Hecho**
 
 - Lean actor headers: X-Actor-Type: human|agent (default human) + optional X-Agent-Id — no OAuth.
-- Authz: agent → **403** on PATCH .../status → done when pproval_gate or unmet depends_on; human still allowed (prior-step gate unchanged).
-- Run→done path: belt-and-suspenders ssert_actor_may_mark_done for agent actor (gated stays in review).
+- Authz: agent → **403** on PATCH .../status → done when approval_gate or unmet depends_on; human still allowed (prior-step gate unchanged).
+- Run→done path: belt-and-suspenders assert_actor_may_mark_done for agent actor (gated stays in review).
 - Pytest: agent denied + human allowed (+ HTTP 403/200); unmet dependency denied for agent.
 - Docs: [authentication.md](backend/authentication.md), [api/conventions.md](api/conventions.md).
 
@@ -170,12 +170,12 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 - Compound assignee agents (roles seed faltantes: spec, 
 eview-coordinator, etc.) — optional polish.
 - Cron runner / named automations — **Phase 5**.
-- Phase 4 Goals → **started** (slice 4.1).
+- Phase 4 Goals → **near done** (slice 4.2 orchestrator+rails; polish left).
 - UI Templates / Skills.
 
 ---
 
-### Slice Phase 4.1 — Goals foundation (este PR)
+### Slice Phase 4.1 — Goals foundation (merged #24)
 
 **Hecho**
 
@@ -183,14 +183,22 @@ eview-coordinator, etc.) — optional polish.
 - API: `POST/GET /api/v1/goals`, `GET /api/v1/goals/{id}`, `POST .../approve` (draft→approved), `POST .../spawn` stub.
 - Spawn gate: unapproved (`draft`) → **400**; approved → placeholder `AgentSession` (`runner=goal-spawn`) + task link; goal → `active`.
 - Pytest: cannot spawn unapproved; approve then spawn creates session/task link; HTTP 400/201.
-- Phase 3 core marked complete; Phase 4 in progress.
+
+### Slice Phase 4.2 — Orchestrator stub + safety rails (este PR)
+
+**Hecho**
+
+- Rails on Goal: `spend_cap`, `spend_accrued`, `max_wall_seconds`, `stuck_threshold` (default 19); `dod_checked` parallel to DoD; status `stuck`.
+- `POST /api/v1/goals/{id}/orchestrate`: completes open session stub → checks next DoD → spawns next specialist or marks `done`.
+- Cap `0.00` → **403** on spawn/orchestrate; wall exceeded → **400**; last N identical session summaries → status `stuck`.
+- Pytest: 2-item DoD completes via ≥2 sessions; cap 0.00 rejects; stuck rail; HTTP orchestrate + 403.
+- Phase 4 done-when (DoD ≥2 sessions + cap 0.00 + stuck/wall rails) **met** for stub path.
 
 **Por hacer (siguientes slices Phase 4 — no este PR)**
 
-- Orquestador post-sesión (elige siguiente especialista o completa DoD).
-- Rails: spend cap, max wall time, stuck threshold (~19).
 - Progress log append-only / goal inbox / `runnerPreference` por goal.
-- Done-when completo: DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn.
+- Real specialist routing (not stub summaries); auto-hook after live session end.
+- Spend accrual from real provider usage (not stub `STUB_SESSION_COST`).
 
 
 ## Fases AgentOS
@@ -207,12 +215,12 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: in progress** (slice 1 foundation: Goal + DoD approve + spawn gate). Isolation (Phase 2) **done**. Cron = Phase 5. UI Files/Connections follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 orchestrator stub + rails; done-when stub path met). Isolation (Phase 2) **done**. Cron = Phase 5. UI Files/Connections follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
-| **4** | Goals *(in progress)* | Slice 1: Goal+DoD approve+spawn gate. Later: orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
+| **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
