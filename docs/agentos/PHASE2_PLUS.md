@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** Phase 6 YAML / CLI (next). **Phase 5 Triggers core done** (webhook + cron + lead-status-nuevo). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
+**En curso:** Phase 6 YAML / CLI *(slice 1: agentos.yml export/import)*. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -131,7 +131,7 @@ eview-coordinator, etc.) — optional polish
 - Lean `interval_minutes` (no croniter); action `create_task` → task + session stub (`runner=automation`)
 - Pytest: due fires; not-due / disabled do not; HTTP CRUD + tick
 
-### Slice 3 (este PR) — lead-status-nuevo → lead-intake-workflow
+### Slice 3 — lead-status-nuevo → lead-intake-workflow (merged #28)
 
 **Hecho**
 
@@ -140,21 +140,31 @@ eview-coordinator, etc.) — optional polish
 - Bad secret → **401**; missing `leadId` → **400**; success → **200** with 2 tasks
 - Pytest: 401 / 400 / 200 paths — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
 
-**Por hacer**
-
-- **Ripples** UI (cause→effect edges) — optional
-- Phase 6 YAML / CLI
-- Phase 7 PWA
-- Seed shapes polish: support-inbound, bug-report → diagnostic then (on human OK) fix chain
-- No Mac-only workers required; runner stays `mock` | Anthropic API | later Linux VM
-
 **Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron/interval fires on a test clock — **met**; `lead-status-nuevo` instantiates `lead-intake-workflow` (2 cards) — **met**.
 
 **Phase 5 core done-when: satisfied.**
 
-## Later (see ROADMAP Fases 6–7)
+## Phase 6 — YAML / CLI *(in progress)*
 
-- **Fase 6** YAML / CLI (`agentos.yml` push/pull) — Admin sync
+### Slice 1 (este PR) — agentos.yml export/import
+
+**Hecho**
+
+- Minimal schema v1 (agents + templates): [AGENTOS_YML.md](AGENTOS_YML.md)
+- `app.services.agentos_yml` export/import (upsert by agent name / template slug)
+- CLI: `python -m app.cli export` / `import`
+- Pytest: create from YAML; idempotent update; export→import round-trip
+
+**Por hacer**
+
+- Full CLI parity (push/pull, project/goal/task/skill create, agent update)
+- YAML: skills, grants, network, fs, secret refs
+- Phase 7 PWA; Ripples UI optional
+
+**Done when (full Phase 6):** push produces same agents+template as UI; pull after push is identity (whitespace aside) — **slice 1 met for agents+templates**.
+
+## Later (see ROADMAP Fase 7)
+
 - **Fase 7** PWA inbox, live viewer, **Activity** feed, local runner routing
 
 ## Explicit non-goals for GallaIA now

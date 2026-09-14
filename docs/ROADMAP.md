@@ -221,7 +221,7 @@ eview-coordinator, etc.) — optional polish.
 - Lean schedule: `interval_minutes` only (no croniter). First fire when `last_fired_at` is null.
 - Pytest: due on test clock creates task+session; not-due / disabled do not; HTTP CRUD + tick.
 
-### Slice Phase 5.3 — lead-status-nuevo → lead-intake-workflow (este PR)
+### Slice Phase 5.3 — lead-status-nuevo → lead-intake-workflow (merged #28)
 
 **Hecho**
 
@@ -230,16 +230,25 @@ eview-coordinator, etc.) — optional polish.
 - Bad/missing secret → **401**; missing/blank `leadId` → **400**.
 - Pytest: 401, 400, 200 with 2 tasks created.
 
-**Por hacer (optional / next phases — no este PR)**
-
-- Ripples UI (cause→effect edges) — optional.
-- Phase 6 YAML / CLI.
-- Phase 7 PWA.
-- Optional: cron-string parsing (croniter) if interval_minutes is not enough.
-- Seed chain polish: support-inbound / bug-report diagnostic → human OK → fix.
-- Idempotency polish for repeated `leadId` (LEAD_INTAKE §5).
-
 **Phase 5 core done-when: satisfied** (webhook + cron/interval + lead-status-nuevo).
+
+---
+
+### Slice Phase 6.1 — agentos.yml export/import (este PR)
+
+**Hecho**
+
+- Minimal `agentos.yml` schema v1 (agents + templates) documented in [agentos/AGENTOS_YML.md](agentos/AGENTOS_YML.md).
+- Module `app.services.agentos_yml`: export agents/templates → YAML; import/apply upsert by agent `name` / template `slug`.
+- Tiny CLI: `python -m app.cli export` / `import` (from `backend/`).
+- Pytest: import creates matching agent+template; idempotent update; export→import round-trip.
+
+**Por hacer (no este PR)**
+
+- Full CLI parity (`push`/`pull` aliases, project/goal/task/skill create, agent update).
+- YAML coverage for skills, grants, network, fs, secret refs.
+- Phase 7 PWA.
+- Ripples UI; optional croniter; leadId idempotency polish.
 
 
 ## Fases AgentOS
@@ -256,14 +265,14 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (webhook + cron + lead-status-nuevo). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: in progress** (slice 1 agentos.yml export/import). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
 | **5** | Triggers *(core done)* | Slices 1–3: webhook + interval automations + `lead-status-nuevo` → `lead-intake-workflow`. Optional: Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** secreto malo → 401; bueno → task+sesión; cron/interval test-clock; lead-status-nuevo → 2 cards |
-| **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
+| **6** | YAML / CLI *(in progress)* | Slice 1: `agentos.yml` export/import + tiny CLI. Left: full CLI parity, skills/grants in YAML ([AGENTOS_YML.md](agentos/AGENTOS_YML.md)) | Push produce mismos agentes+template que la UI — **slice 1: export/import round-trip met** |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
 
 Detalle corto: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Walkthrough completo: [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md).
@@ -313,6 +322,7 @@ docs/
 │   ├── CONTRACT.md
 │   ├── PHASE2_PLUS.md
 │   ├── SKILLS.md              ← skills.sh (Cursor); no vendor
+│   ├── AGENTOS_YML.md         ← Phase 6 agentos.yml schema
 │   └── POSTMA_WALKTHROUGH.md
 │
 ├── architecture/
