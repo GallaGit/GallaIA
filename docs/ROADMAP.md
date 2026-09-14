@@ -234,7 +234,7 @@ eview-coordinator, etc.) — optional polish.
 
 ---
 
-### Slice Phase 6.1 — agentos.yml export/import (este PR)
+### Slice Phase 6.1 — agentos.yml export/import (merged #29)
 
 **Hecho**
 
@@ -243,12 +243,22 @@ eview-coordinator, etc.) — optional polish.
 - Tiny CLI: `python -m app.cli export` / `import` (from `backend/`).
 - Pytest: import creates matching agent+template; idempotent update; export→import round-trip.
 
-**Por hacer (no este PR)**
+### Slice Phase 6.2 — CLI create/update (este PR)
 
-- Full CLI parity (`push`/`pull` aliases, project/goal/task/skill create, agent update).
-- YAML coverage for skills, grants, network, fs, secret refs.
-- Phase 7 PWA.
-- Ripples UI; optional croniter; leadId idempotency polish.
+**Hecho**
+
+- `python -m app.cli create-agent --name … --role …` (or `--from-yaml` snippet) — same Agent row shape as YAML import / `GET /api/v1/agents`.
+- `python -m app.cli update-agent --name …` partial fields (`--role` / `--title` / `--model` / …).
+- Optional `create-template` (lean); bulk templates stay on `import`/`push`.
+- Aliases `pull`=`export`, `push`=`import`.
+- Pytest + CLI subprocess smoke (create → update → export contains agent).
+
+**Phase 6 core done-when: satisfied** (push/pull + CLI create/update produce same agents+templates as UI list).
+
+**Por hacer (next — Phase 7 / polish)**
+
+- Phase 7 PWA / live.
+- Optional: YAML skills/grants/network/fs/secrets; goal/task/skill CLI; Ripples UI; croniter; leadId idempotency polish.
 
 
 ## Fases AgentOS
@@ -265,14 +275,14 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: in progress** (slice 1 agentos.yml export/import). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: core done** (export/import + CLI create/update). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
 | **5** | Triggers *(core done)* | Slices 1–3: webhook + interval automations + `lead-status-nuevo` → `lead-intake-workflow`. Optional: Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** secreto malo → 401; bueno → task+sesión; cron/interval test-clock; lead-status-nuevo → 2 cards |
-| **6** | YAML / CLI *(in progress)* | Slice 1: `agentos.yml` export/import + tiny CLI. Left: full CLI parity, skills/grants in YAML ([AGENTOS_YML.md](agentos/AGENTOS_YML.md)) | Push produce mismos agentes+template que la UI — **slice 1: export/import round-trip met** |
+| **6** | YAML / CLI *(core done)* | Slices 1–2: `agentos.yml` export/import + CLI create/update (+ push/pull aliases). Optional: skills/grants in YAML; goal/task/skill CLI ([AGENTOS_YML.md](agentos/AGENTOS_YML.md)) | **Satisfied:** push/CLI produce mismos agentes+template que la UI list; pull tras push identidad (whitespace aside) |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
 
 Detalle corto: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Walkthrough completo: [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md).

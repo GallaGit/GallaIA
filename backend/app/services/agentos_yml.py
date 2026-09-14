@@ -1,7 +1,8 @@
-"""Export / import agentos.yml (Phase 6 slice 1).
+"""Export / import agentos.yml + CLI create/update (Phase 6).
 
 Lean projection of agents + templates. Idempotent apply by agent.name /
-template.slug within a project.
+template.slug within a project. create_agent / update_agent share the same
+row shape as import so CLI and UI/API list the same agents.
 """
 
 from __future__ import annotations
@@ -30,6 +31,14 @@ def _require_project(db: Session, project_slug: str = "default") -> Project:
     if project is None:
         raise NotFoundError(f"Project slug={project_slug!r} not found")
     return project
+
+
+def _get_agent_by_name(
+    db: Session, project: Project, name: str
+) -> Agent | None:
+    return db.scalar(
+        select(Agent).where(Agent.project_id == project.id, Agent.name == name)
+    )
 
 
 def export_agentos_yml(
@@ -125,14 +134,214 @@ def load_agentos_yml(path: Path | str) -> AgentOsYml:
     return parse_agentos_yml(text)
 
 
+def write_agentos_yml(path: Path | str, doc: AgentOsYml) -> None:
+    Path(path).write_text(dump_agentos_yml(doc), encoding="utf-8")
+
+
+def parse_agent_yml_snippet(raw: str | dict[str, Any]) -> AgentYml:
+    """Parse a single-agent YAML snippet or a mini agentos.yml with one agent.
+
+    Accepts:
+      - a bare agent mapping: {name, title, ...}
+      - {agents: [{...}]} (uses first entry)
+      - full AgentOsYml (uses first agent)
+    """
+    if isinstance(raw, str):
+        data = yaml.safe_load(raw)
+    else:
+        data = raw
+    if data is None:
+        raise BadRequestError("agent YAML snippet is empty")
+    if not isinstance(data, dict):
+        raise BadRequestError("agent YAML snippet must be a mapping")
+    if "agents" in data:
+        doc = parse_agentos_yml(data)
+        if not doc.agents:
+            raise BadRequestError("agent YAML snippet has empty agents list")
+        return doc.agents[0]
+    if "name" in data:
+        try:
+            return AgentYml.model_validate(data)
+        except Exception as exc:  # noqa: BLE001
+            raise BadRequestError(f"Invalid agent YAML: {exc}") from exc
+    raise BadRequestError(
+        "agent YAML snippet needs 'name' or an 'agents' list"
+    )
+
+
+def parse_template_yml_snippet(raw: str | dict[str, Any]) -> TemplateYml:
+    """Parse a single-template YAML snippet or mini agentos.yml with one template."""
+    if isinstance(raw, str):
+        data = yaml.safe_load(raw)
+    else:
+        data = raw
+    if data is None:
+        raise BadRequestError("template YAML snippet is empty")
+    if not isinstance(data, dict):
+        raise BadRequestError("template YAML snippet must be a mapping")
+    if "templates" in data:
+        doc = parse_agentos_yml(data)
+        if not doc.templates:
+            raise BadRequestError("template YAML snippet has empty templates list")
+        return doc.templates[0]
+    if "slug" in data:
+        try:
+            return TemplateYml.model_validate(data)
+        except Exception as exc:  # noqa: BLE001
+            raise BadRequestError(f"Invalid template YAML: {exc}") from exc
+    raise BadRequestError(
+        "template YAML snippet needs 'slug' or a 'templates' list"
+    )
+
+
+def create_agent(
+    db: Session,
+    *,
+    name: str,
+    title: str | None = None,
+    role_prompt: str = "",
+    model: str = "claude-sonnet-4",
+    foundational_prompt: str = "",
+    runner_preference: str = "mock",
+    project_slug: str = "default",
+    commit: bool = True,
+) -> Agent:
+    """Create an agent row (same shape as YAML import / GET /api/v1/agents)."""
+    project = _require_project(db, project_slug)
+    if _get_agent_by_name(db, project, name) is not None:
+        raise BadRequestError(f"Agent name={name!r} already exists")
+
+    entry = AgentYml(
+        name=name,
+        title=title if title else name,
+        model=model,
+        foundational_prompt=foundational_prompt,
+        role_prompt=role_prompt,
+        runner_preference=runner_preference,
+    )
+    agent = Agent(
+        project_id=project.id,
+        name=entry.name,
+        title=entry.title,
+        model=entry.model,
+        foundational_prompt=entry.foundational_prompt,
+        role_prompt=entry.role_prompt,
+        runner_preference=entry.runner_preference,
+    )
+    db.add(agent)
+    if commit:
+        db.commit()
+        db.refresh(agent)
+    else:
+        db.flush()
+    return agent
+
+
+def create_agent_from_yml(
+    db: Session,
+    entry: AgentYml,
+    *,
+    project_slug: str = "default",
+    commit: bool = True,
+) -> Agent:
+    """Create from a validated AgentYml (fails if name exists)."""
+    return create_agent(
+        db,
+        name=entry.name,
+        title=entry.title,
+        role_prompt=entry.role_prompt,
+        model=entry.model,
+        foundational_prompt=entry.foundational_prompt,
+        runner_preference=entry.runner_preference,
+        project_slug=project_slug,
+        commit=commit,
+    )
+
+
+def update_agent(
+    db: Session,
+    *,
+    name: str,
+    title: str | None = None,
+    role_prompt: str | None = None,
+    model: str | None = None,
+    foundational_prompt: str | None = None,
+    runner_preference: str | None = None,
+    project_slug: str = "default",
+    commit: bool = True,
+) -> Agent:
+    """Partial update by agent name (same fields as YAML import / UI)."""
+    project = _require_project(db, project_slug)
+    agent = _get_agent_by_name(db, project, name)
+    if agent is None:
+        raise NotFoundError(f"Agent name={name!r} not found")
+
+    if title is not None:
+        agent.title = title
+    if role_prompt is not None:
+        agent.role_prompt = role_prompt
+    if model is not None:
+        agent.model = model
+    if foundational_prompt is not None:
+        agent.foundational_prompt = foundational_prompt
+    if runner_preference is not None:
+        agent.runner_preference = runner_preference
+
+    if commit:
+        db.commit()
+        db.refresh(agent)
+    else:
+        db.flush()
+    return agent
+
+
+def create_template(
+    db: Session,
+    entry: TemplateYml,
+    *,
+    project_slug: str = "default",
+    commit: bool = True,
+) -> TaskTemplate:
+    """Create a template (fails if slug exists). Prefer import for bulk."""
+    project = _require_project(db, project_slug)
+    existing = db.scalar(
+        select(TaskTemplate).where(TaskTemplate.slug == entry.slug)
+    )
+    if existing is not None:
+        raise BadRequestError(f"Template slug={entry.slug!r} already exists")
+
+    template = TaskTemplate(
+        project_id=project.id,
+        slug=entry.slug,
+        name=entry.name,
+        description=entry.description,
+    )
+    db.add(template)
+    db.flush()
+    for step in sorted(entry.steps, key=lambda s: s.position):
+        db.add(
+            TaskTemplateStep(
+                template_id=template.id,
+                position=step.position,
+                name=step.name,
+                description=step.description,
+                assignee_agent_name=step.assignee_agent_name,
+                approval_gate=step.approval_gate,
+                requires_previous_done=step.requires_previous_done,
+            )
+        )
+    if commit:
+        db.commit()
+        db.refresh(template)
+    else:
+        db.flush()
+    return template
+
+
 def _upsert_agent(
     db: Session, project: Project, entry: AgentYml, result: AgentOsImportResult
 ) -> None:
-    existing = db.scalar(
-        select(Agent).where(
-            Agent.project_id == project.id, Agent.name == entry.name
-        )
-    )
+    existing = _get_agent_by_name(db, project, entry.name)
     if existing is None:
         db.add(
             Agent(
@@ -241,7 +450,3 @@ def import_agentos_yml(
     else:
         db.flush()
     return result
-
-
-def write_agentos_yml(path: Path | str, doc: AgentOsYml) -> None:
-    Path(path).write_text(dump_agentos_yml(doc), encoding="utf-8")
