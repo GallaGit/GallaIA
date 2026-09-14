@@ -14,22 +14,95 @@ from app.schemas.task import TaskOut
 from app.schemas.template import TemplateInstantiateOut, TemplateOut
 
 DEMO_TWO_STEP_SLUG = "demo-two-step"
+COMPOUND_ENGINEER_SLUG = "compound-engineer-workflow"
+
+# Phase 3 sketch (POSTMA_WALKTHROUGH §2.8): N+1 gated on N done.
+_COMPOUND_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
+    # position, name, description, assignee_agent_name, approval_gate, requires_previous_done
+    (
+        1,
+        "Escribir spec",
+        "Draft feature spec (human approval gate). Typical variable: branchName.",
+        "spec",
+        True,
+        False,
+    ),
+    (
+        2,
+        "Plan",
+        "Write implementation plan; notify via inbox/activity.",
+        "plan",
+        False,
+        True,
+    ),
+    (
+        3,
+        "Plan review",
+        "Coordinator spawns plan reviewers (feasibility, scope, coherence, risk).",
+        "review-coordinator",
+        False,
+        True,
+    ),
+    (
+        4,
+        "Revisar plan",
+        "Plan agent revises plan from review feedback.",
+        "plan",
+        False,
+        True,
+    ),
+    (
+        5,
+        "Implementacion + E2E",
+        "Implement feature and run E2E inside the workflow.",
+        "implementation-plan-executioner",
+        False,
+        True,
+    ),
+    (
+        6,
+        "Code review",
+        "Coordinator-driven code review of the implementation.",
+        "review-coordinator",
+        False,
+        True,
+    ),
+    (
+        7,
+        "Aplicar fixes",
+        "Senior-dev applies review fixes.",
+        "senior-dev",
+        False,
+        True,
+    ),
+    (
+        8,
+        "Wiki",
+        "Librarian updates product wiki / knowledge.",
+        "librarian",
+        False,
+        True,
+    ),
+    (
+        9,
+        "Review humano del PR",
+        "Human merge gate on the final PR.",
+        "human",
+        True,
+        True,
+    ),
+)
 
 
-def ensure_seed_templates(db: Session) -> None:
-    """Idempotent Phase 3 seed: demo-two-step (2 cards; step 2 gated on step 1 done)."""
-    project = db.scalar(select(Project).where(Project.slug == "default"))
-    if project is None:
-        return
-
+def _seed_demo_two_step(db: Session, project_id: int) -> bool:
     existing = db.scalar(
         select(TaskTemplate).where(TaskTemplate.slug == DEMO_TWO_STEP_SLUG)
     )
     if existing is not None:
-        return
+        return False
 
     template = TaskTemplate(
-        project_id=project.id,
+        project_id=project_id,
         slug=DEMO_TWO_STEP_SLUG,
         name="Demo two-step workflow",
         description=(
@@ -61,7 +134,56 @@ def ensure_seed_templates(db: Session) -> None:
             ),
         ]
     )
-    db.commit()
+    return True
+
+
+def _seed_compound_engineer(db: Session, project_id: int) -> bool:
+    existing = db.scalar(
+        select(TaskTemplate).where(TaskTemplate.slug == COMPOUND_ENGINEER_SLUG)
+    )
+    if existing is not None:
+        return False
+
+    template = TaskTemplate(
+        project_id=project_id,
+        slug=COMPOUND_ENGINEER_SLUG,
+        name="Compound engineer workflow",
+        description=(
+            "Phase 3 seed: 9-step feature build (POSTMA 2.8). "
+            "Each step after 1 is gated on the previous done. "
+            "Gates on steps 1 and 9 (human approve/merge)."
+        ),
+    )
+    db.add(template)
+    db.flush()
+    db.add_all(
+        [
+            TaskTemplateStep(
+                template_id=template.id,
+                position=pos,
+                name=name,
+                description=desc,
+                assignee_agent_name=assignee,
+                approval_gate=gate,
+                requires_previous_done=req_prev,
+            )
+            for pos, name, desc, assignee, gate, req_prev in _COMPOUND_STEPS
+        ]
+    )
+    return True
+
+
+def ensure_seed_templates(db: Session) -> None:
+    """Idempotent Phase 3 seeds: demo-two-step + compound-engineer-workflow."""
+    project = db.scalar(select(Project).where(Project.slug == "default"))
+    if project is None:
+        return
+
+    dirty = False
+    dirty = _seed_demo_two_step(db, project.id) or dirty
+    dirty = _seed_compound_engineer(db, project.id) or dirty
+    if dirty:
+        db.commit()
 
 
 def _load_template(db: Session, template_id: int | None = None, slug: str | None = None) -> TaskTemplate:

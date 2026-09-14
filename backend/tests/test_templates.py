@@ -1,4 +1,4 @@
-"""Phase 3 Templates slice 1: instantiate + prior-step gate."""
+"""Phase 3 Templates: instantiate + prior-step gate (demo + compound)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from app.models import Agent, Task, TaskTemplate
 from app.services.runner import run_task_session
 from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
 from app.services.templates import (
+    COMPOUND_ENGINEER_SLUG,
     DEMO_TWO_STEP_SLUG,
     assert_prior_step_done,
     get_template,
@@ -140,7 +141,78 @@ def test_instantiate_idempotent_seed():
 
         ensure_seed_templates(db)
         ensure_seed_templates(db)
-        rows = list(db.scalars(select(TaskTemplate).where(TaskTemplate.slug == DEMO_TWO_STEP_SLUG)).all())
+        rows = list(
+            db.scalars(
+                select(TaskTemplate).where(TaskTemplate.slug == DEMO_TWO_STEP_SLUG)
+            ).all()
+        )
         assert len(rows) == 1
+        compound_rows = list(
+            db.scalars(
+                select(TaskTemplate).where(TaskTemplate.slug == COMPOUND_ENGINEER_SLUG)
+            ).all()
+        )
+        assert len(compound_rows) == 1
+    finally:
+        db.close()
+
+
+def test_compound_engineer_seed_nine_steps():
+    db = _memory_db()
+    try:
+        templates = list_templates(db)
+        slugs = {t.slug for t in templates}
+        assert COMPOUND_ENGINEER_SLUG in slugs
+        tpl = get_template(db, COMPOUND_ENGINEER_SLUG)
+        steps = sorted(tpl.steps, key=lambda s: s.position)
+        assert len(steps) == 9
+        assert [s.position for s in steps] == list(range(1, 10))
+        assert steps[0].requires_previous_done is False
+        assert steps[0].approval_gate is True
+        for step in steps[1:]:
+            assert step.requires_previous_done is True
+        assert steps[8].approval_gate is True
+        assert steps[8].position == 9
+    finally:
+        db.close()
+
+
+def test_compound_instantiate_nine_cards_and_gates():
+    db = _memory_db()
+    try:
+        template = get_template(db, COMPOUND_ENGINEER_SLUG)
+        result = instantiate_template(db, template)
+        assert result.template_slug == COMPOUND_ENGINEER_SLUG
+        assert len(result.tasks) == 9
+        tasks = result.tasks
+        assert tasks[0].depends_on_task_id is None
+        for i in range(1, 9):
+            assert tasks[i].step_index == i + 1
+            assert tasks[i].depends_on_task_id == tasks[i - 1].id
+            assert tasks[i].template_run_id == result.run_id
+
+        t1 = db.get(Task, tasks[0].id)
+        t2 = db.get(Task, tasks[1].id)
+        t3 = db.get(Task, tasks[2].id)
+        assert t1 is not None and t2 is not None and t3 is not None
+
+        with pytest.raises(BadRequestError) as blocked2:
+            assert_prior_step_done(db, t2)
+        assert "blocked" in blocked2.value.message.lower()
+
+        with pytest.raises(BadRequestError) as blocked3:
+            assert_prior_step_done(db, t3)
+        assert "blocked" in blocked3.value.message.lower()
+
+        t1.status = "done"
+        db.commit()
+        assert_prior_step_done(db, t2)  # no raise
+
+        with pytest.raises(BadRequestError):
+            assert_prior_step_done(db, t3)
+
+        t2.status = "done"
+        db.commit()
+        assert_prior_step_done(db, t3)  # no raise
     finally:
         db.close()
