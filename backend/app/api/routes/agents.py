@@ -4,7 +4,8 @@ from sqlalchemy import select
 from app.api.dependencies.db import DbSession
 from app.exceptions import NotFoundError
 from app.models import Agent
-from app.schemas import AgentOut
+from app.schemas import AgentGrantsOut, AgentGrantsUpdate, AgentOut
+from app.services.grants import grants_out, replace_agent_grants, require_agent
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -23,3 +24,16 @@ def get_agent(agent_id: int, db: DbSession):
     if agent is None:
         raise NotFoundError(f"Agent {agent_id} not found")
     return agent
+
+
+@router.get("/{agent_id}/grants", response_model=AgentGrantsOut)
+def get_agent_grants(agent_id: int, db: DbSession) -> AgentGrantsOut:
+    return grants_out(require_agent(db, agent_id))
+
+
+@router.put("/{agent_id}/grants", response_model=AgentGrantsOut)
+def put_agent_grants(
+    agent_id: int, payload: AgentGrantsUpdate, db: DbSession
+) -> AgentGrantsOut:
+    agent = require_agent(db, agent_id)
+    return replace_agent_grants(db, agent, payload.grants)

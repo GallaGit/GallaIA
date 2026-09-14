@@ -7,7 +7,7 @@ Documento de producto del **control plane** AgentOS en GallaIA. Inspirado en el 
 | Estado | Alcance |
 |--------|---------|
 | **Confirmado (Phase 1 MVP)** | Seeds, Kanban, sesiones, inbox, mock runner, stub Anthropic Messages |
-| **Siguiente implementación (spec hasta un PR de runtime)** | **Phase 2 Isolation** — ver [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md) |
+| **Siguiente implementación (grants wall done; Isolation incompleta)** | **Phase 2 Isolation** — [PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md), [ROADMAP.md](../ROADMAP.md). Network / filesystem / secret refs pendientes. |
 | **Solo documentación (Phase 3+)** | Templates → Goals → Triggers → YAML → PWA |
 | **Sidebar futuro (doc only)** | Activity, Goals, Skills, Environment, Templates, Knowledge, Ripples, Connections, Admin — [CONTROL_PLANE_NAV.md](CONTROL_PLANE_NAV.md) |
 
@@ -95,13 +95,13 @@ Frontend React + Vite + TypeScript + Lucide. Estética **atelier**: cream / indi
 
 ---
 
-## Phase 2+ — solo documentación (no implementar en este MVP)
+## Phase 2+ — Isolation en curso (grants done)
 
-Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) (numeración = [ROADMAP.md](../ROADMAP.md)). Incluye, entre otros:
+Sketch en [docs/agentos/PHASE2_PLUS.md](../agentos/PHASE2_PLUS.md) (numeración = [ROADMAP.md](../ROADMAP.md)). Grants MCP/repo/env (default deny) están implementados. Incluye, entre otros:
 
 | Fase | Tema | Notas |
 |------|------|--------|
-| 2 | Isolation / ACL | Grants MCP/repo/env; Environment + Connections + Files reales |
+| 2 | Isolation / ACL | Grants MCP/repo/env **done**; Environment + Connections + Files reales pendientes |
 | 3 | Templates + gates | Cadena 9 pasos; Skills CRUD mínimo; seed doc `lead-intake-workflow` |
 | 4 | Goals | Gauntlet / DoD / orchestrator |
 | 5 | Triggers | Webhooks firmados → task + session; Ripples; seed doc `lead-status-nuevo` |

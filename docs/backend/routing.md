@@ -10,8 +10,8 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `app/api/router.py` aggregates routers (health, projects, agents, tasks, sessions, inbox, agentos); `main.py` includes `api_router` with `prefix="/api/v1"` and keeps unversioned `/` and `/health`.
-- Planned: Phase 2+ route modules (grants, templates, goals, webhooks) when those phases start — [ROADMAP.md](../ROADMAP.md).
+- Existing: `app/api/router.py` aggregates routers (health, projects, agents, tasks, sessions, inbox, agentos); `main.py` includes `api_router` with `prefix="/api/v1"` and keeps unversioned `/` and `/health`. Agent grants: `GET/PUT /agents/{id}/grants` and `/agentos/agents/{name}/grants`.
+- Planned: Phase 2+ route modules (network policy, filesystem ACL, templates, goals, webhooks) when those phases start — [ROADMAP.md](../ROADMAP.md).
 - Future: additional API versions if breaking changes require them; single-operator auth-protected routers.
 
 ## Mounting

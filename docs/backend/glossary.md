@@ -11,7 +11,7 @@ Draft
 ## Scope
 
 - Existing: Layered package names under `backend/app/`; AgentOS / control-plane terms in use (task, session, runner, seed).
-- Planned: Terms as Isolation / templates / goals land (grant, approval gate, webhook secret).
+- Planned: Terms as Isolation network/filesystem / templates / goals land (approval gate, webhook secret).
 - Future: RAG, embedding, memory when those packages activate.
 
 ## TODO

@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from app.agentos.grants import GrantSet
+
 PROMPT_ORIGIN = (
     "Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt."
 )
@@ -55,9 +57,13 @@ class AgentSeed:
     prompt_origin: str = PROMPT_ORIGIN
     skills: tuple[str, ...] = ()
     mcp: tuple[str, ...] = ("agentos", "inbox")
+    grants: tuple[tuple[str, str], ...] = (("mcp", "agentos"), ("mcp", "inbox"))
     runner_preference: Literal["mock", "anthropic", "openrouter", "inherit"] = "inherit"
     collaboration: tuple[str, ...] = ()
     one_job: str = ""
+
+    def grant_set(self) -> GrantSet:
+        return GrantSet.from_pairs(self.grants)
 
 
 AGENT_SEEDS: dict[str, AgentSeed] = {
@@ -74,6 +80,7 @@ you have. Finish or inbox if stuck.
 """,
         one_job="General workhorse",
         mcp=("agentos", "inbox"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox")),
     ),
     "plan": AgentSeed(
         name="plan",
@@ -91,6 +98,7 @@ implement. You do not open unrelated tools.
         one_job="Turn an approved spec into a concrete implementation plan",
         skills=("plan-mode",),
         mcp=("agentos", "inbox"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox")),
         runner_preference="anthropic",
     ),
     "senior-dev": AgentSeed(
@@ -107,6 +115,24 @@ when done. Run available tests. Inbox the human only if you are blocked.
 """,
         one_job="Implement / apply review fixes",
         mcp=("agentos", "inbox", "github"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "github")),
+        runner_preference="mock",
+    ),
+    "support": AgentSeed(
+        name="support",
+        title="Customer support",
+        model="claude-sonnet-4-5",
+        foundational_prompt=FOUNDATIONAL_PROMPT,
+        role_prompt="""\
+# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
+
+You are a customer support agent. You have one job: handle inbound
+support via the Front MCP. You do not have GitHub. You do not have
+repo access. You do not have Gmail. Finish or inbox if stuck.
+""",
+        one_job="Inbound support via Front MCP — no GitHub, no repo",
+        mcp=("front",),
+        grants=(("mcp", "front"),),
         runner_preference="mock",
     ),
 }

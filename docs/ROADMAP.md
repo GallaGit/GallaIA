@@ -30,7 +30,7 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 - [x] **PR #12** (`feature/agent-skills`) — **cerrar, no mergear.** ~357 files / +200k líneas; casi todo es árbol vendored en `.agents/skills` (lock + junk). Reemplazo lean: [agentos/SKILLS.md](agentos/SKILLS.md) (`npx skills add`, sin commitear 200k líneas).
 
-### Slice 2026-09-14 (este cambio)
+### Slice 2026-09-14 (higiene / cadencia)
 
 **Hecho**
 
@@ -47,6 +47,25 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 ---
 
+### Slice Isolation 1 — Grants wall (este PR)
+
+**Hecho**
+
+- Modelo de grants por agente en SQLite (`agent_grants`: MCP / repo path / env key). Default deny.
+- Seed `support` con solo MCP Front fake; mock runner rechaza `github.*`.
+- API mínima GET/PUT grants: `/api/v1/agents/{id}/grants` y `/api/v1/agentos/agents/{name}/grants`.
+- Tests pytest: default-deny + Front-only no usa GitHub.
+
+**Por hacer (siguientes muros Isolation — no este PR)**
+
+- Network policy `open`\|`limited` + host allowlist en el proxy del runner.
+- Filesystem MCP + ACL server-side (read/write/delete, deny `../`).
+- Secret refs inyectados al start (sin tokens crudos en DB) / UI de Connections.
+
+**Siguiente muro tras merge:** Network policy `open`\|`limited` + host allowlist.
+
+---
+
 ## Fases AgentOS
 
 ### Hecho
@@ -60,11 +79,11 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md).
 
 ### Siguiente
 
-**Candidato de implementación siguiente: Fase 2 Isolation.** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. **Este PR de higiene no implementa Isolation.** El primer PR de runtime debe ser un slice acotado (un muro, no grants + red + filesystem + secretos a la vez). Fases 3–7 siguen en sketch.
+**Candidato de implementación siguiente: Fase 2 Isolation (grants wall done in this slice).** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. Muros pendientes: network policy, filesystem ACL, secret refs. Fases 3–7 siguen en sketch.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **2** | Isolation *(siguiente implementación)* | Grants MCP/repo/env (default deny), network `open`\|`limited`, filesystem MCP + ACL, secret refs | Agente support con Front fake no llama GitHub ni lee carpeta ajena |
+| **2** | Isolation *(grants wall: done; resto en curso)* | Grants MCP/repo/env (default deny) **done**; network `open`\|`limited`; filesystem MCP + ACL; secret refs | Agente support con Front fake no llama GitHub *(este muro)* ni lee carpeta ajena *(filesystem, siguiente)* |
 | **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |

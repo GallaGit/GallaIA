@@ -30,7 +30,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - App: http://127.0.0.1:8000/
 - OpenAPI: http://127.0.0.1:8000/docs
 
-Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `default`, `plan`, `senior-dev`.
+Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `default`, `plan`, `senior-dev`, `support` (grants Isolation).
 
 ## Docker (UI + API, un contenedor)
 
@@ -58,6 +58,7 @@ El `docker-compose.yml` de esta carpeta es solo API (legado).
 | GET | `/health` | Health + ping DB |
 | GET | `/projects`, `/projects/{id}` | Proyectos |
 | GET | `/agents`, `/agents/{id}` | Agentes (prompts reconstruidos) |
+| GET/PUT | `/agents/{id}/grants` | Grants MCP/repo/env (default deny) |
 | GET/POST | `/tasks` | Listar / crear |
 | GET/PATCH/DELETE | `/tasks/{id}` | CRUD parcial |
 | PATCH | `/tasks/{id}/status` | Cambiar status Kanban |

@@ -18,6 +18,7 @@ class AgentSeedOut(BaseModel):
     one_job: str
     skills: list[str]
     mcp: list[str]
+    grants: list[dict[str, str]] = Field(default_factory=list)
     runner_preference: str
     prompt_origin: str
     foundational_prompt: str
