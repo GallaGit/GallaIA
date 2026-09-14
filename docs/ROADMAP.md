@@ -211,7 +211,7 @@ eview-coordinator, etc.) — optional polish.
 - Bad/missing/unconfigured secret → **401** (`UnauthorizedError`).
 - Pytest: valid path creates task+session; bad/missing → 401; support-inbound assigns `support`.
 
-### Slice Phase 5.2 — Named interval automations + test clock (este PR)
+### Slice Phase 5.2 — Named interval automations + test clock (merged #27)
 
 **Hecho**
 
@@ -221,14 +221,25 @@ eview-coordinator, etc.) — optional polish.
 - Lean schedule: `interval_minutes` only (no croniter). First fire when `last_fired_at` is null.
 - Pytest: due on test clock creates task+session; not-due / disabled do not; HTTP CRUD + tick.
 
-**Por hacer (siguientes slices Phase 5 — no este PR)**
+### Slice Phase 5.3 — lead-status-nuevo → lead-intake-workflow (este PR)
 
-- Product seed trigger `lead-status-nuevo` → instantiate `lead-intake-workflow`.
-- Ripples UI (cause→effect edges).
+**Hecho**
+
+- `POST /api/v1/triggers/lead-status-nuevo` with `X-Webhook-Secret` + body `{ leadId }`.
+- Valid → instantiate seed template `lead-intake-workflow` (2 task cards) for that leadId.
+- Bad/missing secret → **401**; missing/blank `leadId` → **400**.
+- Pytest: 401, 400, 200 with 2 tasks created.
+
+**Por hacer (optional / next phases — no este PR)**
+
+- Ripples UI (cause→effect edges) — optional.
 - Phase 6 YAML / CLI.
+- Phase 7 PWA.
 - Optional: cron-string parsing (croniter) if interval_minutes is not enough.
 - Seed chain polish: support-inbound / bug-report diagnostic → human OK → fix.
+- Idempotency polish for repeated `leadId` (LEAD_INTAKE §5).
 
+**Phase 5 core done-when: satisfied** (webhook + cron/interval + lead-status-nuevo).
 
 
 ## Fases AgentOS
@@ -245,13 +256,13 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: in progress** (slice 5.2 interval automations). Isolation (Phase 2) **done**. UI Files/Connections follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (webhook + cron + lead-status-nuevo). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
-| **5** | Triggers *(in progress)* | Slice 1 webhook + slice 2 interval automations **done**. Left: `lead-status-nuevo`, Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión *(webhook met)*; cron/interval test-clock *(met)* |
+| **5** | Triggers *(core done)* | Slices 1–3: webhook + interval automations + `lead-status-nuevo` → `lead-intake-workflow`. Optional: Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** secreto malo → 401; bueno → task+sesión; cron/interval test-clock; lead-status-nuevo → 2 cards |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
 

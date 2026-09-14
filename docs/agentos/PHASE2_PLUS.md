@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 5 Triggers** (slice 2 interval automations). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
+**En curso:** Phase 6 YAML / CLI (next). **Phase 5 Triggers core done** (webhook + cron + lead-status-nuevo). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -122,7 +122,7 @@ eview-coordinator, etc.) — optional polish
 - Bad/missing/unconfigured secret → **401**
 - Pytest both paths
 
-### Slice 2 (este PR) — named interval automations + test clock
+### Slice 2 — named interval automations + test clock (merged #27)
 
 **Hecho**
 
@@ -131,15 +131,26 @@ eview-coordinator, etc.) — optional polish
 - Lean `interval_minutes` (no croniter); action `create_task` → task + session stub (`runner=automation`)
 - Pytest: due fires; not-due / disabled do not; HTTP CRUD + tick
 
+### Slice 3 (este PR) — lead-status-nuevo → lead-intake-workflow
+
+**Hecho**
+
+- `POST /api/v1/triggers/lead-status-nuevo` (`X-Webhook-Secret` + `{ leadId }`)
+- Instantiates seed `lead-intake-workflow` (2 cards) via template instantiate service
+- Bad secret → **401**; missing `leadId` → **400**; success → **200** with 2 tasks
+- Pytest: 401 / 400 / 200 paths — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
+
 **Por hacer**
 
-- Product seed (doc): `lead-status-nuevo` → instantiate `lead-intake-workflow` — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
-- Seed shapes polish: support-inbound, bug-report → diagnostic then (on human OK) fix chain
-- **Ripples** UI (cause→effect edges)
+- **Ripples** UI (cause→effect edges) — optional
 - Phase 6 YAML / CLI
+- Phase 7 PWA
+- Seed shapes polish: support-inbound, bug-report → diagnostic then (on human OK) fix chain
 - No Mac-only workers required; runner stays `mock` | Anthropic API | later Linux VM
 
-**Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron/interval fires on a test clock — **met**.
+**Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron/interval fires on a test clock — **met**; `lead-status-nuevo` instantiates `lead-intake-workflow` (2 cards) — **met**.
+
+**Phase 5 core done-when: satisfied.**
 
 ## Later (see ROADMAP Fases 6–7)
 

@@ -11,7 +11,7 @@ Draft (reflects current implementation)
 ## Scope
 
 - Existing: `app/api/router.py` aggregates routers (health, projects, agents, tasks, sessions, inbox, scheduler, goals, skills, templates, triggers, automations, agentos); `main.py` includes `api_router` with `prefix="/api/v1"` and keeps unversioned `/` and `/health`. Agent grants: `GET/PUT /agents/{id}/grants` and `/agentos/agents/{name}/grants`. Network policy: `GET/PUT /agents/{id}/network` and `/agentos/agents/{name}/network`. Filesystem ACL: `GET/PUT /agents/{id}/fs` and `/agentos/agents/{name}/fs`. Secret refs: `GET/PUT /agents/{id}/secrets` and `/agentos/agents/{name}/secrets` (names/keys only).
-- Active: Phase 5 webhook + `GET/POST/PATCH/DELETE /api/v1/automations` and `POST /api/v1/automations/tick` (optional `now` test clock). — [ROADMAP.md](../ROADMAP.md).
+- Active: Phase 5 webhook + `POST /api/v1/triggers/lead-status-nuevo` + `GET/POST/PATCH/DELETE /api/v1/automations` and `POST /api/v1/automations/tick` (optional `now` test clock). — [ROADMAP.md](../ROADMAP.md).
 - Future: additional API versions if breaking changes require them; single-operator auth-protected routers.
 
 ## Mounting
