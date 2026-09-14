@@ -53,3 +53,5 @@ Filesystem ACL, secret refs, templates, goals/orchestrator, triggers/webhooks �
 Skills de Cursor/skills.sh (no el catálogo AgentOS `/skills`): [SKILLS.md](SKILLS.md).
 
 Walkthrough del video de Postma (qué construyó y en qué orden replicarlo): [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md).
+
+Phase 6 agentos.yml schema + CLI: [AGENTOS_YML.md](AGENTOS_YML.md).

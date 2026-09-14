@@ -8,6 +8,7 @@ dependencies = [
     "pydantic-settings",
     "sqlalchemy>=2.0",
     "psycopg[binary]",
+    "PyYAML>=6",
 ]
 
 [project.optional-dependencies]
