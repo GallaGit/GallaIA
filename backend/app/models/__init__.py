@@ -7,6 +7,7 @@ from app.models.project import Project
 from app.models.secret import AgentSecretRef
 from app.models.session import AgentSession
 from app.models.task import Task
+from app.models.template import TaskTemplate, TaskTemplateStep
 
 __all__ = [
     "Project",
@@ -16,6 +17,8 @@ __all__ = [
     "AgentFsAcl",
     "AgentSecretRef",
     "Task",
+    "TaskTemplate",
+    "TaskTemplateStep",
     "AgentSession",
     "InboxMessage",
 ]

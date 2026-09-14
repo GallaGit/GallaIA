@@ -32,5 +32,9 @@ class TaskOut(BaseModel):
     status: str
     assignee_agent_id: int | None = None
     approval_gate: bool
+    template_id: int | None = None
+    template_run_id: str | None = None
+    step_index: int | None = None
+    depends_on_task_id: int | None = None
     created_at: datetime
     updated_at: datetime

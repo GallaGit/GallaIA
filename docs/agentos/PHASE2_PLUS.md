@@ -1,8 +1,8 @@
-# AgentOS Phase 2+ — Isolation complete; Templates next
+# AgentOS Phase 2+ — Isolation complete; Phase 3 Templates in progress
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente implementación:** **Phase 3 Templates**. Phase 2 Isolation (grants + network + filesystem + secret refs) is **done**. UI Files / Connections are follow-ups, not Isolation blockers. **No** implementar Templates, Goals ni Triggers en este slice.
+**En curso:** **Phase 3 Templates** (slice 1). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -28,16 +28,27 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 
 **Isolation complete.** Leftover UI (Files / Connections) does not block this phase.
 
-## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo)
+## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo) — **in progress**
 
-- `TaskTemplate` + instantiate
-- Approval gates enforced in API and MCP (not honor-system prompts)
+### Slice 1 (este PR) — Hecho
+
+- `TaskTemplate` + `TaskTemplateStep` in SQLite; instantiate API
+- Seed `demo-two-step` (2 steps): step 1 approval gate; step 2 `requires_previous_done`
+- Gate enforced in `POST /tasks/{id}/run`, status→doing/review/done, and mock runner
+- Pytest: instantiate creates 2 cards; step 2 blocked until step 1 `done`
+
+### Por hacer (siguientes slices)
+
+- Approval gates also via MCP actor/token (agent cannot PATCH gated `done`)
 - Follow-up chain scheduler; seed `compound-engineer-workflow` (9 steps)
 - Product seed (doc): `lead-intake-workflow` (2 steps, `leadId`) — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md); agents `lead-researcher` / `lead-solutions`
 - Schedule-at / recurring cron on tasks
 - Skills catalog CRUD mínimo (e.g. `plan-mode` ceases to be a bare seed string only)
+- UI Templates surface
 
-**Done when:** instantiating the template creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
+**Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
+
+**Slice 1 done when:** instantiate `demo-two-step` → 2 cards; step 2 run blocked until step 1 `done`.
 
 ## Phase 4 — Goals (gauntlet loop)
 
