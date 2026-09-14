@@ -11,6 +11,7 @@ from app.models.skill import Skill
 from app.models.goal import Goal
 from app.models.automation import Automation
 from app.models.activity import ActivityEvent
+from app.models.push import PushSubscription
 from app.models.template import TaskTemplate, TaskTemplateStep
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "ActivityEvent",
     "AgentSession",
     "InboxMessage",
+    "PushSubscription",
 ]

@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente:** Phase 7 polish (web push VAPID, real local runner). Backend surface near-complete after slice 7.3. **Phase 6 YAML / CLI core done**. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
+**Siguiente:** post-MVP polish (real VAPID keys from Ociel, real local runner binary, Ripples UI). **Phase 7 core complete** (slices 7.1–7.4). **Phase 6 YAML / CLI core done**. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -165,14 +165,14 @@ eview-coordinator, etc.) — optional polish
 
 **Phase 6 core done-when: satisfied.**
 
-**Por hacer (Phase 7 / polish)**
+**Por hacer (post-MVP polish)**
 
-- Phase 7 remaining polish: web push VAPID, real local runner binary (slice 7.3 = live SSE + route stub)
-- Optional YAML skills/grants; goal/task/skill CLI; Ripples UI
+- Real VAPID keys from Ociel + optional pywebpush; real local runner binary; Ripples UI
+- Optional YAML skills/grants; goal/task/skill CLI
 
 **Done when (full Phase 6):** push produces same agents+template as UI; pull after push is identity (whitespace aside) — **met** (export/import + CLI create/update).
 
-## Phase 7 — PWA / live *(near-complete)*
+## Phase 7 — PWA / live *(core complete)*
 
 ### Slice 7.1 — Activity feed + SSE stub (merged #31)
 
@@ -185,14 +185,22 @@ eview-coordinator, etc.) — optional polish
 - `manifest.webmanifest` + shell-only service worker + index link (no push yet)
 - Optional Activity atelier page
 
-### Slice 7.3 — Live session viewer + local runner routing stub (este PR)
+### Slice 7.3 — Live session viewer + local runner routing stub (merged #33)
 
 - `GET /api/v1/sessions/{id}/stream` SSE (status + tool log replay/poll + heartbeats)
 - `runner_route=mock|local` + `POST /api/v1/runners/route` → `local-stub` (no OS binary yet)
 - Tiny Live atelier page
-- **Por hacer:** web push VAPID; real local runner binary; polish
 
-**Done when (full Phase 7):** reply en móvil reanuda sesión — *not yet* (backend surface near-complete).
+### Slice 7.4 — Web push VAPID stub (este PR)
+
+- Optional `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`; missing → push endpoints **503**
+- `POST /api/v1/push/subscribe` stores endpoint + client keys in SQLite
+- `POST /api/v1/push/test` mock/skipped send (no pywebpush); real send = follow-up
+
+**Phase 7 core done-when: satisfied** for MVP (phases 0–7 substantially met).
+
+**Por hacer (post-MVP):** real VAPID keys from Ociel; real local runner binary; Ripples UI polish; reply móvil reanuda sesión.
+
 
 ## Explicit non-goals for GallaIA now
 

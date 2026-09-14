@@ -5,6 +5,7 @@ from app.exceptions.base import (
     NotFoundError,
     UnauthorizedError,
     UnresolvedSecretRefError,
+    ServiceUnavailableError,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "NotFoundError",
     "UnauthorizedError",
     "UnresolvedSecretRefError",
+    "ServiceUnavailableError",
 ]

@@ -46,3 +46,7 @@ class UnauthorizedError(AppError):
     def __init__(self, message: str = "Unauthorized") -> None:
         super().__init__(message, code="unauthorized", status_code=401)
 
+
+class ServiceUnavailableError(AppError):
+    def __init__(self, message: str = "Service unavailable") -> None:
+        super().__init__(message, code="service_unavailable", status_code=503)

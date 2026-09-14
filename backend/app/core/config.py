@@ -37,6 +37,15 @@ class Settings(BaseSettings):
             "runner_route",
         ),
     )
+    # Phase 7: optional Web Push VAPID (empty = push endpoints return 503). Never commit real keys.
+    vapid_public_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("VAPID_PUBLIC_KEY", "vapid_public_key"),
+    )
+    vapid_private_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("VAPID_PRIVATE_KEY", "vapid_private_key"),
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

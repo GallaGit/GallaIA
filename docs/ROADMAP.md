@@ -279,7 +279,7 @@ eview-coordinator, etc.) — optional polish.
 - Optional: atelier Activity page listing `GET /api/v1/activity` + nav link.
 - Pytest for inbox list/reply/resolve; frontend `npm run build`.
 
-### Slice Phase 7.3 — Live session viewer + local runner routing stub (este PR)
+### Slice Phase 7.3 — Live session viewer + local runner routing stub (merged #33)
 
 **Hecho**
 
@@ -289,13 +289,24 @@ eview-coordinator, etc.) — optional polish.
 - Tiny atelier Live page (`/live`, `/live/:id`) connecting to session SSE.
 - Pytest: stream replay/heartbeat/end, live tool append, runner route mock/local-stub; frontend build.
 
-**Por hacer (Phase 7 polish — no este PR)**
+### Slice Phase 7.4 — Web push VAPID stub (este PR)
 
-- Web push (VAPID).
+**Hecho**
+
+- Settings optional `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` (env only; never commit production keys).
+- If missing → `POST /api/v1/push/subscribe` and `POST /api/v1/push/test` return **503** with clear message.
+- `POST /api/v1/push/subscribe` stores browser PushSubscription endpoint + client `p256dh`/`auth` in SQLite (no server VAPID secrets in DB).
+- `POST /api/v1/push/test` mock/skipped send (no `pywebpush` dep); real HTTP delivery documented as follow-up.
+- Pytest: 503 without keys; store/upsert with test env keys; test skips real send.
+
+**Phase 7 core AgentOS roadmap: complete** for MVP (phases 0–7 done-when substantially met: Activity + inbox/PWA stub + live SSE + runner route stub + VAPID store stub).
+
+**Por hacer (post-MVP polish — no este PR)**
+
+- Real VAPID keys from Ociel when ready + optional `pywebpush` delivery.
 - Real OS-local runner binary.
-- Polish: reply-on-mobile resumes session; richer live UI.
+- Ripples UI polish; reply-on-mobile resumes live session.
 
-**Phase 7 backend surface: near-complete** (Activity + inbox decisions + PWA stub + session live SSE + runner route stub). Full Phase 7 done-when (reply móvil reanuda sesión) still open.
 
 
 ## Fases AgentOS
@@ -312,7 +323,7 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: core done** (export/import + CLI create/update). **Fase 7 PWA/live: near-complete** (slices 7.1–7.3; polish left: VAPID push, real local runner). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: core done** (export/import + CLI create/update). **Fase 7 PWA/live: core complete** (slices 7.1–7.4). Isolation (Phase 2) **done**. Por hacer: real VAPID from Ociel, real local runner, Ripples UI polish.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
@@ -320,7 +331,7 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
 | **5** | Triggers *(core done)* | Slices 1–3: webhook + interval automations + `lead-status-nuevo` → `lead-intake-workflow`. Optional: Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** secreto malo → 401; bueno → task+sesión; cron/interval test-clock; lead-status-nuevo → 2 cards |
 | **6** | YAML / CLI *(core done)* | Slices 1–2: `agentos.yml` export/import + CLI create/update (+ push/pull aliases). Optional: skills/grants in YAML; goal/task/skill CLI ([AGENTOS_YML.md](agentos/AGENTOS_YML.md)) | **Satisfied:** push/CLI produce mismos agentes+template que la UI list; pull tras push identidad (whitespace aside) |
-| **7** | PWA / live *(near-complete)* | Inbox PWA + push, live viewer SSE, Activity feed, routing local. Slices 7.1–7.3: Activity+SSE, inbox+PWA stub, **live session SSE + runner route stub** | Reply en móvil reanuda sesión |
+| **7** | PWA / live *(core complete)* | Inbox PWA + push stub, live viewer SSE, Activity feed, routing local. Slices 7.1–7.4: Activity+SSE, inbox+PWA stub, live SSE + runner route stub, **VAPID store stub** | **MVP core met** (substantial). Polish: real VAPID/send, real local runner, reply móvil reanuda |
 
 Detalle corto: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Walkthrough completo: [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md).
 

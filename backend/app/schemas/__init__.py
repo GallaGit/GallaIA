@@ -18,6 +18,12 @@ from app.schemas.trigger import (
 )
 from app.schemas.activity import ActivityEventCreate, ActivityEventOut
 from app.schemas.runner import RunnerRouteIn, RunnerRouteInfoOut, RunnerRouteOut
+from app.schemas.push import (
+    PushSubscribeIn,
+    PushSubscriptionOut,
+    PushTestIn,
+    PushTestOut,
+)
 from app.schemas.automation import (
     AutomationCreate,
     AutomationOut,
@@ -83,4 +89,8 @@ __all__ = [
     "RunnerRouteIn",
     "RunnerRouteOut",
     "RunnerRouteInfoOut",
+    "PushSubscribeIn",
+    "PushSubscriptionOut",
+    "PushTestIn",
+    "PushTestOut",
 ]
