@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "GallaAI AgentOS — control plane Phase 1",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/GallaGit/GallaIA",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "57ff7224fdad71cce9dbe3104ceb60351bc132bc"
+    },
+    "views": [
+      {
+        "id": "camino-ui",
+        "label": "Camino de la UI",
+        "focus": ["operator", "atelier", "fastapi", "agentos-store", "session-runner"],
+        "note": "El atelier llama solo /api/v1/agentos; el store es in-memory."
+      },
+      {
+        "id": "sql-invisible",
+        "label": "SQL invisible",
+        "focus": ["fastapi", "sql-routes", "sqlite"],
+        "note": "Las rutas SQLAlchemy existen; el frontend no las usa."
+      },
+      {
+        "id": "runners-llm",
+        "label": "Runners LLM",
+        "focus": ["session-runner", "openrouter", "anthropic"],
+        "note": "Sin clave → mock. OpenRouter si hay key. Anthropic solo si se pide."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operador",
+      "sublabel": "Browser",
+      "pos": [40, 340],
+      "size": [120, 72]
+    },
+    {
+      "id": "atelier",
+      "type": "frontend",
+      "label": "Atelier UI",
+      "sublabel": "React 19 + Vite :5173",
+      "brand": "react",
+      "tag": "Kanban · Sessions · Inbox",
+      "pos": [240, 340],
+      "size": [180, 72],
+      "sources": [
+        { "path": "frontend/src/api/client.ts", "line": 3, "label": "BASE agentos" },
+        { "path": "frontend/src/App.tsx", "line": 9, "label": "rutas atelier" }
+      ]
+    },
+    {
+      "id": "fastapi",
+      "type": "backend",
+      "label": "FastAPI",
+      "sublabel": "gallaai-backend :8000",
+      "brand": "fastapi",
+      "tag": "/api/v1",
+      "pos": [500, 340],
+      "size": [180, 72],
+      "sources": [
+        { "path": "backend/app/main.py", "line": 42, "end_line": 57, "label": "app + router" }
+      ]
+    },
+    {
+      "id": "agentos-store",
+      "type": "backend",
+      "label": "AgentOS store",
+      "sublabel": "in-memory",
+      "tag": "/api/v1/agentos",
+      "pos": [760, 340],
+      "size": [170, 72],
+      "sources": [
+        { "path": "backend/app/api/routes/agentos.py", "line": 23, "label": "router AgentOS" },
+        { "path": "backend/app/agentos/store.py", "label": "store" }
+      ]
+    },
+    {
+      "id": "session-runner",
+      "type": "backend",
+      "label": "SessionRunner",
+      "sublabel": "mock | openrouter | anthropic",
+      "pos": [1010, 340],
+      "size": [200, 72],
+      "sources": [
+        { "path": "backend/app/agentos/runner.py", "line": 57, "end_line": 80, "label": "resolve + run" }
+      ]
+    },
+    {
+      "id": "sql-routes",
+      "type": "backend",
+      "label": "SQLAlchemy routes",
+      "sublabel": "/projects · /agents · /tasks",
+      "tag": "UI no las llama",
+      "pos": [500, 110],
+      "size": [180, 72],
+      "sources": [
+        { "path": "backend/app/api/router.py", "line": 8, "end_line": 13, "label": "SQL routers" }
+      ]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite",
+      "sublabel": "data/gallaia.db",
+      "brand": "sqlite",
+      "pos": [760, 110],
+      "size": [150, 72],
+      "sources": [
+        { "path": "backend/app/db/session.py", "line": 17, "end_line": 21, "label": "engine" }
+      ]
+    },
+    {
+      "id": "openrouter",
+      "type": "external",
+      "label": "OpenRouter",
+      "sublabel": "Nemotron Chat Completions",
+      "brand": "openrouter",
+      "tag": "OPENROUTER_API_KEY",
+      "pos": [900, 560],
+      "size": [200, 72],
+      "sources": [
+        { "path": "backend/app/providers/openrouter.py", "line": 1, "end_line": 40, "label": "Chat Completions" }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "type": "external",
+      "label": "Anthropic",
+      "sublabel": "Messages (opcional)",
+      "brand": "anthropic",
+      "tag": "ANTHROPIC_API_KEY",
+      "pos": [1140, 560],
+      "size": [170, 72]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Control plane :8000",
+      "wraps": ["agentos-store", "session-runner"]
+    },
+    {
+      "kind": "region",
+      "label": "SQL (UI no llama)",
+      "wraps": ["sql-routes", "sqlite"]
+    },
+    {
+      "kind": "region",
+      "label": "LLM opcionales",
+      "wraps": ["openrouter", "anthropic"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "operator-atelier",
+      "from": "operator",
+      "to": "atelier",
+      "label": "HTTPS :5173",
+      "variant": "emphasis"
+    },
+    {
+      "id": "atelier-fastapi",
+      "from": "atelier",
+      "to": "fastapi",
+      "label": "/api/v1/agentos",
+      "variant": "emphasis",
+      "labelDy": 40
+    },
+    {
+      "id": "fastapi-agentos",
+      "from": "fastapi",
+      "to": "agentos-store",
+      "label": "router AgentOS",
+      "labelDy": 40
+    },
+    {
+      "id": "agentos-runner",
+      "from": "agentos-store",
+      "to": "session-runner",
+      "label": "run(task)",
+      "labelDy": 40
+    },
+    {
+      "id": "runner-openrouter",
+      "from": "session-runner",
+      "to": "openrouter",
+      "label": "Chat Completions",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "runner-anthropic",
+      "from": "session-runner",
+      "to": "anthropic",
+      "label": "Messages API",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "fastapi-sql",
+      "from": "fastapi",
+      "to": "sql-routes",
+      "label": "routers SQL",
+      "variant": "dashed"
+    },
+    {
+      "id": "sql-sqlite",
+      "from": "sql-routes",
+      "to": "sqlite",
+      "label": "SQLAlchemy 2.0",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Cliente",
+      "items": [
+        "Atelier (React 19 + Vite 6) en :5173, proxy `/api` → :8000",
+        "Docker Compose sirve UI + API juntas en :8000"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Dos superficies API",
+      "items": [
+        "UI primaria: `/api/v1/agentos` → store in-memory + SessionRunner",
+        "SQLAlchemy `/projects|/agents|/tasks|/sessions|/inbox` → SQLite; el frontend no las llama"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Runners",
+      "items": [
+        "Sin clave → mock. Con OPENROUTER_API_KEY → Chat Completions (nvidia/nemotron-3-ultra-550b-a55b:free)",
+        "Anthropic Messages solo si se pide y hay ANTHROPIC_API_KEY"
+      ]
+    }
+  ]
+}
