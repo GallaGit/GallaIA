@@ -4,10 +4,11 @@ from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate, GrantItem
 from app.schemas.inbox import InboxMessageOut, InboxReplyIn
 from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
 from app.schemas.project import ProjectOut
+from app.schemas.scheduler import SchedulerTickIn, SchedulerTickOut
 from app.schemas.secret import AgentSecretsOut, AgentSecretsUpdate, SecretRefItem
 from app.schemas.session import SessionOut
 from app.schemas.skill import SkillCreate, SkillOut, SkillUpdate, SkillUpsert
-from app.schemas.task import TaskCreate, TaskOut, TaskStatusUpdate, TaskUpdate
+from app.schemas.task import TaskCreate, TaskOut, TaskScheduleUpdate, TaskStatusUpdate, TaskUpdate
 from app.schemas.template import (
     TemplateInstantiateIn,
     TemplateInstantiateOut,
@@ -32,6 +33,7 @@ __all__ = [
     "TaskCreate",
     "TaskUpdate",
     "TaskStatusUpdate",
+    "TaskScheduleUpdate",
     "TaskOut",
     "TemplateStepOut",
     "TemplateOut",
@@ -44,4 +46,6 @@ __all__ = [
     "SkillCreate",
     "SkillUpdate",
     "SkillUpsert",
+    "SchedulerTickIn",
+    "SchedulerTickOut",
 ]

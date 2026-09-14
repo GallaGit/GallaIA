@@ -50,15 +50,24 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Minimal glue: `AgentSeed.skills` stay as slugs; agentos list/get fills `resolved_skills` from catalog
 - Pytest: seed + CRUD + agent slug resolve
 
-### Slice 4 (este PR) — Hecho
+### Slice 4 — Hecho (merged #21)
 
 - Product seed `lead-intake-workflow` (2 steps, `leadId`): step 2 `requires_previous_done` + approval gate
 - Lean agent seeds `lead-researcher` / `lead-solutions` (GallaAI product prompts)
 - Pytest: instantiate → 2 cards + prior-step gate; assignees resolve
 
+### Slice 5 (este PR) — schedule-at
+
+**Hecho**
+
+- Task.scheduled_at + PATCH /tasks/{id}/schedule + POST /scheduler/tick (optional 
+ow test clock)
+- Due tasks cleared + session stub (
+unner=scheduler, status=queued) when assignee set
+- Pytest: future not due; past promoted; cron deferred to Phase 5 (skipped test)
+
 ### Por hacer (siguientes slices)
 
-- Schedule-at / recurring cron on tasks; follow-up chain scheduler
 - Assignee agents for compound steps (missing role seeds: `spec`, `review-coordinator`, etc.)
 - Approval gates also via MCP actor/token (agent cannot PATCH gated `done`)
 - UI Templates / Skills surfaces

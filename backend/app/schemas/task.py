@@ -22,6 +22,12 @@ class TaskStatusUpdate(BaseModel):
     status: str = Field(pattern="^(todo|doing|review|done)$")
 
 
+class TaskScheduleUpdate(BaseModel):
+    """Set or clear schedule-at. Pass null to clear. Cron deferred to Phase 5."""
+
+    scheduled_at: datetime | None = None
+
+
 class TaskOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -36,5 +42,6 @@ class TaskOut(BaseModel):
     template_run_id: str | None = None
     step_index: int | None = None
     depends_on_task_id: int | None = None
+    scheduled_at: datetime | None = None
     created_at: datetime
     updated_at: datetime

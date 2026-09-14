@@ -6,7 +6,9 @@ from app.exceptions import BadRequestError, NotFoundError
 from app.models import Agent, Project, Task
 from app.models.task import TASK_STATUSES
 from app.schemas import SessionOut, TaskCreate, TaskOut, TaskStatusUpdate, TaskUpdate
+from app.schemas.task import TaskScheduleUpdate
 from app.services.runner import run_task_session
+from app.services.scheduler import set_task_schedule
 from app.services.templates import assert_prior_step_done
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -77,6 +79,15 @@ def update_task(task_id: int, payload: TaskUpdate, db: DbSession):
     return task
 
 
+@router.patch("/{task_id}/schedule", response_model=TaskOut)
+def patch_task_schedule(task_id: int, payload: TaskScheduleUpdate, db: DbSession):
+    """Set or clear scheduled_at. Body {"scheduled_at": null} clears."""
+    task = db.get(Task, task_id)
+    if task is None:
+        raise NotFoundError(f"Task {task_id} not found")
+    return set_task_schedule(db, task, payload.scheduled_at)
+
+
 @router.patch("/{task_id}/status", response_model=TaskOut)
 def patch_task_status(task_id: int, payload: TaskStatusUpdate, db: DbSession):
     task = db.get(Task, task_id)
@@ -84,7 +95,6 @@ def patch_task_status(task_id: int, payload: TaskStatusUpdate, db: DbSession):
         raise NotFoundError(f"Task {task_id} not found")
     if payload.status not in TASK_STATUSES:
         raise BadRequestError(f"Invalid status: {payload.status}")
-    # Starting work on a gated step requires the prior card to be done.
     if payload.status in {"doing", "review", "done"}:
         assert_prior_step_done(db, task)
     task.status = payload.status

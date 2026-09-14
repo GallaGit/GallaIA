@@ -28,6 +28,10 @@ class Task(Base):
     depends_on_task_id: Mapped[int | None] = mapped_column(
         ForeignKey("tasks.id"), nullable=True, index=True
     )
+    # Phase 3 schedule-at: due when scheduled_at <= now. Full cron runner = Phase 5.
+    scheduled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
