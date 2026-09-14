@@ -104,22 +104,29 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 **Phase 2 Isolation: complete** al aterrizar este muro. Siguiente fase: Templates.
 
 
-### Slice Phase 3.1 — TaskTemplate + instantiate + gate (este PR)
+### Slice Phase 3.1 — TaskTemplate + instantiate + gate
+
+**Hecho** (merged #18)
+
+- Modelo `TaskTemplate` / `TaskTemplateStep` en SQLite + campos de enlace en `tasks`.
+- Seed lean `demo-two-step` (2 pasos) + gate prior-step.
+- API list/get/instantiate; gate en API/runner.
+
+### Slice Phase 3.2 — compound-engineer seed (este PR)
 
 **Hecho**
 
-- Modelo `TaskTemplate` / `TaskTemplateStep` en SQLite + campos de enlace en `tasks` (`template_id`, `template_run_id`, `step_index`, `depends_on_task_id`).
-- Seed lean `demo-two-step` (2 pasos): paso 1 con `approval_gate`; paso 2 con `requires_previous_done`.
-- API: `GET /api/v1/templates`, `GET /api/v1/templates/{id|slug}`, `POST .../instantiate` → N task cards.
-- Gate en API/runner: paso 2 no puede `run` ni pasar a `doing`/`review`/`done` hasta que el paso 1 esté `done`.
-- Tests pytest: seed, instantiate (2 cards + dependencia), gate bloquea y luego permite.
+- Seed `compound-engineer-workflow` (9 pasos, POSTMA §2.8): cada paso tras el 1 con `requires_previous_done`; gates en 1 y 9.
+- Instantiate → 9 cards con cadena `depends_on`; pytest: count=9, step 2 bloqueado hasta 1 `done`, step 3 bloqueado hasta 2 `done`.
 
 **Por hacer (siguientes slices Phase 3 — no este PR)**
 
-- Seed `compound-engineer-workflow` (9 pasos) y/o `lead-intake-workflow` (doc).
-- Gate “token de agente no puede PATCH done” en paso gated (auth/actor).
-- Scheduler de follow-ups / schedule-at / cron en tasks.
-- Skills catalog CRUD mínimo; UI Templates.
+- Skills CRUD mínimo.
+- Schedule/cron on tasks (follow-ups / schedule-at).
+- Seed `lead-intake-workflow` si aún no está (doc: [LEAD_INTAKE.md](product/LEAD_INTAKE.md)).
+- Gate "token de agente no puede PATCH done" en paso gated (auth/actor).
+- UI Templates.
+
 
 ---
 
@@ -140,11 +147,11 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**En curso: Fase 3 Templates** (slice 1: `demo-two-step` instantiate + gate). Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up. Resto de Phase 3–7: sketch / siguientes slices.
+**En curso: Fase 3 Templates** (slice 2: `compound-engineer-workflow` seed). Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up. Resto de Phase 3–7: sketch / siguientes slices.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **3** | Templates *(en curso)* | Slice 1: `TaskTemplate` + instantiate + gate (`demo-two-step`). Luego: `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Slice 1: instantiate → 2 cards; paso 2 bloqueado hasta 1 `done`. Full: 9 cards compound + agent token no marca gated `done` |
+| **3** | Templates *(en curso)* | Slice 1 done (`demo-two-step`). Slice 2: seed `compound-engineer-workflow` (9 pasos). Luego: Skills CRUD, schedule/cron; seed `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Slice 2: instantiate → 9 cards; paso 2/3 gated. Full: agent token no marca gated `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
