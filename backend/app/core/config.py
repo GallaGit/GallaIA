@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_model: str = "nvidia/nemotron-3-ultra-550b-a55b:free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
+    gallaia_webhook_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

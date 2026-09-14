@@ -41,3 +41,8 @@ class ForbiddenError(AppError):
     def __init__(self, message: str = "Forbidden") -> None:
         super().__init__(message, code="forbidden", status_code=403)
 
+
+class UnauthorizedError(AppError):
+    def __init__(self, message: str = "Unauthorized") -> None:
+        super().__init__(message, code="unauthorized", status_code=401)
+

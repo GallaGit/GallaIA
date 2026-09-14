@@ -11,7 +11,8 @@ Draft (reflects current implementation)
 ## Scope
 
 - Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); optional `OPENROUTER_*` (Chat Completions) and `ANTHROPIC_*` (Messages stub).
-- Planned: Secret refs / richer runner settings when Isolation starts — [ROADMAP.md](../ROADMAP.md).
+- Existing: Phase 5 webhook secret `GALLAIA_WEBHOOK_SECRET`.
+- Planned: richer runner / cron settings — [ROADMAP.md](../ROADMAP.md).
 - Future: multi-environment profiles; Postgres URL when ADR-003 is accepted.
 ## How it works
 
@@ -32,6 +33,7 @@ Draft (reflects current implementation)
 | `OPENROUTER_API_KEY` | `openrouter_api_key` | Optional Chat Completions; empty → skip OpenRouter |
 | `OPENROUTER_MODEL` | `openrouter_model` | Default `nvidia/nemotron-3-ultra-550b-a55b:free` |
 | `OPENROUTER_BASE_URL` | `openrouter_base_url` | Default `https://openrouter.ai/api/v1` |
+| `GALLAIA_WEBHOOK_SECRET` | `gallaia_webhook_secret` | Phase 5 public webhook; empty → 401 |
 
 ## Conventions
 

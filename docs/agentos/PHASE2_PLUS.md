@@ -113,14 +113,24 @@ eview-coordinator, etc.) — optional polish
 
 ## Phase 5 — Triggers (+ automations; Ripples leave theory)
 
-- Public webhook + secret → scoped task + session
-- Seed shapes: support-inbound, bug-report → diagnostic then (on human OK) fix chain
+### Slice 1 (este PR) — signed webhook
+
+**Hecho**
+
+- `GALLAIA_WEBHOOK_SECRET` + `POST /api/v1/triggers/webhook` (`X-Webhook-Secret`)
+- Valid → task + session stub (`runner=webhook`); shapes `generic` / `support-inbound` / `bug-report`
+- Bad/missing/unconfigured secret → **401**
+- Pytest both paths
+
+**Por hacer**
+
+- Named cron automations (test-clock fire)
 - Product seed (doc): `lead-status-nuevo` → instantiate `lead-intake-workflow` — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
-- Named cron automations
-- **Ripples** UI can show cause→effect edges (trigger → task → session, template step → next)
+- Seed shapes polish: support-inbound, bug-report → diagnostic then (on human OK) fix chain
+- **Ripples** UI (cause→effect edges)
 - No Mac-only workers required; runner stays `mock` | Anthropic API | later Linux VM
 
-**Done when:** signed webhook creates task+session; bad secret → 401; a cron fires on a test clock.
+**Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron fires on a test clock — pending.
 
 ## Later (see ROADMAP Fases 6–7)
 

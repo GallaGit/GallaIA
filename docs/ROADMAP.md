@@ -184,7 +184,7 @@ eview-coordinator, etc.) — optional polish.
 - Spawn gate: unapproved (`draft`) → **400**; approved → placeholder `AgentSession` (`runner=goal-spawn`) + task link; goal → `active`.
 - Pytest: cannot spawn unapproved; approve then spawn creates session/task link; HTTP 400/201.
 
-### Slice Phase 4.2 — Orchestrator stub + safety rails (este PR)
+### Slice Phase 4.2 — Orchestrator stub + safety rails (merged #25)
 
 **Hecho**
 
@@ -201,6 +201,25 @@ eview-coordinator, etc.) — optional polish.
 - Spend accrual from real provider usage (not stub `STUB_SESSION_COST`).
 
 
+### Slice Phase 5.1 — Signed webhook trigger (este PR)
+
+**Hecho**
+
+- Config: `GALLAIA_WEBHOOK_SECRET` → `Settings.gallaia_webhook_secret` (empty = deny).
+- `POST /api/v1/triggers/webhook` with header `X-Webhook-Secret` (constant-time compare).
+- Valid secret → task + session stub (`runner=webhook`, `status=queued`); shapes `generic` / `support-inbound` / `bug-report`.
+- Bad/missing/unconfigured secret → **401** (`UnauthorizedError`).
+- Pytest: valid path creates task+session; bad/missing → 401; support-inbound assigns `support`.
+
+**Por hacer (siguientes slices Phase 5 — no este PR)**
+
+- Named cron automations (test-clock fire).
+- Product seed trigger `lead-status-nuevo` → instantiate `lead-intake-workflow`.
+- Ripples UI (cause→effect edges).
+- Seed chain polish: support-inbound / bug-report diagnostic → human OK → fix.
+
+
+
 ## Fases AgentOS
 
 ### Hecho
@@ -215,13 +234,13 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 orchestrator stub + rails; done-when stub path met). Isolation (Phase 2) **done**. Cron = Phase 5. UI Files/Connections follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: in progress** (slice 5.1 signed webhook). Isolation (Phase 2) **done**. UI Files/Connections follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
-| **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
+| **5** | Triggers *(in progress)* | Slice 1 signed webhook **done**. Left: cron automations, `lead-status-nuevo`, Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión *(webhook met)*; cron test-clock pending |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |
 
