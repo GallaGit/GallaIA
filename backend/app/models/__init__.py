@@ -7,6 +7,7 @@ from app.models.project import Project
 from app.models.secret import AgentSecretRef
 from app.models.session import AgentSession
 from app.models.task import Task
+from app.models.skill import Skill
 from app.models.template import TaskTemplate, TaskTemplateStep
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "Task",
     "TaskTemplate",
     "TaskTemplateStep",
+    "Skill",
     "AgentSession",
     "InboxMessage",
 ]

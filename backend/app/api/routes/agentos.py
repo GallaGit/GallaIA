@@ -44,17 +44,30 @@ from app.services.secrets import (
     secret_refs_for_agent,
     secrets_out,
 )
+from app.services.skills import resolve_skill_slugs
 
 router = APIRouter(prefix="/agentos", tags=["agentos"])
 
 
-def _seed_out(s) -> AgentSeedOut:
+def _seed_out(s, db=None) -> AgentSeedOut:
+    resolved: list[dict[str, str]] = []
+    if db is not None and s.skills:
+        for row in resolve_skill_slugs(db, s.skills):
+            resolved.append(
+                {
+                    "slug": row.slug,
+                    "name": row.name,
+                    "kind": row.kind,
+                    "body": row.body,
+                }
+            )
     return AgentSeedOut(
         name=s.name,
         title=s.title,
         model=s.model,
         one_job=s.one_job,
         skills=list(s.skills),
+        resolved_skills=resolved,
         mcp=list(s.mcp),
         grants=s.grant_set().as_list(),
         network_mode=s.network_mode,
@@ -101,18 +114,18 @@ def _session_out(session) -> SessionOut:
 
 
 @router.get("/agents", response_model=list[AgentSeedOut])
-def get_agents() -> list[AgentSeedOut]:
+def get_agents(db: DbSession) -> list[AgentSeedOut]:
     """List seeded agents (default, plan, senior-dev, support)."""
-    return [_seed_out(s) for s in list_seeds()]
+    return [_seed_out(s, db) for s in list_seeds()]
 
 
 @router.get("/agents/{name}", response_model=AgentSeedOut)
-def get_agent(name: str) -> AgentSeedOut:
+def get_agent(name: str, db: DbSession) -> AgentSeedOut:
     try:
         s = get_seed(name)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return _seed_out(s)
+    return _seed_out(s, db)
 
 
 @router.get("/agents/{name}/grants", response_model=AgentGrantsOut)

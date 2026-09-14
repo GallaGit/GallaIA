@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 3 Templates** (slice 2: compound-engineer seed). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
+**En curso:** **Phase 3 Templates** (slice 3: Skills CRUD). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -28,7 +28,7 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 
 **Isolation complete.** Leftover UI (Files / Connections) does not block this phase.
 
-## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo) — **in progress**
+## Phase 3 — Templates (+ gates, chains, Skills CRUD) — **in progress**
 
 ### Slice 1 — Hecho (merged #18)
 
@@ -37,19 +37,26 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Gate enforced in run / status / mock runner
 - Pytest: 2 cards; step 2 blocked until step 1 `done`
 
-### Slice 2 (este PR) — Hecho
+### Slice 2 — Hecho (merged #19)
 
 - Seed `compound-engineer-workflow` (9 steps, POSTMA §2.8); steps 2–9 `requires_previous_done`; gates on 1 and 9
 - Instantiate → 9 cards with `depends_on` chain
 - Pytest: count=9; step 2 blocked until 1 `done`; step 3 blocked until 2 `done`
 
+### Slice 3 (este PR) — Hecho
+
+- SQLite `Skill` catalog (`slug` / `name` / `description` / `kind` / `body`) + seed `plan-mode`
+- API list/get/create/patch/put-upsert/delete under `/api/v1/skills`
+- Minimal glue: `AgentSeed.skills` stay as slugs; agentos list/get fills `resolved_skills` from catalog
+- Pytest: seed + CRUD + agent slug resolve
+
 ### Por hacer (siguientes slices)
 
-- Skills CRUD mínimo (e.g. `plan-mode` ceases to be a bare seed string only)
 - Schedule-at / recurring cron on tasks; follow-up chain scheduler
 - Product seed (doc): `lead-intake-workflow` (2 steps, `leadId`) — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md) if not done
+- Assignee agents for compound steps (missing role seeds: `spec`, `review-coordinator`, etc.)
 - Approval gates also via MCP actor/token (agent cannot PATCH gated `done`)
-- UI Templates surface
+- UI Templates / Skills surfaces
 
 **Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
 
