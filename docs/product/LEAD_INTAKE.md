@@ -1,6 +1,6 @@
 # Lead Intake — workflow de producto (doc only)
 
-**Status:** Planned — **solo documentación. No implementar ahora.**
+**Status:** Phase 3 template seed **done** (`lead-intake-workflow` + agent seeds). Trigger `lead-status-nuevo` remains Phase 5. CRM/mail runtime still Isolation Connections follow-up.
 
 Segundo workflow de producto encima de AgentOS: un lead en estado CRM `nuevo` dispara una plantilla de 2 pasos. Un agente investiga dolores; otro puntúa, escribe notas/estado en el CRM y deja el abordaje del primer contacto. El correo **no se envía** hasta que el operador configure la plantilla y apruebe en Inbox.
 
@@ -236,14 +236,14 @@ Progreso rutinario → activity de la task, no Inbox.
 
 ---
 
-## 11. Seeds a documentar (no añadir a `seeds.py` ahora)
+## 11. Seeds (Phase 3)
 
 | Seed | One job | MCP | Collaboration |
 |------|---------|-----|----------------|
 | `lead-researcher` | Investigar dolores → ficha | `agentos`, `inbox`, `crm` (read) | no spawnea |
 | `lead-solutions` | Ficha → score → notas + estado CRM (+ borrador si `>= 60`) | `agentos`, `inbox`, `crm` (notes + status write) | no spawnea |
 
-Prompts **RECONSTRUCTED** / originales de GallaAI. No mezclar con los de Postma. No tocar [CONTRACT.md](../agentos/CONTRACT.md) ni Phase 1 seeds hasta implementar.
+Lean seeds en `backend/app/agentos/seeds.py` + template en `templates.py`. Prompts **originales de GallaAI** (no Postma). MCP `crm` es grant stub hasta Connections runtime. Trigger sigue en Phase 5.
 
 ---
 

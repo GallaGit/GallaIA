@@ -26,13 +26,25 @@ def _clear_llm_env(monkeypatch) -> None:
     get_settings.cache_clear()
 
 
-def test_three_seeds_labeled_reconstructed():
+def test_seeds_labeled_origin():
     names = {s.name for s in list_seeds()}
-    assert names == {"default", "plan", "senior-dev", "support"}
+    assert names == {
+        "default",
+        "plan",
+        "senior-dev",
+        "support",
+        "lead-researcher",
+        "lead-solutions",
+    }
+    product = {"lead-researcher", "lead-solutions"}
     for seed in AGENT_SEEDS.values():
-        assert "not his verbatim" in seed.prompt_origin.lower() or "not his verbatim" in seed.role_prompt.lower()
-        assert "Reconstructed" in seed.prompt_origin or "Reconstructed" in seed.role_prompt
         assert "Reconstructed" in seed.foundational_prompt
+        if seed.name in product:
+            assert "GallaAI" in seed.prompt_origin
+            assert "GallaAI" in seed.role_prompt
+        else:
+            assert "not his verbatim" in seed.prompt_origin.lower() or "not his verbatim" in seed.role_prompt.lower()
+            assert "Reconstructed" in seed.prompt_origin or "Reconstructed" in seed.role_prompt
 
 
 def test_mock_runner_advances_kanban_and_logs_tools(monkeypatch):

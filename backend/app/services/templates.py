@@ -15,6 +15,7 @@ from app.schemas.template import TemplateInstantiateOut, TemplateOut
 
 DEMO_TWO_STEP_SLUG = "demo-two-step"
 COMPOUND_ENGINEER_SLUG = "compound-engineer-workflow"
+LEAD_INTAKE_SLUG = "lead-intake-workflow"
 
 # Phase 3 sketch (POSTMA_WALKTHROUGH §2.8): N+1 gated on N done.
 _COMPOUND_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
@@ -173,8 +174,67 @@ def _seed_compound_engineer(db: Session, project_id: int) -> bool:
     return True
 
 
+
+# Phase 3 product seed (LEAD_INTAKE.md): 2 steps, typical variable leadId.
+_LEAD_INTAKE_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
+    # position, name, description, assignee_agent_name, approval_gate, requires_previous_done
+    (
+        1,
+        "Investigar dolores",
+        "Investigate lead pains; persist Ficha de dolor. Typical variable: leadId.",
+        "lead-researcher",
+        False,
+        False,
+    ),
+    (
+        2,
+        "Soluciones + score + primer contacto",
+        "Read ficha; emit score; CRM notes/status; draft or inbox if score >= 60. Human gate.",
+        "lead-solutions",
+        True,
+        True,
+    ),
+)
+
+
+def _seed_lead_intake(db: Session, project_id: int) -> bool:
+    existing = db.scalar(
+        select(TaskTemplate).where(TaskTemplate.slug == LEAD_INTAKE_SLUG)
+    )
+    if existing is not None:
+        return False
+
+    template = TaskTemplate(
+        project_id=project_id,
+        slug=LEAD_INTAKE_SLUG,
+        name="Lead intake workflow",
+        description=(
+            "Phase 3 product seed: 2-step lead intake (LEAD_INTAKE.md). "
+            "Step 2 gated on step 1 done + human approval gate. "
+            "Typical variable: leadId. Trigger lead-status-nuevo is Phase 5."
+        ),
+    )
+    db.add(template)
+    db.flush()
+    db.add_all(
+        [
+            TaskTemplateStep(
+                template_id=template.id,
+                position=pos,
+                name=name,
+                description=desc,
+                assignee_agent_name=assignee,
+                approval_gate=gate,
+                requires_previous_done=req_prev,
+            )
+            for pos, name, desc, assignee, gate, req_prev in _LEAD_INTAKE_STEPS
+        ]
+    )
+    return True
+
+
 def ensure_seed_templates(db: Session) -> None:
-    """Idempotent Phase 3 seeds: demo-two-step + compound-engineer-workflow."""
+    """Idempotent Phase 3 seeds: demo + compound + lead-intake."""
     project = db.scalar(select(Project).where(Project.slug == "default"))
     if project is None:
         return
@@ -182,6 +242,7 @@ def ensure_seed_templates(db: Session) -> None:
     dirty = False
     dirty = _seed_demo_two_step(db, project.id) or dirty
     dirty = _seed_compound_engineer(db, project.id) or dirty
+    dirty = _seed_lead_intake(db, project.id) or dirty
     if dirty:
         db.commit()
 
