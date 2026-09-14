@@ -2,25 +2,30 @@
 
 ## Purpose
 
-Record how authentication and authorization will be introduced for a **single operator**—without treating auth as part of AgentOS Phase 1.
+Record how authentication and authorization are introduced for a **single operator**—without treating full OAuth as part of AgentOS core.
 
 ## Status
 
-Draft
+Draft — lean **actor headers** landed in Phase 3 (gate authz only). Full login still Future.
 
 ## Scope
 
-- Existing: Empty / light `app/core/security.py` scaffold only. Phase 1 runs without login (localhost / Docker).
-- Planned: Out of Phase 1 (see [alcance.md](../alcance.md)). Design deferred until a single-operator gate is needed (CLI token, session cookie).
+- Existing:
+  - Lean request actor via headers (not OAuth / JWT):
+    - X-Actor-Type: human | agent — default **human** if omitted (UI / curl).
+    - X-Agent-Id: <int> — optional agent id when type is gent.
+  - Helpers: pp.core.security.parse_actor_headers / FastAPI ActorDep.
+  - Authz: ssert_actor_may_mark_done — agent callers get **403** when marking done on an pproval_gate task or a task with unmet depends_on. Humans may still mark done (prior-step gate still applies).
+  - Wired on PATCH /api/v1/tasks/{id}/status and as a belt-and-suspenders check on the control-plane run→done path.
+- Planned: Out of Phase 1–3 core (see [alcance.md](../alcance.md)). Single-operator login (CLI token / session cookie) when a public surface needs it.
 - Future: Authn/authz for one human; **not** multi-tenant SaaS RBAC as the MVP path.
 
 ## Notes
 
-This document is outside the AgentOS Phase 1 core topics. It exists so authentication has a home when the roadmap unlocks it ([ROADMAP.md](../ROADMAP.md) — infra/Future, not “Fase 4 chat-era JWT”).
+This document is outside the AgentOS Phase 1 core topics. Phase 3 only adds the minimal header convention so "agent token cannot mark gated done" is enforceable without inventing OAuth.
 
 ## TODO
 
 - Decide auth approach when a public surface or CLI needs a personal token.
-- Document how security helpers in `app/core/security.py` will be used.
-- Align with middleware and dependency-injection docs when auth lands.
+- Align with middleware and dependency-injection docs when full auth lands.
 - Do not invent multi-user billing roles for GallaIA MVP.

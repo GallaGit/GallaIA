@@ -1,6 +1,7 @@
 from app.exceptions.base import (
     AppError,
     BadRequestError,
+    ForbiddenError,
     NotFoundError,
     UnresolvedSecretRefError,
 )
@@ -8,6 +9,7 @@ from app.exceptions.base import (
 __all__ = [
     "AppError",
     "BadRequestError",
+    "ForbiddenError",
     "NotFoundError",
     "UnresolvedSecretRefError",
 ]
