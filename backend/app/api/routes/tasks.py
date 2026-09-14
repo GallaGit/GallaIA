@@ -12,6 +12,7 @@ from app.services.runner import run_task_session
 from app.services.scheduler import set_task_schedule
 from app.services.authz import assert_actor_may_mark_done
 from app.services.templates import assert_prior_step_done
+from app.services.activity import append_activity, notify_after_commit
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -52,8 +53,16 @@ def create_task(payload: TaskCreate, db: DbSession):
         status="todo",
     )
     db.add(task)
+    db.flush()
+    evt = append_activity(
+        db,
+        type="task.created",
+        message=f"Task created: {task.name}",
+        task_id=task.id,
+    )
     db.commit()
     db.refresh(task)
+    notify_after_commit(evt)
     return task
 
 

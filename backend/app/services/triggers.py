@@ -24,6 +24,7 @@ from app.schemas.trigger import (
     WebhookTriggerIn,
     WebhookTriggerOut,
 )
+from app.services.activity import append_activity, notify_after_commit
 from app.services.templates import (
     LEAD_INTAKE_SLUG,
     get_template,
@@ -122,9 +123,18 @@ def handle_webhook_trigger(
         tool_call_log="[]",
     )
     db.add(stub)
+    db.flush()
+    evt = append_activity(
+        db,
+        type="webhook.received",
+        message=f"Webhook received shape={payload.shape} task={task.name}",
+        task_id=task.id,
+        session_id=stub.id,
+    )
     db.commit()
     db.refresh(task)
     db.refresh(stub)
+    notify_after_commit(evt)
 
     return WebhookTriggerOut(
         task_id=task.id,

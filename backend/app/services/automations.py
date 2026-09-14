@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.exceptions import BadRequestError, NotFoundError
+from app.services.activity import append_activity, notify_after_commit
 from app.models import Agent, AgentSession, Project, Task
 from app.models.automation import Automation
 from app.schemas.automation import (
@@ -196,6 +197,7 @@ def tick_automations(
     fired_ids: list[int] = []
     task_ids: list[int] = []
     session_ids: list[int] = []
+    pending_notify: list = []
 
     for row in rows:
         if not is_due(row, clock):
@@ -213,8 +215,19 @@ def tick_automations(
         task_ids.append(task_id)
         if session_id is not None:
             session_ids.append(session_id)
+        evt = append_activity(
+            db,
+            type="automation.fired",
+            message=f"Automation fired: {row.name}",
+            task_id=task_id,
+            session_id=session_id,
+            automation_id=row.id,
+        )
+        pending_notify.append(evt)
 
     db.commit()
+    for evt in pending_notify:
+        notify_after_commit(evt)
     return AutomationTickOut(
         now=clock,
         fired_automation_ids=fired_ids,

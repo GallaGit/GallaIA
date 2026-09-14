@@ -16,6 +16,7 @@ from app.schemas.trigger import (
     WebhookTriggerIn,
     WebhookTriggerOut,
 )
+from app.schemas.activity import ActivityEventCreate, ActivityEventOut
 from app.schemas.automation import (
     AutomationCreate,
     AutomationOut,
@@ -75,4 +76,6 @@ __all__ = [
     "AutomationUpdate",
     "AutomationTickIn",
     "AutomationTickOut",
+    "ActivityEventOut",
+    "ActivityEventCreate",
 ]
