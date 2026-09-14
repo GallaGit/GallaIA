@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
+**En curso:** **Phase 5 Triggers** (slice 2 interval automations). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -113,7 +113,7 @@ eview-coordinator, etc.) — optional polish
 
 ## Phase 5 — Triggers (+ automations; Ripples leave theory)
 
-### Slice 1 (este PR) — signed webhook
+### Slice 1 — signed webhook (merged #26)
 
 **Hecho**
 
@@ -122,15 +122,24 @@ eview-coordinator, etc.) — optional polish
 - Bad/missing/unconfigured secret → **401**
 - Pytest both paths
 
+### Slice 2 (este PR) — named interval automations + test clock
+
+**Hecho**
+
+- SQLite `Automation` + CRUD under `/api/v1/automations`
+- `POST /api/v1/automations/tick` with optional `now` (test clock)
+- Lean `interval_minutes` (no croniter); action `create_task` → task + session stub (`runner=automation`)
+- Pytest: due fires; not-due / disabled do not; HTTP CRUD + tick
+
 **Por hacer**
 
-- Named cron automations (test-clock fire)
 - Product seed (doc): `lead-status-nuevo` → instantiate `lead-intake-workflow` — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md)
 - Seed shapes polish: support-inbound, bug-report → diagnostic then (on human OK) fix chain
 - **Ripples** UI (cause→effect edges)
+- Phase 6 YAML / CLI
 - No Mac-only workers required; runner stays `mock` | Anthropic API | later Linux VM
 
-**Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron fires on a test clock — pending.
+**Done when:** signed webhook creates task+session; bad secret → 401 — **met**; a cron/interval fires on a test clock — **met**.
 
 ## Later (see ROADMAP Fases 6–7)
 

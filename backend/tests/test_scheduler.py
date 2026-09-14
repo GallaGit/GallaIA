@@ -134,8 +134,9 @@ def test_tick_without_assignee_clears_schedule_no_session():
 
 
 @pytest.mark.skip(
-    reason="cron string runner deferred to Phase 5 automations; this slice is schedule_at only"
+    reason="full cron-string parsing still deferred; Phase 5 slice 2 uses interval_minutes "
+    "(see test_automations.py)"
 )
 def test_invalid_cron_rejected():
-    """Placeholder: reject invalid cron when Phase 5 stores a cron field."""
-    raise AssertionError("unreachable — cron not in this slice")
+    """Placeholder: reject invalid cron strings if/when croniter lands."""
+    raise AssertionError("unreachable — cron strings not in interval_minutes slice")
