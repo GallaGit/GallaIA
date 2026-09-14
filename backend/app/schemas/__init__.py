@@ -17,6 +17,7 @@ from app.schemas.trigger import (
     WebhookTriggerOut,
 )
 from app.schemas.activity import ActivityEventCreate, ActivityEventOut
+from app.schemas.runner import RunnerRouteIn, RunnerRouteInfoOut, RunnerRouteOut
 from app.schemas.automation import (
     AutomationCreate,
     AutomationOut,
@@ -79,4 +80,7 @@ __all__ = [
     "AutomationTickOut",
     "ActivityEventOut",
     "ActivityEventCreate",
+    "RunnerRouteIn",
+    "RunnerRouteOut",
+    "RunnerRouteInfoOut",
 ]

@@ -9,6 +9,7 @@ import {
   Sun,
   Activity,
   Radio,
+  Eye,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -18,6 +19,7 @@ const primaryLinks = [
   { to: '/sessions', label: 'Sesiones', icon: Activity },
   { to: '/inbox', label: 'Inbox', icon: Inbox },
   { to: '/activity', label: 'Activity', icon: Radio },
+  { to: '/live', label: 'Live', icon: Eye },
 ]
 
 const secondaryLinks = [

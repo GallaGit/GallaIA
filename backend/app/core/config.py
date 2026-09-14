@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +28,15 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
     gallaia_webhook_secret: str = ""
+    # Phase 7: mock (in-process) | local (future OS binary -> local-stub for now).
+    runner_route: str = Field(
+        default="mock",
+        validation_alias=AliasChoices(
+            "GALLAIA_RUNNER_ROUTE",
+            "RUNNER_ROUTE",
+            "runner_route",
+        ),
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

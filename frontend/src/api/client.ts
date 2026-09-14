@@ -180,4 +180,22 @@ export const api = {
     requestAt<ActivityEvent[]>(
       `${API_ROOT}/activity?limit=${encodeURIComponent(String(limit))}`,
     ),
+  /** Control-plane runner route stub (not under /agentos) */
+  runnerRoute: () =>
+    requestAt<{
+      configured_route: string
+      effective_runner: string
+      local_runner_available: boolean
+      note: string
+    }>(`${API_ROOT}/runners/route`),
+  routeRunner: (body: { route: 'mock' | 'local'; session_id?: number }) =>
+    requestAt<{
+      intended: string
+      effective_runner: string
+      status: string
+      note: string
+    }>(`${API_ROOT}/runners/route`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 }

@@ -269,7 +269,7 @@ eview-coordinator, etc.) — optional polish.
 - Auto-emit: task.created (POST tasks), webhook.received, automation.fired.
 - Pytest: list/POST, emits from task/webhook/automation, SSE heartbeat+end, SSE receives live POST.
 
-### Slice Phase 7.2 — Inbox decisions API + PWA manifest stub (este PR)
+### Slice Phase 7.2 — Inbox decisions API + PWA manifest stub (merged #32)
 
 **Hecho**
 
@@ -279,13 +279,23 @@ eview-coordinator, etc.) — optional polish.
 - Optional: atelier Activity page listing `GET /api/v1/activity` + nav link.
 - Pytest for inbox list/reply/resolve; frontend `npm run build`.
 
-**Por hacer (siguientes slices Phase 7 — no este PR)**
+### Slice Phase 7.3 — Live session viewer + local runner routing stub (este PR)
 
-- Web push notifications.
-- Full live viewer UI (session SSE / replay).
-- Routing local (local runner preference).
+**Hecho**
 
-**Phase 6 core done-when: satisfied** (unchanged). Phase 7 in progress (slice 7.2 = inbox decisions + PWA stub).
+- `GET /api/v1/sessions/{id}/stream` SSE: status snapshot + tool-log replay/poll + heartbeats (`max_seconds` for tests).
+- Settings `runner_route=mock|local` (env `GALLAIA_RUNNER_ROUTE`); OS-local binary is future.
+- `GET/POST /api/v1/runners/route` records intended route; `local` → effective `local-stub` (optional session stamp); no real local process.
+- Tiny atelier Live page (`/live`, `/live/:id`) connecting to session SSE.
+- Pytest: stream replay/heartbeat/end, live tool append, runner route mock/local-stub; frontend build.
+
+**Por hacer (Phase 7 polish — no este PR)**
+
+- Web push (VAPID).
+- Real OS-local runner binary.
+- Polish: reply-on-mobile resumes session; richer live UI.
+
+**Phase 7 backend surface: near-complete** (Activity + inbox decisions + PWA stub + session live SSE + runner route stub). Full Phase 7 done-when (reply móvil reanuda sesión) still open.
 
 
 ## Fases AgentOS
@@ -302,7 +312,7 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: core done** (export/import + CLI create/update). **Fase 7 PWA/live: in progress** (slice 7.2 inbox+PWA stub; 7.1 Activity+SSE merged). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: near done** (slice 4.2 merged #25; stub done-when met; polish left). **Fase 5 Triggers: core done** (merged #26–#28). **Fase 6 YAML/CLI: core done** (export/import + CLI create/update). **Fase 7 PWA/live: near-complete** (slices 7.1–7.3; polish left: VAPID push, real local runner). Isolation (Phase 2) **done**. UI Files/Connections / Ripples follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
@@ -310,7 +320,7 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 | **4** | Goals *(near done)* | Slice 1 foundation + slice 2 orchestrator stub + rails spend/time/stuck. Left: progress log / inbox / real routing | **Stub done-when met:** DoD 2 items -> >=2 sessions; cap `0.00` -> 403; stuck/wall rails |
 | **5** | Triggers *(core done)* | Slices 1–3: webhook + interval automations + `lead-status-nuevo` → `lead-intake-workflow`. Optional: Ripples UI, support/bug chains ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** secreto malo → 401; bueno → task+sesión; cron/interval test-clock; lead-status-nuevo → 2 cards |
 | **6** | YAML / CLI *(core done)* | Slices 1–2: `agentos.yml` export/import + CLI create/update (+ push/pull aliases). Optional: skills/grants in YAML; goal/task/skill CLI ([AGENTOS_YML.md](agentos/AGENTOS_YML.md)) | **Satisfied:** push/CLI produce mismos agentes+template que la UI list; pull tras push identidad (whitespace aside) |
-| **7** | PWA / live *(in progress)* | Inbox PWA + push, live viewer SSE, Activity feed, routing local. Slice 7.1 Activity+SSE; **7.2** inbox reply/resolve + PWA manifest stub | Reply en móvil reanuda sesión |
+| **7** | PWA / live *(near-complete)* | Inbox PWA + push, live viewer SSE, Activity feed, routing local. Slices 7.1–7.3: Activity+SSE, inbox+PWA stub, **live session SSE + runner route stub** | Reply en móvil reanuda sesión |
 
 Detalle corto: [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). Walkthrough completo: [agentos/POSTMA_WALKTHROUGH.md](agentos/POSTMA_WALKTHROUGH.md).
 
