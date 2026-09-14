@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** Phase 6 YAML / CLI *(slice 1: agentos.yml export/import)*. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
+**Siguiente:** Phase 7 PWA / live. **Phase 6 YAML / CLI core done**. **Phase 5 Triggers core done** (merged #26–#28). Prior: **Phase 4 Goals** (slice 2: orchestrator stub + safety rails — done-when stub path met; polish left). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections / Ripples remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -144,9 +144,9 @@ eview-coordinator, etc.) — optional polish
 
 **Phase 5 core done-when: satisfied.**
 
-## Phase 6 — YAML / CLI *(in progress)*
+## Phase 6 — YAML / CLI *(core done)*
 
-### Slice 1 (este PR) — agentos.yml export/import
+### Slice 1 — agentos.yml export/import (merged #29)
 
 **Hecho**
 
@@ -155,13 +155,21 @@ eview-coordinator, etc.) — optional polish
 - CLI: `python -m app.cli export` / `import`
 - Pytest: create from YAML; idempotent update; export→import round-trip
 
-**Por hacer**
+### Slice 2 (este PR) — CLI create/update
 
-- Full CLI parity (push/pull, project/goal/task/skill create, agent update)
-- YAML: skills, grants, network, fs, secret refs
-- Phase 7 PWA; Ripples UI optional
+**Hecho**
 
-**Done when (full Phase 6):** push produces same agents+template as UI; pull after push is identity (whitespace aside) — **slice 1 met for agents+templates**.
+- `create-agent` / `update-agent` (flags or `--from-yaml`); optional `create-template`
+- Aliases `push`/`pull`; same Agent rows as import / `GET /api/v1/agents`
+- Pytest + subprocess smoke
+
+**Phase 6 core done-when: satisfied.**
+
+**Por hacer (Phase 7 / polish)**
+
+- Phase 7 PWA / live; optional YAML skills/grants; goal/task/skill CLI; Ripples UI
+
+**Done when (full Phase 6):** push produces same agents+template as UI; pull after push is identity (whitespace aside) — **met** (export/import + CLI create/update).
 
 ## Later (see ROADMAP Fase 7)
 
