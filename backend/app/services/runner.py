@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.agentos.filesystem import evaluate_fs
 from app.agentos.grants import evaluate_tool
 from app.agentos.network import evaluate_http
 from app.models import Agent, AgentSession, InboxMessage, Task
@@ -20,6 +21,7 @@ from app.providers.openrouter import (
     openrouter_api_key,
     openrouter_model,
 )
+from app.services.filesystem import filesystem_acl_for_agent
 from app.services.grants import grant_set_for_agent
 from app.services.network import network_policy_for_agent
 
@@ -82,6 +84,28 @@ def _append_http(
     return False
 
 
+def _append_fs(
+    session: AgentSession,
+    events: list,
+    acl,
+    op: str,
+    path: str,
+) -> bool:
+    """Record a mock fs tool; return False when ACL blocked the path."""
+    decision = evaluate_fs(acl, op, path)
+    tool = f"fs.{op}"
+    if decision.allowed:
+        _append_event(session, events, tool, f"{path} ok")
+        return True
+    _append_event(
+        session,
+        events,
+        tool,
+        f"DENIED {decision.reason} path={path}",
+    )
+    return False
+
+
 def _anthropic_key() -> str:
     try:
         from app.core.config import get_settings
@@ -122,6 +146,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
     session.status = "running"
     grants = grant_set_for_agent(agent)
     network = network_policy_for_agent(agent)
+    filesystem = filesystem_acl_for_agent(agent)
     _append_event(session, events, "session.start", f"Runner={runner_name} agent={agent.name}")
     _append_event(
         session,
@@ -134,7 +159,10 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         session,
         events,
         "session.manifest",
-        f"grants={grants.as_list()} network={network.as_dict()} isolation=grants-default-deny+network-policy",
+        (
+            f"grants={grants.as_list()} network={network.as_dict()} "
+            f"fs={filesystem.as_list()} isolation=grants-default-deny+network-policy+fs-acl"
+        ),
     )
 
     if runner_name == "openrouter":
@@ -194,6 +222,17 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 "https://api.github.com/user",
                 "must not succeed outside allowlist",
             )
+            _append_fs(session, events, filesystem, "read", "/agents/support/ticket.md")
+            _append_fs(
+                session, events, filesystem, "read", "/agents/senior-dev/notes.md"
+            )
+            _append_fs(
+                session,
+                events,
+                filesystem,
+                "read",
+                "/agents/support/../senior-dev/notes.md",
+            )
         elif agent.name == "senior-dev":
             _append_gated(
                 session,
@@ -201,6 +240,9 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 grants,
                 "github.commit",
                 f"feat: {task.name} (mock)",
+            )
+            _append_fs(
+                session, events, filesystem, "read", "/agents/senior-dev/notes.md"
             )
         _append_gated(
             session, events, grants, "agentos.task_update", "Marking task complete"

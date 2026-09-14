@@ -4,7 +4,16 @@ from sqlalchemy import select
 from app.api.dependencies.db import DbSession
 from app.exceptions import NotFoundError
 from app.models import Agent
-from app.schemas import AgentGrantsOut, AgentGrantsUpdate, AgentNetworkOut, AgentNetworkUpdate, AgentOut
+from app.schemas import (
+    AgentFsOut,
+    AgentFsUpdate,
+    AgentGrantsOut,
+    AgentGrantsUpdate,
+    AgentNetworkOut,
+    AgentNetworkUpdate,
+    AgentOut,
+)
+from app.services.filesystem import fs_out, replace_agent_fs
 from app.services.grants import grants_out, replace_agent_grants, require_agent
 from app.services.network import network_out, replace_agent_network
 
@@ -51,3 +60,14 @@ def put_agent_network(
 ) -> AgentNetworkOut:
     agent = require_agent(db, agent_id)
     return replace_agent_network(db, agent, payload.mode, payload.allowlist)
+
+
+@router.get("/{agent_id}/fs", response_model=AgentFsOut)
+def get_agent_fs(agent_id: int, db: DbSession) -> AgentFsOut:
+    return fs_out(require_agent(db, agent_id))
+
+
+@router.put("/{agent_id}/fs", response_model=AgentFsOut)
+def put_agent_fs(agent_id: int, payload: AgentFsUpdate, db: DbSession) -> AgentFsOut:
+    agent = require_agent(db, agent_id)
+    return replace_agent_fs(db, agent, payload.roots)

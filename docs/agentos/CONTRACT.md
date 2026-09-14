@@ -81,4 +81,4 @@ Every seed `foundational_prompt` / `role_prompt` labeled:
 - `backend/tests/test_agentos_runner.py`
 - `docs/agentos/{README,PHASE2_PLUS}.md`
 
-Phase 2 Isolation: grants wall + network policy are implemented (`agent_grants` default-deny; `agent_network_policies` `open`|`limited` + allowlist on mock `http.fetch`). Filesystem ACL / secret refs remain later slices.
+Phase 2 Isolation: grants + network + filesystem walls are implemented (`agent_grants` default-deny; `agent_network_policies` `open`|`limited`; `agent_fs_acls` per-agent roots, deny `../` on mock `fs.read`/`fs.write`/`fs.delete`). Secret refs remain a later slice.

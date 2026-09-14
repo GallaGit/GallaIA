@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente implementación:** **Phase 2 Isolation** — grants + network walls **done** (este PR). Siguiente muro: filesystem ACL, luego secret refs. **No** implementar Templates, Goals ni Triggers en este slice.
+**Siguiente implementación:** **Phase 2 Isolation** — grants + network + filesystem walls **done** (este PR). Siguiente muro: secret refs. **No** implementar Templates, Goals ni Triggers en este slice.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -13,16 +13,18 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 | Muro | Estado |
 |------|--------|
 | Per-agent MCP / repo / env grants (default deny) | **Done** |
-| Network policy `open` \| `limited` + host allowlist at runner proxy | **Done** (este PR) |
-| Filesystem MCP with server-side read/write/delete ACLs and per-agent folders | Por hacer — **siguiente muro** |
-| Secret refs injected at session start only (no raw tokens in DB) | Por hacer |
+| Network policy `open` \| `limited` + host allowlist at runner proxy | **Done** |
+| Filesystem MCP with server-side read/write/delete ACLs and per-agent folders | **Done** (este PR) |
+| Secret refs injected at session start only (no raw tokens in DB) | Por hacer — **siguiente muro** |
 | UI surfaces: **Environment**, **Connections**, **Files** (real browser) | Por hacer |
 
 **Done when (grants wall):** a support-style agent with only a fake Front MCP cannot call GitHub.
 
 **Done when (network wall):** `limited` + allowlist `api.front.com` cannot `http.fetch` `api.github.com`; `open` can.
 
-**Done when (Isolation completa):** tampoco lee another agent's folder.
+**Done when (filesystem wall):** Agent A cannot `fs.read` Agent B's `/agents/{b}/` folder; `../` is denied.
+
+**Done when (Isolation completa):** secret refs (no raw tokens in DB).
 
 ## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo)
 

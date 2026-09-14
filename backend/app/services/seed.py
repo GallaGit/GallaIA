@@ -1,11 +1,12 @@
-"""Seed default project + agents on first boot; backfill Isolation grants/network."""
+"""Seed default project + agents on first boot; backfill Isolation grants/network/fs."""
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.agentos.filesystem import FilesystemAcl
 from app.agentos.network import dump_allowlist_json
 from app.agentos.seeds import AGENT_SEEDS, AgentSeed
-from app.models import Agent, AgentGrant, AgentNetworkPolicy, Project
+from app.models import Agent, AgentFsAcl, AgentGrant, AgentNetworkPolicy, Project
 from app.services.prompts import FOUNDATIONAL_PROMPT, ROLE_PROMPTS
 
 
@@ -122,6 +123,7 @@ def ensure_seed_agents_and_grants(db: Session) -> None:
     if dirty:
         db.commit()
     ensure_seed_network_policies(db)
+    ensure_seed_fs_acls(db, newly_created_ids={agent.id for agent, _ in newly_created})
 
 
 def _upsert_network_policy(db: Session, agent: Agent, seed: AgentSeed) -> None:
@@ -168,6 +170,58 @@ def ensure_seed_network_policies(db: Session) -> None:
             if agent is None or agent.id in have:
                 continue
             _upsert_network_policy(db, agent, seed)
+            dirty = True
+
+    if dirty:
+        db.commit()
+
+
+def _insert_fs_acls(db: Session, agent: Agent, acl: FilesystemAcl) -> None:
+    for root in acl.roots:
+        db.add(
+            AgentFsAcl(
+                agent_id=agent.id,
+                root=root.root,
+                can_read=root.can_read,
+                can_write=root.can_write,
+                can_delete=root.can_delete,
+            )
+        )
+
+
+def ensure_seed_fs_acls(
+    db: Session, newly_created_ids: set[int] | None = None
+) -> None:
+    """Idempotent Isolation backfill: seed filesystem ACLs when the table is empty.
+
+    If ACLs already exist, only newly created agents get seed defaults so an
+    operator PUT of `[]` is not overwritten on restart.
+    """
+    project = db.scalar(select(Project).where(Project.slug == "default"))
+    if project is None:
+        return
+
+    existing = {
+        agent.name: agent
+        for agent in db.scalars(select(Agent).where(Agent.project_id == project.id)).all()
+    }
+    acl_count = db.scalar(select(func.count()).select_from(AgentFsAcl)) or 0
+    dirty = False
+
+    if acl_count == 0:
+        for seed in AGENT_SEEDS.values():
+            agent = existing.get(seed.name)
+            if agent is None:
+                continue
+            _insert_fs_acls(db, agent, seed.filesystem_acl())
+            dirty = True
+    else:
+        created = newly_created_ids or set()
+        for seed in AGENT_SEEDS.values():
+            agent = existing.get(seed.name)
+            if agent is None or agent.id not in created:
+                continue
+            _insert_fs_acls(db, agent, seed.filesystem_acl())
             dirty = True
 
     if dirty:

@@ -1,4 +1,5 @@
 from app.schemas.agent import AgentOut
+from app.schemas.filesystem import AgentFsOut, AgentFsUpdate, FsRootItem
 from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate, GrantItem
 from app.schemas.inbox import InboxMessageOut, InboxReplyIn
 from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
@@ -14,6 +15,9 @@ __all__ = [
     "AgentGrantsUpdate",
     "AgentNetworkOut",
     "AgentNetworkUpdate",
+    "FsRootItem",
+    "AgentFsOut",
+    "AgentFsUpdate",
     "TaskCreate",
     "TaskUpdate",
     "TaskStatusUpdate",

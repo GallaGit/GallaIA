@@ -10,8 +10,8 @@ Draft
 
 ## Scope
 
-- Existing: SQLAlchemy models and Pydantic schemas for the AgentOS control plane (projects, agents, agent grants, network policy, tasks, sessions, inbox) plus in-memory AgentOS package schemas under `app/agentos/`.
-- Planned: Models/schemas for Isolation filesystem/secret refs, templates, goals, triggers when those phases start — [ROADMAP.md](../ROADMAP.md).
+- Existing: SQLAlchemy models and Pydantic schemas for the AgentOS control plane (projects, agents, agent grants, network policy, filesystem ACL, tasks, sessions, inbox) plus in-memory AgentOS package schemas under `app/agentos/`.
+- Planned: Models/schemas for Isolation secret refs, templates, goals, triggers when those phases start — [ROADMAP.md](../ROADMAP.md).
 - Future: Users (single-operator auth), documents/embeddings if RAG lands.
 
 ## TODO
