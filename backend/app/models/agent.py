@@ -25,3 +25,6 @@ class Agent(Base):
     project = relationship("Project", back_populates="agents")
     tasks = relationship("Task", back_populates="assignee_agent")
     sessions = relationship("AgentSession", back_populates="agent")
+    grants = relationship(
+        "AgentGrant", back_populates="agent", cascade="all, delete-orphan"
+    )

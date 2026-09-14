@@ -19,8 +19,33 @@ from app.agentos.schemas import (
 )
 from app.agentos.seeds import get_seed, list_seeds
 from app.agentos.store import store
+from app.api.dependencies.db import DbSession
+from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate
+from app.services.grants import (
+    grant_set_for_agent,
+    grants_out,
+    load_agent_by_name,
+    replace_agent_grants,
+    require_agent_by_name,
+)
 
 router = APIRouter(prefix="/agentos", tags=["agentos"])
+
+
+def _seed_out(s) -> AgentSeedOut:
+    return AgentSeedOut(
+        name=s.name,
+        title=s.title,
+        model=s.model,
+        one_job=s.one_job,
+        skills=list(s.skills),
+        mcp=list(s.mcp),
+        grants=s.grant_set().as_list(),
+        runner_preference=s.runner_preference,
+        prompt_origin=s.prompt_origin,
+        foundational_prompt=s.foundational_prompt,
+        role_prompt=s.role_prompt,
+    )
 
 
 def _task_out(task: Task) -> TaskOut:
@@ -57,22 +82,8 @@ def _session_out(session) -> SessionOut:
 
 @router.get("/agents", response_model=list[AgentSeedOut])
 def get_agents() -> list[AgentSeedOut]:
-    """List seeded agents (default, plan, senior-dev)."""
-    return [
-        AgentSeedOut(
-            name=s.name,
-            title=s.title,
-            model=s.model,
-            one_job=s.one_job,
-            skills=list(s.skills),
-            mcp=list(s.mcp),
-            runner_preference=s.runner_preference,
-            prompt_origin=s.prompt_origin,
-            foundational_prompt=s.foundational_prompt,
-            role_prompt=s.role_prompt,
-        )
-        for s in list_seeds()
-    ]
+    """List seeded agents (default, plan, senior-dev, support)."""
+    return [_seed_out(s) for s in list_seeds()]
 
 
 @router.get("/agents/{name}", response_model=AgentSeedOut)
@@ -81,18 +92,20 @@ def get_agent(name: str) -> AgentSeedOut:
         s = get_seed(name)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return AgentSeedOut(
-        name=s.name,
-        title=s.title,
-        model=s.model,
-        one_job=s.one_job,
-        skills=list(s.skills),
-        mcp=list(s.mcp),
-        runner_preference=s.runner_preference,
-        prompt_origin=s.prompt_origin,
-        foundational_prompt=s.foundational_prompt,
-        role_prompt=s.role_prompt,
-    )
+    return _seed_out(s)
+
+
+@router.get("/agents/{name}/grants", response_model=AgentGrantsOut)
+def get_agent_grants(name: str, db: DbSession) -> AgentGrantsOut:
+    return grants_out(require_agent_by_name(db, name))
+
+
+@router.put("/agents/{name}/grants", response_model=AgentGrantsOut)
+def put_agent_grants(
+    name: str, body: AgentGrantsUpdate, db: DbSession
+) -> AgentGrantsOut:
+    agent = require_agent_by_name(db, name)
+    return replace_agent_grants(db, agent, body.grants)
 
 
 @router.post("/tasks", response_model=TaskOut, status_code=201)
@@ -183,14 +196,23 @@ def get_inbox() -> list[InboxItem]:
     return items
 
 @router.post("/tasks/{task_id}/run", response_model=RunResponse)
-def run_task(task_id: str, body: RunRequest | None = None) -> RunResponse:
+def run_task(
+    task_id: str, db: DbSession, body: RunRequest | None = None
+) -> RunResponse:
     body = body or RunRequest()
+    task = store.get_task(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Unknown task {task_id!r}")
+    seed_name = body.agent_name or task.assignee_agent
+    stored = load_agent_by_name(db, seed_name)
+    grants = grant_set_for_agent(stored) if stored is not None else None
     runner = SessionRunner(store)
     try:
         result = runner.run(
             task_id,
             agent_name=body.agent_name,
             runner=body.runner,
+            grants=grants,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

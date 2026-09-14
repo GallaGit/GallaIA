@@ -315,7 +315,7 @@ Runtime real (cuando toque sustituir el stub):
 
 ### Fase 2 — Isolation (lo más importante y lo más difícil)
 
-**Candidato de implementación siguiente en GallaIA.** Spec only until a dedicated runtime PR; first slice should pick one wall (grants XOR network XOR filesystem ACL), not the whole list.
+**Candidato de implementación siguiente en GallaIA.** Grants wall: done. Remaining walls: network policy, filesystem ACL, secret refs — one wall per slice.
 
 1. Default deny en el **session manifest**.
 2. Grants por agente: MCP, repo, env, filesystem, collaboration list.

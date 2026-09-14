@@ -12,12 +12,14 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.agentos.grants import evaluate_tool
 from app.models import Agent, AgentSession, InboxMessage, Task
 from app.providers.openrouter import (
     complete as openrouter_complete,
     openrouter_api_key,
     openrouter_model,
 )
+from app.services.grants import grant_set_for_agent
 
 
 def _now() -> datetime:
@@ -33,6 +35,28 @@ def _append_event(session: AgentSession, events: list, name: str, detail: str) -
         }
     )
     session.set_tool_events(events)
+
+
+def _append_gated(
+    session: AgentSession,
+    events: list,
+    grants,
+    name: str,
+    detail: str,
+    tool_input: dict | None = None,
+) -> bool:
+    """Record a tool event; return False when default-deny blocked it."""
+    decision = evaluate_tool(grants, name, tool_input)
+    if decision.allowed:
+        _append_event(session, events, name, detail)
+        return True
+    _append_event(
+        session,
+        events,
+        name,
+        f"DENIED {decision.reason}",
+    )
+    return False
 
 
 def _anthropic_key() -> str:
@@ -73,6 +97,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
 
     events: list = []
     session.status = "running"
+    grants = grant_set_for_agent(agent)
     _append_event(session, events, "session.start", f"Runner={runner_name} agent={agent.name}")
     _append_event(
         session,
@@ -81,6 +106,12 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         "Loaded foundational + role prompts (RECONSTRUCTED — not verbatim)",
     )
     _append_event(session, events, "task.read", f"Task #{task.id}: {task.name}")
+    _append_event(
+        session,
+        events,
+        "session.manifest",
+        f"grants={grants.as_list()} isolation=grants-default-deny",
+    )
 
     if runner_name == "openrouter":
         try:
@@ -110,11 +141,38 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         )
         _append_event(session, events, "mock.think", "Simulating tool use…")
         _append_event(session, events, "mock.write", "Would write via filesystem MCP")
-        _append_event(session, events, "agentos.task_update", "Marking task complete")
+        if agent.name == "support":
+            _append_gated(
+                session,
+                events,
+                grants,
+                "front.list_conversations",
+                "fake Front inbox",
+            )
+            _append_gated(
+                session,
+                events,
+                grants,
+                "github.commit",
+                "must not succeed without mcp:github",
+            )
+        elif agent.name == "senior-dev":
+            _append_gated(
+                session,
+                events,
+                grants,
+                "github.commit",
+                f"feat: {task.name} (mock)",
+            )
+        _append_gated(
+            session, events, grants, "agentos.task_update", "Marking task complete"
+        )
 
     if task.approval_gate:
         task.status = "review"
-        _append_event(session, events, "agentos.gate", "Approval gate → left in review")
+        _append_gated(
+            session, events, grants, "agentos.gate", "Approval gate → left in review"
+        )
         inbox = InboxMessage(
             from_role="agent",
             agent_id=agent.id,
@@ -127,7 +185,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         db.add(inbox)
     else:
         task.status = "done"
-        _append_event(session, events, "agentos.done", "Task marked done")
+        _append_gated(session, events, grants, "agentos.done", "Task marked done")
 
     session.summary = summary
     session.status = "destroyed"

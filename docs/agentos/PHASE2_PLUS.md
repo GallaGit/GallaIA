@@ -2,21 +2,25 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**Siguiente implementación:** **Phase 2 Isolation** (abajo). Sigue siendo spec hasta un PR de runtime dedicado. **No** implementar Isolation, Templates, Goals ni Triggers en PRs de higiene/docs.
+**Siguiente implementación:** **Phase 2 Isolation** — grants wall **done** (este PR). Siguientes muros: network, filesystem ACL, secret refs. **No** implementar Templates, Goals ni Triggers en este slice.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
 Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMAP.md](../ROADMAP.md) § Operación autónoma.
 
-## Phase 2 — Isolation *(next implementation — not in this docs PR)*
+## Phase 2 — Isolation
 
-- Per-agent MCP / repo / env grants (default deny)
-- Network policy `open` | `limited` + host allowlist at runner proxy
-- Filesystem MCP with server-side read/write/delete ACLs and per-agent folders
-- Secret refs injected at session start only (no raw tokens in DB)
-- UI surfaces that become real here: **Environment**, **Connections**, **Files** (real browser)
+| Muro | Estado |
+|------|--------|
+| Per-agent MCP / repo / env grants (default deny) | **Done** (este PR) |
+| Network policy `open` \| `limited` + host allowlist at runner proxy | Por hacer — **siguiente muro** |
+| Filesystem MCP with server-side read/write/delete ACLs and per-agent folders | Por hacer |
+| Secret refs injected at session start only (no raw tokens in DB) | Por hacer |
+| UI surfaces: **Environment**, **Connections**, **Files** (real browser) | Por hacer |
 
-**Done when:** a support-style agent with only a fake Front MCP cannot call GitHub or read another agent's folder.
+**Done when (grants wall):** a support-style agent with only a fake Front MCP cannot call GitHub.
+
+**Done when (Isolation completa):** tampoco lee another agent's folder; network `limited` bloquea hosts no allowlisted.
 
 ## Phase 3 — Templates (+ gates, chains, Skills CRUD mínimo)
 

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+from app.agentos.grants import GrantSet, gated_output
 from app.agentos.models import Session, Task, ToolEvent
 from app.agentos.seeds import AgentSeed, get_seed
 from app.agentos.store import AgentOSStore, store as default_store
@@ -79,6 +80,7 @@ class SessionRunner:
         *,
         agent_name: str | None = None,
         runner: RunnerKind | None = None,
+        grants: GrantSet | None = None,
     ) -> RunResult:
         task = self.store.get_task(task_id)
         if task is None:
@@ -87,6 +89,7 @@ class SessionRunner:
         seed_name = agent_name or task.assignee_agent
         seed = get_seed(seed_name)
         kind = resolve_runner(runner or seed.runner_preference)
+        grant_set = grants if grants is not None else seed.grant_set()
 
         session = Session(
             task_id=task.id,
@@ -121,6 +124,8 @@ class SessionRunner:
                     "mcp": list(seed.mcp),
                     "skills": list(seed.skills),
                     "prompt_origin": seed.prompt_origin,
+                    "grants": grant_set.as_list(),
+                    "isolation": "grants-default-deny",
                 },
             )
         )
@@ -130,13 +135,17 @@ class SessionRunner:
         summary: str
 
         if kind == "openrouter":
-            summary, or_events, used_openrouter = self._run_openrouter(seed, task)
+            summary, or_events, used_openrouter = self._run_openrouter(
+                seed, task, grant_set
+            )
             events.extend(or_events)
         elif kind == "anthropic":
-            summary, anthropic_events, used_anthropic = self._run_anthropic(seed, task)
+            summary, anthropic_events, used_anthropic = self._run_anthropic(
+                seed, task, grant_set
+            )
             events.extend(anthropic_events)
         else:
-            summary, mock_events = self._run_mock(seed, task)
+            summary, mock_events = self._run_mock(seed, task, grant_set)
             events.extend(mock_events)
 
         # doing -> review (agents leave gated work in review; MVP marks review then done)
@@ -188,17 +197,34 @@ class SessionRunner:
             tool_events=events,
         )
 
-    def _run_mock(self, seed: AgentSeed, task: Task) -> tuple[str, list[ToolEvent]]:
+    def _tool(
+        self,
+        grants: GrantSet,
+        name: str,
+        tool_input: dict[str, Any],
+        allowed_output: dict[str, Any],
+    ) -> ToolEvent:
+        return ToolEvent(
+            name=name,
+            input=tool_input,
+            output=gated_output(grants, name, tool_input, allowed_output),
+        )
+
+    def _run_mock(
+        self, seed: AgentSeed, task: Task, grants: GrantSet
+    ) -> tuple[str, list[ToolEvent]]:
         events = [
-            ToolEvent(
-                name="agentos.task.read",
-                input={"task_id": task.id},
-                output={"name": task.name, "description": task.description},
+            self._tool(
+                grants,
+                "agentos.task.read",
+                {"task_id": task.id},
+                {"name": task.name, "description": task.description},
             ),
-            ToolEvent(
-                name="agentos.task.write_activity",
-                input={"message": f"[{seed.name}] mock progress on {task.name}"},
-                output={"ok": True},
+            self._tool(
+                grants,
+                "agentos.task.write_activity",
+                {"message": f"[{seed.name}] mock progress on {task.name}"},
+                {},
             ),
         ]
         if seed.name == "plan":
@@ -211,28 +237,49 @@ class SessionRunner:
                 f"(Mock plan — {seed.prompt_origin})"
             )
             events.append(
-                ToolEvent(
-                    name="agentos.task.attach_plan",
-                    input={"format": "markdown"},
-                    output={"plan_preview": plan[:240]},
+                self._tool(
+                    grants,
+                    "agentos.task.attach_plan",
+                    {"format": "markdown"},
+                    {"plan_preview": plan[:240]},
                 )
             )
             summary = f"Mock plan written for task {task.name!r}"
         elif seed.name == "senior-dev":
             events.append(
-                ToolEvent(
-                    name="github.commit",
-                    input={"message": f"feat: {task.name} (mock)"},
-                    output={"sha": "mockdeadbeef", "ok": True},
+                self._tool(
+                    grants,
+                    "github.commit",
+                    {"message": f"feat: {task.name} (mock)"},
+                    {"sha": "mockdeadbeef"},
                 )
             )
             summary = f"Mock implementation committed for {task.name!r}"
+        elif seed.name == "support":
+            events.append(
+                self._tool(
+                    grants,
+                    "front.list_conversations",
+                    {"inbox": "support"},
+                    {"conversations": [], "source": "fake-front"},
+                )
+            )
+            # Isolation assertion: Front-only must not get GitHub.
+            events.append(
+                self._tool(
+                    grants,
+                    "github.commit",
+                    {"message": f"should-be-denied:{task.name}"},
+                    {"sha": "must-not-land"},
+                )
+            )
+            summary = f"Mock support handled {task.name!r} via Front (GitHub denied)"
         else:
             summary = f"Mock default agent completed {task.name!r}"
         return summary, events
 
     def _run_openrouter(
-        self, seed: AgentSeed, task: Task
+        self, seed: AgentSeed, task: Task, grants: GrantSet
     ) -> tuple[str, list[ToolEvent], bool]:
         from app.providers.openrouter import (
             OpenRouterError,
@@ -243,7 +290,7 @@ class SessionRunner:
 
         events: list[ToolEvent] = []
         if not openrouter_api_key():
-            summary, mock_events = self._run_mock(seed, task)
+            summary, mock_events = self._run_mock(seed, task, grants)
             events.append(
                 ToolEvent(
                     name="openrouter.skip",
@@ -290,17 +337,17 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task)
+            summary, mock_events = self._run_mock(seed, task, grants)
             events.extend(mock_events)
             return f"OpenRouter failed ({exc}); mock: {summary}", events, False
 
     def _run_anthropic(
-        self, seed: AgentSeed, task: Task
+        self, seed: AgentSeed, task: Task, grants: GrantSet
     ) -> tuple[str, list[ToolEvent], bool]:
         api_key = _anthropic_key()
         events: list[ToolEvent] = []
         if not api_key:
-            summary, mock_events = self._run_mock(seed, task)
+            summary, mock_events = self._run_mock(seed, task, grants)
             events.append(
                 ToolEvent(
                     name="anthropic.skip",
@@ -378,6 +425,6 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task)
+            summary, mock_events = self._run_mock(seed, task, grants)
             events.extend(mock_events)
             return f"Anthropic failed ({exc}); mock: {summary}", events, False

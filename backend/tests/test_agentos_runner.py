@@ -28,7 +28,7 @@ def _clear_llm_env(monkeypatch) -> None:
 
 def test_three_seeds_labeled_reconstructed():
     names = {s.name for s in list_seeds()}
-    assert names == {"default", "plan", "senior-dev"}
+    assert names == {"default", "plan", "senior-dev", "support"}
     for seed in AGENT_SEEDS.values():
         assert "not his verbatim" in seed.prompt_origin.lower() or "not his verbatim" in seed.role_prompt.lower()
         assert "Reconstructed" in seed.prompt_origin or "Reconstructed" in seed.role_prompt
