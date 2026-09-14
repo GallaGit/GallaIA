@@ -11,8 +11,8 @@ Draft
 ## Scope
 
 - Existing: AgentOS / control-plane services and prompts under `app/services/` and `app/agentos/` (runners, seeds, grants, network policy, filesystem ACL, secret refs, task/session orchestration).
-- Active: Template instantiate + goal orchestrator stub (`app/services/goals.py` orchestrate + spend/time/stuck rails).
-- Future: RAG, product-chat orchestration, richer automations.
+- Active: Template instantiate + goal orchestrator stub (`app/services/goals.py`) + signed webhook (`app/services/triggers.py`).
+- Future: RAG, product-chat orchestration, cron automations, Ripples.
 
 ## TODO
 

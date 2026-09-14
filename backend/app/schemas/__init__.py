@@ -10,6 +10,7 @@ from app.schemas.session import SessionOut
 from app.schemas.skill import SkillCreate, SkillOut, SkillUpdate, SkillUpsert
 from app.schemas.goal import GoalCreate, GoalOrchestrateOut, GoalOut, GoalSpawnOut
 from app.schemas.task import TaskCreate, TaskOut, TaskScheduleUpdate, TaskStatusUpdate, TaskUpdate
+from app.schemas.trigger import WebhookTriggerIn, WebhookTriggerOut
 from app.schemas.template import (
     TemplateInstantiateIn,
     TemplateInstantiateOut,
@@ -53,4 +54,6 @@ __all__ = [
     "GoalOrchestrateOut",
     "SchedulerTickIn",
     "SchedulerTickOut",
+    "WebhookTriggerIn",
+    "WebhookTriggerOut",
 ]
