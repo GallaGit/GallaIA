@@ -1,12 +1,20 @@
-"""Seed default project + agents on first boot; backfill Isolation grants/network/fs."""
+"""Seed default project + agents on first boot; backfill Isolation grants/network/fs/secrets."""
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.agentos.filesystem import FilesystemAcl
 from app.agentos.network import dump_allowlist_json
+from app.agentos.secrets import SecretRefSet
 from app.agentos.seeds import AGENT_SEEDS, AgentSeed
-from app.models import Agent, AgentFsAcl, AgentGrant, AgentNetworkPolicy, Project
+from app.models import (
+    Agent,
+    AgentFsAcl,
+    AgentGrant,
+    AgentNetworkPolicy,
+    AgentSecretRef,
+    Project,
+)
 from app.services.prompts import FOUNDATIONAL_PROMPT, ROLE_PROMPTS
 
 
@@ -124,6 +132,9 @@ def ensure_seed_agents_and_grants(db: Session) -> None:
         db.commit()
     ensure_seed_network_policies(db)
     ensure_seed_fs_acls(db, newly_created_ids={agent.id for agent, _ in newly_created})
+    ensure_seed_secret_refs(
+        db, newly_created_ids={agent.id for agent, _ in newly_created}
+    )
 
 
 def _upsert_network_policy(db: Session, agent: Agent, seed: AgentSeed) -> None:
@@ -222,6 +233,64 @@ def ensure_seed_fs_acls(
             if agent is None or agent.id not in created:
                 continue
             _insert_fs_acls(db, agent, seed.filesystem_acl())
+            dirty = True
+
+    if dirty:
+        db.commit()
+
+
+def _insert_secret_refs(db: Session, agent: Agent, refs: SecretRefSet) -> None:
+    for ref in refs.items:
+        db.add(
+            AgentSecretRef(
+                agent_id=agent.id,
+                name=ref.name,
+                provider=ref.provider,
+                key=ref.key,
+            )
+        )
+
+
+def ensure_seed_secret_refs(
+    db: Session, newly_created_ids: set[int] | None = None
+) -> None:
+    """Idempotent Isolation backfill: seed secret refs when the table is empty.
+
+    Seeds currently ship with no refs (unresolved refs would deny sessions).
+    If rows already exist, only newly created agents get seed defaults so an
+    operator PUT of `[]` is not overwritten on restart.
+    """
+    project = db.scalar(select(Project).where(Project.slug == "default"))
+    if project is None:
+        return
+
+    existing = {
+        agent.name: agent
+        for agent in db.scalars(select(Agent).where(Agent.project_id == project.id)).all()
+    }
+    ref_count = db.scalar(select(func.count()).select_from(AgentSecretRef)) or 0
+    dirty = False
+
+    if ref_count == 0:
+        for seed in AGENT_SEEDS.values():
+            agent = existing.get(seed.name)
+            if agent is None:
+                continue
+            refs = seed.secret_ref_set()
+            if not refs.items:
+                continue
+            _insert_secret_refs(db, agent, refs)
+            dirty = True
+    else:
+        created = newly_created_ids or set()
+        for seed in AGENT_SEEDS.values():
+            agent = existing.get(seed.name)
+            if agent is None or agent.id not in created:
+                continue
+            refs = seed.secret_ref_set()
+            if not refs.items:
+                continue
+            _insert_secret_refs(db, agent, refs)
             dirty = True
 
     if dirty:

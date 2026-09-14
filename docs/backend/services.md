@@ -10,8 +10,8 @@ Draft
 
 ## Scope
 
-- Existing: AgentOS / control-plane services and prompts under `app/services/` and `app/agentos/` (runners, seeds, grants, network policy, filesystem ACL, task/session orchestration).
-- Planned: Isolation secret refs, template instantiate, goal orchestrator — when those AgentOS phases start ([ROADMAP.md](../ROADMAP.md)).
+- Existing: AgentOS / control-plane services and prompts under `app/services/` and `app/agentos/` (runners, seeds, grants, network policy, filesystem ACL, secret refs, task/session orchestration).
+- Planned: Template instantiate, goal orchestrator — when those AgentOS phases start ([ROADMAP.md](../ROADMAP.md)).
 - Future: RAG, product-chat orchestration, richer automations.
 
 ## TODO

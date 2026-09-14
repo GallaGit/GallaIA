@@ -48,7 +48,7 @@ Every seed file and prompt string starts with / documents:
 
 ## Out of scope here
 
-Filesystem ACL, secret refs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md). **Grants + network walls (Phase 2 Isolation):** implemented in this slice. Sidebar map (doc only until those surfaces land): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
+Filesystem ACL, secret refs, templates, goals/orchestrator, triggers/webhooks — see [PHASE2_PLUS.md](PHASE2_PLUS.md) and [ROADMAP.md](../ROADMAP.md). **Phase 2 Isolation (grants + network + filesystem + secret refs):** implemented. UI Files/Connections remain follow-ups. Sidebar map (doc only until those surfaces land): [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md).
 
 Skills de Cursor/skills.sh (no el catálogo AgentOS `/skills`): [SKILLS.md](SKILLS.md).
 

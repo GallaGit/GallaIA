@@ -20,9 +20,12 @@ from app.agentos.schemas import (
 from app.agentos.seeds import get_seed, list_seeds
 from app.agentos.store import store
 from app.api.dependencies.db import DbSession
+from app.agentos.secrets import UnresolvedSecretRef
+from app.exceptions import UnresolvedSecretRefError
 from app.schemas.filesystem import AgentFsOut, AgentFsUpdate
 from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate
 from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
+from app.schemas.secret import AgentSecretsOut, AgentSecretsUpdate
 from app.services.filesystem import filesystem_acl_for_agent, fs_out, replace_agent_fs
 from app.services.grants import (
     grant_set_for_agent,
@@ -35,6 +38,11 @@ from app.services.network import (
     network_out,
     network_policy_for_agent,
     replace_agent_network,
+)
+from app.services.secrets import (
+    replace_agent_secrets,
+    secret_refs_for_agent,
+    secrets_out,
 )
 
 router = APIRouter(prefix="/agentos", tags=["agentos"])
@@ -52,6 +60,7 @@ def _seed_out(s) -> AgentSeedOut:
         network_mode=s.network_mode,
         network_allowlist=list(s.network_allowlist),
         fs_acl=s.filesystem_acl().as_list(),
+        secrets=s.secret_ref_set().as_list(),
         runner_preference=s.runner_preference,
         prompt_origin=s.prompt_origin,
         foundational_prompt=s.foundational_prompt,
@@ -141,6 +150,19 @@ def get_agent_fs(name: str, db: DbSession) -> AgentFsOut:
 def put_agent_fs(name: str, body: AgentFsUpdate, db: DbSession) -> AgentFsOut:
     agent = require_agent_by_name(db, name)
     return replace_agent_fs(db, agent, body.roots)
+
+
+@router.get("/agents/{name}/secrets", response_model=AgentSecretsOut)
+def get_agent_secrets(name: str, db: DbSession) -> AgentSecretsOut:
+    return secrets_out(require_agent_by_name(db, name))
+
+
+@router.put("/agents/{name}/secrets", response_model=AgentSecretsOut)
+def put_agent_secrets(
+    name: str, body: AgentSecretsUpdate, db: DbSession
+) -> AgentSecretsOut:
+    agent = require_agent_by_name(db, name)
+    return replace_agent_secrets(db, agent, body.secrets)
 
 
 @router.post("/tasks", response_model=TaskOut, status_code=201)
@@ -243,6 +265,7 @@ def run_task(
     grants = grant_set_for_agent(stored) if stored is not None else None
     network = network_policy_for_agent(stored) if stored is not None else None
     filesystem = filesystem_acl_for_agent(stored) if stored is not None else None
+    secrets = secret_refs_for_agent(stored) if stored is not None else None
     runner = SessionRunner(store)
     try:
         result = runner.run(
@@ -252,9 +275,12 @@ def run_task(
             grants=grants,
             network=network,
             filesystem=filesystem,
+            secrets=secrets,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except UnresolvedSecretRef as exc:
+        raise UnresolvedSecretRefError(list(exc.missing)) from exc
     return RunResponse(
         runner=result.runner,
         used_anthropic=result.used_anthropic,

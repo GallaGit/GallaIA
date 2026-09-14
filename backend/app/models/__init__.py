@@ -4,6 +4,7 @@ from app.models.grant import AgentGrant
 from app.models.inbox import InboxMessage
 from app.models.network import AgentNetworkPolicy
 from app.models.project import Project
+from app.models.secret import AgentSecretRef
 from app.models.session import AgentSession
 from app.models.task import Task
 
@@ -13,6 +14,7 @@ __all__ = [
     "AgentGrant",
     "AgentNetworkPolicy",
     "AgentFsAcl",
+    "AgentSecretRef",
     "Task",
     "AgentSession",
     "InboxMessage",

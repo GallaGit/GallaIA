@@ -70,7 +70,7 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 ---
 
-### Slice Isolation 3 — Filesystem ACL (este PR)
+### Slice Isolation 3 — Filesystem ACL
 
 **Hecho**
 
@@ -81,10 +81,27 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 **Por hacer (siguientes muros Isolation — no este PR)**
 
-- Secret refs inyectados al start (sin tokens crudos en DB) / UI de Connections.
-- File browser UI (Environment / Files).
+- Secret refs inyectados al start (sin tokens crudos en DB) / UI de Connections. → **hecho en slice 4**.
+- File browser UI (Environment / Files). → follow-up, no bloquea Isolation.
 
-**Siguiente muro tras merge:** Secret refs.
+---
+
+### Slice Isolation 4 — Secret refs (este PR)
+
+**Hecho**
+
+- Secret refs por agente en SQLite (`agent_secret_refs`: `name` + `provider=env` + `key`). Nunca valores plaintext.
+- Resolución al start de sesión desde process env (o fixture de test). Ref sin valor → deny/error claro (`unresolved secret ref`).
+- PUT rechaza tokens crudos (`sk-…`, `ghp_…`, campo `value`). GET/PUT devuelven nombres/keys, no valores.
+- API mínima: `GET/PUT /api/v1/agents/{id}/secrets` y `GET/PUT /api/v1/agentos/agents/{name}/secrets`.
+- Tests pytest: persistir solo refs; sesión recibe valor de `GALLAIA_TEST_SECRET_FOO`; dump SQLite sin plaintext.
+
+**Por hacer (no bloquean Isolation done-when)**
+
+- UI **Files** (browser real) y **Connections** (MCP/repos/secret refs).
+- R2 / proveedor de secretos local distinto de process env.
+
+**Phase 2 Isolation: complete** al aterrizar este muro. Siguiente fase: Templates.
 
 ---
 
@@ -96,16 +113,16 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 |------|--------|-------------|-----------|
 | **0** | Foundation | FastAPI, Settings, logging, health, Docker / Compose, `/api/v1`, errores, middleware | App abre, health ok |
 | **1** | AgentOS MVP | Seeds `default` / `plan` / `senior-dev`, Kanban, sessions, inbox, mock runner, stub Anthropic Messages, UI atelier | Crear task → run → Kanban avanza → session con tool log |
+| **2** | Isolation | Grants MCP/repo/env (default deny), network `open`\|`limited`, filesystem MCP + ACL, secret refs | Support Front-only no llama GitHub ni fetch fuera de allowlist ni lee carpeta ajena; secret refs sin plaintext en DB |
 
-Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md).
+Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2.
 
 ### Siguiente
 
-**Candidato de implementación siguiente: Fase 2 Isolation (grants + network + filesystem walls done in this slice).** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. Muro pendiente: secret refs. Fases 3–7 siguen en sketch.
+**Candidato de implementación siguiente: Fase 3 Templates.** Isolation (Phase 2) está **done**. UI Files/Connections queda como follow-up, no bloquea Isolation. Fases 3–7 siguen en sketch.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **2** | Isolation *(grants + network + filesystem: done; secret refs en curso)* | Grants MCP/repo/env **done**; network `open`\|`limited` **done**; filesystem MCP + ACL **done**; secret refs | Support Front-only no llama GitHub *(grants)* ni fetch a hosts no allowlisted *(network)* ni lee carpeta ajena *(este muro)*; secret refs siguiente |
 | **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |

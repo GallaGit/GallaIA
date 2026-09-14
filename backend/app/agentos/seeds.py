@@ -13,6 +13,7 @@ from typing import Literal
 from app.agentos.filesystem import FilesystemAcl, FsRoot
 from app.agentos.grants import GrantSet
 from app.agentos.network import NetworkPolicy
+from app.agentos.secrets import SecretRefSet
 
 PROMPT_ORIGIN = (
     "Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt."
@@ -63,6 +64,7 @@ class AgentSeed:
     network_mode: Literal["open", "limited"] = "open"
     network_allowlist: tuple[str, ...] = ()
     fs_roots: tuple[FsRoot, ...] | None = None
+    secret_refs: tuple[tuple[str, str, str], ...] = ()
     runner_preference: Literal["mock", "anthropic", "openrouter", "inherit"] = "inherit"
     collaboration: tuple[str, ...] = ()
     one_job: str = ""
@@ -77,6 +79,12 @@ class AgentSeed:
         if self.fs_roots is not None:
             return FilesystemAcl.from_roots(self.fs_roots)
         return FilesystemAcl.for_agent(self.name)
+
+    def secret_ref_set(self) -> SecretRefSet:
+        return SecretRefSet.from_items(
+            {"name": name, "provider": provider, "key": key}
+            for name, provider, key in self.secret_refs
+        )
 
 
 AGENT_SEEDS: dict[str, AgentSeed] = {

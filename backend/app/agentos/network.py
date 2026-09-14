@@ -1,6 +1,6 @@
 """Per-agent network policy at the mock/runner proxy.
 
-Phase 2 Isolation — network wall only (not filesystem ACL or secret refs).
+Phase 2 Isolation — network wall (`open` | `limited` + host allowlist).
 `open` allows any host; `limited` allows only the host allowlist.
 """
 

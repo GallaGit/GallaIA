@@ -17,6 +17,12 @@ from app.agentos.filesystem import FilesystemAcl, FsOp, MockFilesystem, gated_fs
 from app.agentos.grants import GrantSet, gated_output
 from app.agentos.models import Session, Task, ToolEvent
 from app.agentos.network import NetworkPolicy, gated_http_output
+from app.agentos.secrets import (
+    SecretRefSet,
+    SecretRuntime,
+    gated_secret_output,
+    resolve_secret_refs,
+)
 from app.agentos.seeds import AgentSeed, get_seed
 from app.agentos.store import AgentOSStore, store as default_store
 
@@ -32,6 +38,7 @@ class RunResult:
     summary: str
     tool_events: list[ToolEvent] = field(default_factory=list)
     used_openrouter: bool = False
+    secrets: SecretRuntime = field(default_factory=SecretRuntime.empty)
 
 
 def _utcnow() -> datetime:
@@ -85,6 +92,8 @@ class SessionRunner:
         grants: GrantSet | None = None,
         network: NetworkPolicy | None = None,
         filesystem: FilesystemAcl | None = None,
+        secrets: SecretRefSet | None = None,
+        secret_fixture: dict[str, str] | None = None,
     ) -> RunResult:
         task = self.store.get_task(task_id)
         if task is None:
@@ -96,6 +105,8 @@ class SessionRunner:
         grant_set = grants if grants is not None else seed.grant_set()
         network_policy = network if network is not None else seed.network_policy()
         fs_acl = filesystem if filesystem is not None else seed.filesystem_acl()
+        secret_set = secrets if secrets is not None else seed.secret_ref_set()
+        secret_runtime = resolve_secret_refs(secret_set, fixture=secret_fixture)
 
         session = Session(
             task_id=task.id,
@@ -133,8 +144,16 @@ class SessionRunner:
                     "grants": grant_set.as_list(),
                     "network": network_policy.as_dict(),
                     "fs_acl": fs_acl.as_list(),
-                    "isolation": "grants-default-deny+network-policy+fs-acl",
+                    "secrets": secret_set.as_list(),
+                    "isolation": "grants-default-deny+network-policy+fs-acl+secret-refs",
                 },
+            )
+        )
+        events.append(
+            ToolEvent(
+                name="session.secrets",
+                input={"refs": secret_set.as_list()},
+                output={"ok": True, **secret_runtime.as_public_dict()},
             )
         )
 
@@ -144,17 +163,17 @@ class SessionRunner:
 
         if kind == "openrouter":
             summary, or_events, used_openrouter = self._run_openrouter(
-                seed, task, grant_set, network_policy, fs_acl
+                seed, task, grant_set, network_policy, fs_acl, secret_runtime
             )
             events.extend(or_events)
         elif kind == "anthropic":
             summary, anthropic_events, used_anthropic = self._run_anthropic(
-                seed, task, grant_set, network_policy, fs_acl
+                seed, task, grant_set, network_policy, fs_acl, secret_runtime
             )
             events.extend(anthropic_events)
         else:
             summary, mock_events = self._run_mock(
-                seed, task, grant_set, network_policy, fs_acl
+                seed, task, grant_set, network_policy, fs_acl, secret_runtime
             )
             events.extend(mock_events)
 
@@ -205,6 +224,7 @@ class SessionRunner:
             used_openrouter=used_openrouter,
             summary=summary,
             tool_events=events,
+            secrets=secret_runtime,
         )
 
     def _tool(
@@ -246,6 +266,13 @@ class SessionRunner:
             output=gated_fs_output(acl, op, path, store=store, content=content),
         )
 
+    def _secret(self, runtime: SecretRuntime, name: str) -> ToolEvent:
+        return ToolEvent(
+            name="secret.get",
+            input={"name": name},
+            output=gated_secret_output(runtime, name),
+        )
+
     def _run_mock(
         self,
         seed: AgentSeed,
@@ -253,6 +280,7 @@ class SessionRunner:
         grants: GrantSet,
         network: NetworkPolicy,
         filesystem: FilesystemAcl,
+        secrets: SecretRuntime,
     ) -> tuple[str, list[ToolEvent]]:
         fs_store = MockFilesystem.seeded()
         events = [
@@ -353,6 +381,8 @@ class SessionRunner:
                     "/agents/support/../senior-dev/notes.md",
                 )
             )
+            for secret_name in secrets.values:
+                events.append(self._secret(secrets, secret_name))
             summary = (
                 f"Mock support handled {task.name!r} via Front "
                 "(GitHub MCP + GitHub HTTP denied; peer folder + ../ denied)"
@@ -368,6 +398,7 @@ class SessionRunner:
         grants: GrantSet,
         network: NetworkPolicy,
         filesystem: FilesystemAcl,
+        secrets: SecretRuntime,
     ) -> tuple[str, list[ToolEvent], bool]:
         from app.providers.openrouter import (
             OpenRouterError,
@@ -379,7 +410,7 @@ class SessionRunner:
         events: list[ToolEvent] = []
         if not openrouter_api_key():
             summary, mock_events = self._run_mock(
-                seed, task, grants, network, filesystem
+                seed, task, grants, network, filesystem, secrets
             )
             events.append(
                 ToolEvent(
@@ -428,7 +459,7 @@ class SessionRunner:
                 )
             )
             summary, mock_events = self._run_mock(
-                seed, task, grants, network, filesystem
+                seed, task, grants, network, filesystem, secrets
             )
             events.extend(mock_events)
             return f"OpenRouter failed ({exc}); mock: {summary}", events, False
@@ -440,12 +471,13 @@ class SessionRunner:
         grants: GrantSet,
         network: NetworkPolicy,
         filesystem: FilesystemAcl,
+        secrets: SecretRuntime,
     ) -> tuple[str, list[ToolEvent], bool]:
         api_key = _anthropic_key()
         events: list[ToolEvent] = []
         if not api_key:
             summary, mock_events = self._run_mock(
-                seed, task, grants, network, filesystem
+                seed, task, grants, network, filesystem, secrets
             )
             events.append(
                 ToolEvent(
@@ -525,7 +557,7 @@ class SessionRunner:
                 )
             )
             summary, mock_events = self._run_mock(
-                seed, task, grants, network, filesystem
+                seed, task, grants, network, filesystem, secrets
             )
             events.extend(mock_events)
             return f"Anthropic failed ({exc}); mock: {summary}", events, False

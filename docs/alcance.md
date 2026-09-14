@@ -34,8 +34,8 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 
 ## Alcance de la fase actual
 
-**Hecho:** AgentOS Phase 0 + Phase 1 (MVP en `master`). Phase 2 Isolation: grants + network + filesystem walls done.  
-**Siguiente implementación:** secret refs (último muro Isolation). Spec: [ROADMAP.md](ROADMAP.md) y [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md).
+**Hecho:** AgentOS Phase 0 + Phase 1 (MVP en `master`). Phase 2 Isolation **done** (grants + network + filesystem + secret refs).  
+**Siguiente implementación:** Fase 3 Templates. Spec: [ROADMAP.md](ROADMAP.md) y [agentos/PHASE2_PLUS.md](agentos/PHASE2_PLUS.md). UI Files/Connections = follow-up, no bloquea Isolation.
 
 ### Phase 1 (cerrada como MVP de aprendizaje)
 
@@ -56,7 +56,7 @@ Capacidades previstas a lo largo del ciclo (solo cuando el [ROADMAP](ROADMAP.md)
 
 ### Excluido de Phase 1 (Isolation = siguiente runtime; no en slices de docs)
 
-- Isolation secret refs / Connections UI — siguiente muro; grants + network + filesystem ACL ya en runtime
+- Isolation UI Files / Connections — follow-up; Isolation runtime (grants + network + filesystem ACL + secret refs) ya en runtime
 - Templates con gates, Goals + orquestador, Triggers/webhooks
 - YAML CLI, PWA push, live SSE / Activity feed completo
 - RAG, embeddings, chat tipo ChatGPT como producto

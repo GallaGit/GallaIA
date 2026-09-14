@@ -22,6 +22,7 @@ class AgentSeedOut(BaseModel):
     network_mode: Literal["open", "limited"] = "open"
     network_allowlist: list[str] = Field(default_factory=list)
     fs_acl: list[dict] = Field(default_factory=list)
+    secrets: list[dict[str, str]] = Field(default_factory=list)
     runner_preference: str
     prompt_origin: str
     foundational_prompt: str

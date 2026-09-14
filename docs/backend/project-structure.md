@@ -10,8 +10,8 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), `api` (router, routes, dependencies), `agentos/`, `exceptions/`, `middleware/`, plus control-plane `models` / `schemas` / `services` and SQLite (including Isolation grants, network policy, filesystem ACL). Docker and `pyproject.toml` at `backend/` (root Compose serves UI+API).
-- Planned: Isolation secret refs, templates, goals per [ROADMAP.md](../ROADMAP.md).
+- Existing: Layered tree under `backend/app/` with active `main`, `core` (config/logging), `api` (router, routes, dependencies), `agentos/`, `exceptions/`, `middleware/`, plus control-plane `models` / `schemas` / `services` and SQLite (including Isolation grants, network policy, filesystem ACL, secret refs). Docker and `pyproject.toml` at `backend/` (root Compose serves UI+API).
+- Planned: Templates, goals per [ROADMAP.md](../ROADMAP.md).
 - Future: `providers/` richness, `memory/`, `rag/`; Postgres per [ADR-003](../adr/ADR-003-postgresql.md).
 ## Layout (simplified)
 

@@ -24,6 +24,7 @@ from app.providers.openrouter import (
 from app.services.filesystem import filesystem_acl_for_agent
 from app.services.grants import grant_set_for_agent
 from app.services.network import network_policy_for_agent
+from app.services.secrets import resolve_agent_secrets, secret_refs_for_agent
 
 
 def _now() -> datetime:
@@ -130,6 +131,10 @@ def _control_plane_runner() -> str:
 def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
     """Start a (mock or LLM) session for a task and update status."""
     runner_name = _control_plane_runner()
+    grants = grant_set_for_agent(agent)
+    network = network_policy_for_agent(agent)
+    filesystem = filesystem_acl_for_agent(agent)
+    secret_runtime = resolve_agent_secrets(agent)
 
     session = AgentSession(
         agent_id=agent.id,
@@ -144,9 +149,6 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
 
     events: list = []
     session.status = "running"
-    grants = grant_set_for_agent(agent)
-    network = network_policy_for_agent(agent)
-    filesystem = filesystem_acl_for_agent(agent)
     _append_event(session, events, "session.start", f"Runner={runner_name} agent={agent.name}")
     _append_event(
         session,
@@ -161,8 +163,15 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         "session.manifest",
         (
             f"grants={grants.as_list()} network={network.as_dict()} "
-            f"fs={filesystem.as_list()} isolation=grants-default-deny+network-policy+fs-acl"
+            f"fs={filesystem.as_list()} secrets={secret_refs_for_agent(agent).as_list()} "
+            f"isolation=grants-default-deny+network-policy+fs-acl+secret-refs"
         ),
+    )
+    _append_event(
+        session,
+        events,
+        "session.secrets",
+        f"injected={secret_runtime.as_public_dict()}",
     )
 
     if runner_name == "openrouter":
@@ -233,6 +242,13 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 "read",
                 "/agents/support/../senior-dev/notes.md",
             )
+            for secret_name in secret_runtime.values:
+                _append_event(
+                    session,
+                    events,
+                    "secret.get",
+                    f"name={secret_name} present=true",
+                )
         elif agent.name == "senior-dev":
             _append_gated(
                 session,
@@ -273,6 +289,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
     _append_event(session, events, "session.destroy", "Ephemeral session destroyed")
     db.commit()
     db.refresh(session)
+    session.runtime_secrets = secret_runtime  # in-memory only; not an ORM column
     return session
 
 
