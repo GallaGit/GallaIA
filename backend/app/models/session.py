@@ -15,6 +15,7 @@ class AgentSession(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), nullable=False, index=True)
     task_id: Mapped[int | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    goal_id: Mapped[int | None] = mapped_column(ForeignKey("goals.id"), nullable=True, index=True)
     runner: Mapped[str] = mapped_column(String(20), nullable=False, default="mock")
     status: Mapped[str] = mapped_column(String(40), nullable=False, default="starting", index=True)
     # JSON array of tool-call events for the live / replay viewer
@@ -27,6 +28,7 @@ class AgentSession(Base):
 
     agent = relationship("Agent", back_populates="sessions")
     task = relationship("Task", back_populates="sessions")
+    goal = relationship("Goal", back_populates="sessions")
 
     def get_tool_events(self) -> list:
         try:

@@ -15,6 +15,7 @@ from app.models import (  # noqa: F401
     Project,
     Task,
     Skill,
+    Goal,
     TaskTemplate,
     TaskTemplateStep,
 )
@@ -34,9 +35,21 @@ def _ensure_task_schedule_column() -> None:
             conn.execute(text("ALTER TABLE tasks ADD COLUMN scheduled_at DATETIME"))
 
 
+def _ensure_session_goal_column() -> None:
+    """SQLite create_all does not ADD columns; alter existing sessions if needed."""
+    with engine.begin() as conn:
+        rows = conn.execute(text("PRAGMA table_info(sessions)")).fetchall()
+        if not rows:
+            return
+        cols = {r[1] for r in rows}
+        if "goal_id" not in cols:
+            conn.execute(text("ALTER TABLE sessions ADD COLUMN goal_id INTEGER"))
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_task_schedule_column()
+    _ensure_session_goal_column()
     db = SessionLocal()
     try:
         seed_if_empty(db)

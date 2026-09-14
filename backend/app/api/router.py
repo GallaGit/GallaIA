@@ -8,6 +8,7 @@ from app.api.routes import (
     projects,
     scheduler,
     sessions,
+    goals,
     skills,
     tasks,
     templates,
@@ -22,6 +23,7 @@ api_router.include_router(agents.router)
 api_router.include_router(tasks.router)
 api_router.include_router(templates.router)
 api_router.include_router(skills.router)
+api_router.include_router(goals.router)
 api_router.include_router(sessions.router)
 api_router.include_router(inbox.router)
 api_router.include_router(scheduler.router)
