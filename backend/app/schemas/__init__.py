@@ -8,6 +8,7 @@ from app.schemas.scheduler import SchedulerTickIn, SchedulerTickOut
 from app.schemas.secret import AgentSecretsOut, AgentSecretsUpdate, SecretRefItem
 from app.schemas.session import SessionOut
 from app.schemas.skill import SkillCreate, SkillOut, SkillUpdate, SkillUpsert
+from app.schemas.goal import GoalCreate, GoalOut, GoalSpawnOut
 from app.schemas.task import TaskCreate, TaskOut, TaskScheduleUpdate, TaskStatusUpdate, TaskUpdate
 from app.schemas.template import (
     TemplateInstantiateIn,
@@ -46,6 +47,9 @@ __all__ = [
     "SkillCreate",
     "SkillUpdate",
     "SkillUpsert",
+    "GoalOut",
+    "GoalCreate",
+    "GoalSpawnOut",
     "SchedulerTickIn",
     "SchedulerTickOut",
 ]

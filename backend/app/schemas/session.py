@@ -11,6 +11,7 @@ class SessionOut(BaseModel):
     id: int
     agent_id: int
     task_id: int | None = None
+    goal_id: int | None = None
     runner: str
     status: str
     tool_call_log: list[Any] = Field(default_factory=list)

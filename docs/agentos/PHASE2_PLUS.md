@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 3 Templates** (slice 4: lead-intake seed). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
+**En curso:** **Phase 4 Goals** (slice 1: foundation — Goal + DoD approve + spawn gate). Phase 3 Templates **core done**. Phase 2 Isolation **done**. UI Files / Connections remain follow-ups.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -80,20 +80,29 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Compound assignee agents (missing role seeds: spec, 
 eview-coordinator, etc.) — optional polish
 - Cron runner / named automations — **Phase 5**
-- Phase 4 Goals
+- Phase 4 Goals → **started** (slice 1)
 - UI Templates / Skills surfaces
 
 **Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 done; an agent token cannot mark a gated step done — **met**. (lead-intake-workflow: 2 cards; score gate documented in LEAD_INTAKE.)
 
 **Slice 2 done when:** instantiate `compound-engineer-workflow` → 9 cards; step 2/3 gated on prior `done`.
 
-## Phase 4 — Goals (gauntlet loop)
+## Phase 4 — Goals (gauntlet loop) *(in progress)*
 
-- Goal + Definition of Done (human-approved before spawn)
+### Slice 1 — foundation (este PR)
+
+- SQLite `Goal` + DoD items (JSON list); status `draft|approved|active|done`
+- API create / list / get / approve / spawn stub
+- Spawn blocked until human approve (`draft` → 400)
+- Pytest: unapproved blocked; approve → placeholder session + task link
+
+### Por hacer (later Phase 4 slices)
+
 - Orchestrator after each session picks next specialist or completes
 - Safety rails: spend cap, max wall time, stuck threshold (~19 identical iterations)
+- Progress log / goal inbox / runnerPreference
 
-**Done when:** a 2-item DoD goal completes via ≥2 specialist sessions; rails stop runaway loops.
+**Done when (full Phase 4):** a 2-item DoD goal completes via ≥2 specialist sessions; rails stop runaway loops.
 
 ## Phase 5 — Triggers (+ automations; Ripples leave theory)
 

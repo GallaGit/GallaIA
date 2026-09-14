@@ -170,15 +170,28 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 - Compound assignee agents (roles seed faltantes: spec, 
 eview-coordinator, etc.) — optional polish.
 - Cron runner / named automations — **Phase 5**.
-- Phase 4 Goals.
+- Phase 4 Goals → **started** (slice 4.1).
 - UI Templates / Skills.
 
-
-
 ---
 
+### Slice Phase 4.1 — Goals foundation (este PR)
 
----
+**Hecho**
+
+- Modelo SQLite `Goal` (`name`, `status` draft|approved|active|done, DoD items como JSON list de strings).
+- API: `POST/GET /api/v1/goals`, `GET /api/v1/goals/{id}`, `POST .../approve` (draft→approved), `POST .../spawn` stub.
+- Spawn gate: unapproved (`draft`) → **400**; approved → placeholder `AgentSession` (`runner=goal-spawn`) + task link; goal → `active`.
+- Pytest: cannot spawn unapproved; approve then spawn creates session/task link; HTTP 400/201.
+- Phase 3 core marked complete; Phase 4 in progress.
+
+**Por hacer (siguientes slices Phase 4 — no este PR)**
+
+- Orquestador post-sesión (elige siguiente especialista o completa DoD).
+- Rails: spend cap, max wall time, stuck threshold (~19).
+- Progress log append-only / goal inbox / `runnerPreference` por goal.
+- Done-when completo: DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn.
+
 
 ## Fases AgentOS
 
@@ -194,12 +207,12 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md). Isolation: [PHASE2_PL
 
 ### Siguiente
 
-**Fase 3 Templates: core done** (slice 6: agent token gate). Optional polish: compound assignee seeds. Isolation (Phase 2) **done**. Siguiente implementación: **Fase 4 Goals**; cron = Phase 5. UI Files/Connections follow-up.
+**Fase 3 Templates: core done**. **Fase 4 Goals: in progress** (slice 1 foundation: Goal + DoD approve + spawn gate). Isolation (Phase 2) **done**. Cron = Phase 5. UI Files/Connections follow-up.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
 | **3** | Templates *(core done)* | Slices 1-6: templates + Skills + lead-intake + schedule-at + **agent token gate**. Optional: compound assignee seeds. Cron = Phase 5. ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | **Satisfied:** agent token cannot mark gated done; schedule-at landed; cron deferred Phase 5 |
-| **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
+| **4** | Goals *(in progress)* | Slice 1: Goal+DoD approve+spawn gate. Later: orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |
 | **6** | YAML / CLI | `agentos.yml` push/pull, CLI create/update | Push produce mismos agentes+template que la UI |
 | **7** | PWA / live | Inbox PWA + push, live viewer SSE, Activity feed, routing local | Reply en móvil reanuda sesión |

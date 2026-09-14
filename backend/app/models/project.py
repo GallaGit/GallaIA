@@ -22,3 +22,6 @@ class Project(Base):
     templates = relationship(
         "TaskTemplate", back_populates="project", cascade="all, delete-orphan"
     )
+    goals = relationship(
+        "Goal", back_populates="project", cascade="all, delete-orphan"
+    )
