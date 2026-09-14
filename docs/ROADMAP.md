@@ -47,7 +47,7 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 
 ---
 
-### Slice Isolation 1 — Grants wall (este PR)
+### Slice Isolation 1 — Grants wall
 
 **Hecho**
 
@@ -56,17 +56,9 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 - API mínima GET/PUT grants: `/api/v1/agents/{id}/grants` y `/api/v1/agentos/agents/{name}/grants`.
 - Tests pytest: default-deny + Front-only no usa GitHub.
 
-**Por hacer (siguientes muros Isolation — no este PR)**
-
-- Network policy `open`\|`limited` + host allowlist en el proxy del runner.
-- Filesystem MCP + ACL server-side (read/write/delete, deny `../`).
-- Secret refs inyectados al start (sin tokens crudos en DB) / UI de Connections.
-
-**Siguiente muro tras merge:** Filesystem MCP + ACL server-side.
-
 ---
 
-### Slice Isolation 2 — Network policy (este PR)
+### Slice Isolation 2 — Network policy
 
 **Hecho**
 
@@ -76,12 +68,23 @@ Ociel concedió autonomía al Product Manager / Cloud Agent sobre este repo. Cad
 - API mínima GET/PUT: `/api/v1/agents/{id}/network` y `/api/v1/agentos/agents/{name}/network`.
 - Tests pytest: deny outside allowlist + persistencia SQLite.
 
+---
+
+### Slice Isolation 3 — Filesystem ACL (este PR)
+
+**Hecho**
+
+- Filesystem MCP mock (`fs.read` / `fs.write` / `fs.delete`) con ACL server-side por agente (`agent_fs_acls`: root + can_read/can_write/can_delete). Default deny fuera de roots.
+- Carpeta por agente `/agents/{name}`; Agent A no lee la carpeta de Agent B; `../` denegado (sin resolver).
+- API mínima GET/PUT: `/api/v1/agents/{id}/fs` y `/api/v1/agentos/agents/{name}/fs`.
+- Tests pytest: allow propio + deny peer + deny `../` + persistencia SQLite.
+
 **Por hacer (siguientes muros Isolation — no este PR)**
 
-- Filesystem MCP + ACL server-side (read/write/delete, deny `../`).
 - Secret refs inyectados al start (sin tokens crudos en DB) / UI de Connections.
+- File browser UI (Environment / Files).
 
-**Siguiente muro tras merge:** Filesystem MCP + ACL.
+**Siguiente muro tras merge:** Secret refs.
 
 ---
 
@@ -98,11 +101,11 @@ Detalle Phase 1: [product/AGENTOS.md](product/AGENTOS.md).
 
 ### Siguiente
 
-**Candidato de implementación siguiente: Fase 2 Isolation (grants + network walls done in this slice).** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. Muros pendientes: filesystem ACL, secret refs. Fases 3–7 siguen en sketch.
+**Candidato de implementación siguiente: Fase 2 Isolation (grants + network + filesystem walls done in this slice).** Spec: [PHASE2_PLUS.md](agentos/PHASE2_PLUS.md) §Phase 2. Muro pendiente: secret refs. Fases 3–7 siguen en sketch.
 
 | Fase | Nombre | Qué incluye | Done when (cuando se implemente) |
 | ------ | -------- | ------------- | ---------------------------------- |
-| **2** | Isolation *(grants + network: done; resto en curso)* | Grants MCP/repo/env **done**; network `open`\|`limited` **done**; filesystem MCP + ACL; secret refs | Support Front-only no llama GitHub *(grants)* ni fetch a hosts no allowlisted *(este muro)* ni lee carpeta ajena *(filesystem, siguiente)* |
+| **2** | Isolation *(grants + network + filesystem: done; secret refs en curso)* | Grants MCP/repo/env **done**; network `open`\|`limited` **done**; filesystem MCP + ACL **done**; secret refs | Support Front-only no llama GitHub *(grants)* ni fetch a hosts no allowlisted *(network)* ni lee carpeta ajena *(este muro)*; secret refs siguiente |
 | **3** | Templates | `TaskTemplate` + instantiate, approval gates en API/MCP, cadena `compound-engineer-workflow`, schedule; seed doc `lead-intake-workflow` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Instantiate → 9 cards; paso 2 no arranca hasta humano marca 1 `done` |
 | **4** | Goals | DoD aprobado, orquestador, rails spend/time/stuck | DoD 2 ítems → ≥2 sesiones; cap `0.00` rechaza spawn |
 | **5** | Triggers | Webhooks firmados, automations cron, seeds support/bug; seed doc `lead-status-nuevo` ([LEAD_INTAKE.md](product/LEAD_INTAKE.md)) | Secreto malo → 401; bueno → task+sesión |

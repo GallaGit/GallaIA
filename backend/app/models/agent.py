@@ -34,3 +34,6 @@ class Agent(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    fs_acls = relationship(
+        "AgentFsAcl", back_populates="agent", cascade="all, delete-orphan"
+    )

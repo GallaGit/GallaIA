@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+from app.agentos.filesystem import FilesystemAcl, FsOp, MockFilesystem, gated_fs_output
 from app.agentos.grants import GrantSet, gated_output
 from app.agentos.models import Session, Task, ToolEvent
 from app.agentos.network import NetworkPolicy, gated_http_output
@@ -83,6 +84,7 @@ class SessionRunner:
         runner: RunnerKind | None = None,
         grants: GrantSet | None = None,
         network: NetworkPolicy | None = None,
+        filesystem: FilesystemAcl | None = None,
     ) -> RunResult:
         task = self.store.get_task(task_id)
         if task is None:
@@ -93,6 +95,7 @@ class SessionRunner:
         kind = resolve_runner(runner or seed.runner_preference)
         grant_set = grants if grants is not None else seed.grant_set()
         network_policy = network if network is not None else seed.network_policy()
+        fs_acl = filesystem if filesystem is not None else seed.filesystem_acl()
 
         session = Session(
             task_id=task.id,
@@ -129,7 +132,8 @@ class SessionRunner:
                     "prompt_origin": seed.prompt_origin,
                     "grants": grant_set.as_list(),
                     "network": network_policy.as_dict(),
-                    "isolation": "grants-default-deny+network-policy",
+                    "fs_acl": fs_acl.as_list(),
+                    "isolation": "grants-default-deny+network-policy+fs-acl",
                 },
             )
         )
@@ -140,16 +144,18 @@ class SessionRunner:
 
         if kind == "openrouter":
             summary, or_events, used_openrouter = self._run_openrouter(
-                seed, task, grant_set, network_policy
+                seed, task, grant_set, network_policy, fs_acl
             )
             events.extend(or_events)
         elif kind == "anthropic":
             summary, anthropic_events, used_anthropic = self._run_anthropic(
-                seed, task, grant_set, network_policy
+                seed, task, grant_set, network_policy, fs_acl
             )
             events.extend(anthropic_events)
         else:
-            summary, mock_events = self._run_mock(seed, task, grant_set, network_policy)
+            summary, mock_events = self._run_mock(
+                seed, task, grant_set, network_policy, fs_acl
+            )
             events.extend(mock_events)
 
         # doing -> review (agents leave gated work in review; MVP marks review then done)
@@ -226,9 +232,29 @@ class SessionRunner:
             output=gated_http_output(policy, url, allowed_output),
         )
 
+    def _fs(
+        self,
+        acl: FilesystemAcl,
+        store: MockFilesystem,
+        op: FsOp,
+        path: str,
+        content: str | None = None,
+    ) -> ToolEvent:
+        return ToolEvent(
+            name=f"fs.{op}",
+            input={"path": path} if content is None else {"path": path, "content": content},
+            output=gated_fs_output(acl, op, path, store=store, content=content),
+        )
+
     def _run_mock(
-        self, seed: AgentSeed, task: Task, grants: GrantSet, network: NetworkPolicy
+        self,
+        seed: AgentSeed,
+        task: Task,
+        grants: GrantSet,
+        network: NetworkPolicy,
+        filesystem: FilesystemAcl,
     ) -> tuple[str, list[ToolEvent]]:
+        fs_store = MockFilesystem.seeded()
         events = [
             self._tool(
                 grants,
@@ -277,6 +303,9 @@ class SessionRunner:
                     {"status": 200, "sha": "mockdeadbeef"},
                 )
             )
+            events.append(
+                self._fs(filesystem, fs_store, "read", "/agents/senior-dev/notes.md")
+            )
             summary = f"Mock implementation committed for {task.name!r}"
         elif seed.name == "support":
             events.append(
@@ -310,9 +339,23 @@ class SessionRunner:
                     {"status": 200, "must-not-land": True},
                 )
             )
+            events.append(
+                self._fs(filesystem, fs_store, "read", "/agents/support/ticket.md")
+            )
+            events.append(
+                self._fs(filesystem, fs_store, "read", "/agents/senior-dev/notes.md")
+            )
+            events.append(
+                self._fs(
+                    filesystem,
+                    fs_store,
+                    "read",
+                    "/agents/support/../senior-dev/notes.md",
+                )
+            )
             summary = (
                 f"Mock support handled {task.name!r} via Front "
-                "(GitHub MCP + GitHub HTTP denied)"
+                "(GitHub MCP + GitHub HTTP denied; peer folder + ../ denied)"
             )
         else:
             summary = f"Mock default agent completed {task.name!r}"
@@ -324,6 +367,7 @@ class SessionRunner:
         task: Task,
         grants: GrantSet,
         network: NetworkPolicy,
+        filesystem: FilesystemAcl,
     ) -> tuple[str, list[ToolEvent], bool]:
         from app.providers.openrouter import (
             OpenRouterError,
@@ -334,7 +378,9 @@ class SessionRunner:
 
         events: list[ToolEvent] = []
         if not openrouter_api_key():
-            summary, mock_events = self._run_mock(seed, task, grants, network)
+            summary, mock_events = self._run_mock(
+                seed, task, grants, network, filesystem
+            )
             events.append(
                 ToolEvent(
                     name="openrouter.skip",
@@ -381,7 +427,9 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task, grants, network)
+            summary, mock_events = self._run_mock(
+                seed, task, grants, network, filesystem
+            )
             events.extend(mock_events)
             return f"OpenRouter failed ({exc}); mock: {summary}", events, False
 
@@ -391,11 +439,14 @@ class SessionRunner:
         task: Task,
         grants: GrantSet,
         network: NetworkPolicy,
+        filesystem: FilesystemAcl,
     ) -> tuple[str, list[ToolEvent], bool]:
         api_key = _anthropic_key()
         events: list[ToolEvent] = []
         if not api_key:
-            summary, mock_events = self._run_mock(seed, task, grants, network)
+            summary, mock_events = self._run_mock(
+                seed, task, grants, network, filesystem
+            )
             events.append(
                 ToolEvent(
                     name="anthropic.skip",
@@ -473,6 +524,8 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task, grants, network)
+            summary, mock_events = self._run_mock(
+                seed, task, grants, network, filesystem
+            )
             events.extend(mock_events)
             return f"Anthropic failed ({exc}); mock: {summary}", events, False

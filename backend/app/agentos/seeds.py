@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from app.agentos.filesystem import FilesystemAcl, FsRoot
 from app.agentos.grants import GrantSet
 from app.agentos.network import NetworkPolicy
 
@@ -61,6 +62,7 @@ class AgentSeed:
     grants: tuple[tuple[str, str], ...] = (("mcp", "agentos"), ("mcp", "inbox"))
     network_mode: Literal["open", "limited"] = "open"
     network_allowlist: tuple[str, ...] = ()
+    fs_roots: tuple[FsRoot, ...] | None = None
     runner_preference: Literal["mock", "anthropic", "openrouter", "inherit"] = "inherit"
     collaboration: tuple[str, ...] = ()
     one_job: str = ""
@@ -70,6 +72,11 @@ class AgentSeed:
 
     def network_policy(self) -> NetworkPolicy:
         return NetworkPolicy.from_parts(self.network_mode, self.network_allowlist)
+
+    def filesystem_acl(self) -> FilesystemAcl:
+        if self.fs_roots is not None:
+            return FilesystemAcl.from_roots(self.fs_roots)
+        return FilesystemAcl.for_agent(self.name)
 
 
 AGENT_SEEDS: dict[str, AgentSeed] = {

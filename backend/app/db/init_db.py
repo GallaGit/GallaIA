@@ -2,7 +2,7 @@
 
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models import Agent, AgentGrant, AgentNetworkPolicy, AgentSession, InboxMessage, Project, Task  # noqa: F401
+from app.models import Agent, AgentGrant, AgentNetworkPolicy, AgentFsAcl, AgentSession, InboxMessage, Project, Task  # noqa: F401
 from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
 
 
