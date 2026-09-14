@@ -1,6 +1,7 @@
 /** AgentOS API client — canonical base /api/v1/agentos (see CONTRACT.md) */
 
-const BASE = `${(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')}/api/v1/agentos`
+const API_ROOT = `${(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')}/api/v1`
+const BASE = `${API_ROOT}/agentos`
 
 export type KanbanStatus = 'todo' | 'doing' | 'review' | 'done'
 export type RunnerKind = 'mock' | 'anthropic' | 'openrouter'
@@ -67,6 +68,16 @@ export type InboxItem = {
   created_at: string
 }
 
+export type ActivityEvent = {
+  id: number
+  type: string
+  message: string
+  task_id: number | null
+  session_id: number | null
+  automation_id: number | null
+  created_at: string
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = 'API no disponible') {
     super(message)
@@ -74,10 +85,10 @@ export class ApiUnavailableError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestAt<T>(url: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(`${BASE}${path}`, {
+    res = await fetch(url, {
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
       ...init,
     })
@@ -97,6 +108,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  return requestAt<T>(`${BASE}${path}`, init)
 }
 
 const SESSION_IDS_KEY = 'gallaia.sessionIds'
@@ -160,4 +175,9 @@ export const api = {
   session: (id: string) =>
     request<Session>(`/sessions/${encodeURIComponent(id)}`),
   inbox: () => request<InboxItem[]>('/inbox'),
+  /** Control-plane activity feed (not under /agentos) */
+  activity: (limit = 50) =>
+    requestAt<ActivityEvent[]>(
+      `${API_ROOT}/activity?limit=${encodeURIComponent(String(limit))}`,
+    ),
 }

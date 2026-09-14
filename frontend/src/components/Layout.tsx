@@ -8,6 +8,7 @@ import {
   Settings,
   Sun,
   Activity,
+  Radio,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -16,6 +17,7 @@ const primaryLinks = [
   { to: '/tasks', label: 'Tareas', icon: Columns3 },
   { to: '/sessions', label: 'Sesiones', icon: Activity },
   { to: '/inbox', label: 'Inbox', icon: Inbox },
+  { to: '/activity', label: 'Activity', icon: Radio },
 ]
 
 const secondaryLinks = [

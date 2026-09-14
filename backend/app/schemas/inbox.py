@@ -20,4 +20,12 @@ class InboxMessageOut(BaseModel):
 
 
 class InboxReplyIn(BaseModel):
+    """Human reply that resolves an open inbox decision."""
+
     body: str = Field(min_length=1)
+
+
+class InboxResolveIn(BaseModel):
+    """Resolve without a long reply (optional short note)."""
+
+    note: str | None = Field(default=None, max_length=2000)

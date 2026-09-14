@@ -4,6 +4,7 @@ import AgentsPage from './pages/AgentsPage'
 import TasksPage from './pages/TasksPage'
 import SessionsPage from './pages/SessionsPage'
 import InboxPage from './pages/InboxPage'
+import ActivityPage from './pages/ActivityPage'
 import PlaceholderPage from './pages/PlaceholderPage'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="sessions/:id" element={<SessionsPage />} />
         <Route path="inbox" element={<InboxPage />} />
+        <Route path="activity" element={<ActivityPage />} />
         <Route
           path="files"
           element={

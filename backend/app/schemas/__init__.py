@@ -1,7 +1,7 @@
 from app.schemas.agent import AgentOut
 from app.schemas.filesystem import AgentFsOut, AgentFsUpdate, FsRootItem
 from app.schemas.grant import AgentGrantsOut, AgentGrantsUpdate, GrantItem
-from app.schemas.inbox import InboxMessageOut, InboxReplyIn
+from app.schemas.inbox import InboxMessageOut, InboxReplyIn, InboxResolveIn
 from app.schemas.network import AgentNetworkOut, AgentNetworkUpdate
 from app.schemas.project import ProjectOut
 from app.schemas.scheduler import SchedulerTickIn, SchedulerTickOut
@@ -57,6 +57,7 @@ __all__ = [
     "SessionOut",
     "InboxMessageOut",
     "InboxReplyIn",
+    "InboxResolveIn",
     "SkillOut",
     "SkillCreate",
     "SkillUpdate",
