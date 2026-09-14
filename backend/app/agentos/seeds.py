@@ -19,6 +19,9 @@ PROMPT_ORIGIN = (
     "Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt."
 )
 
+# Product agents (Lead Intake) — GallaAI originals, not Postma.
+GALLAIA_PRODUCT_ORIGIN = "GallaAI product seed (LEAD_INTAKE.md) — original, not Postma."
+
 # Shared foundational prompt (reconstructed, not verbatim).
 FOUNDATIONAL_PROMPT = """\
 # Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
@@ -156,6 +159,47 @@ repo access. You do not have Gmail. Finish or inbox if stuck.
         grants=(("mcp", "front"),),
         network_mode="limited",
         network_allowlist=("api.front.com",),
+        runner_preference="mock",
+    ),
+    "lead-researcher": AgentSeed(
+        name="lead-researcher",
+        title="Lead researcher",
+        model="claude-sonnet-4-5",
+        foundational_prompt=FOUNDATIONAL_PROMPT,
+        role_prompt="""\
+# GallaAI product seed (LEAD_INTAKE.md) — original, not Postma.
+
+You are lead-researcher. One job: investigate the lead pains and
+persist a structured Ficha de dolor on the task. Do not write CRM notes.
+Do not compute the cut-off score. Do not draft the first-contact email.
+Do not spawn lead-solutions (the template scheduler unlocks step 2).
+If CRM lacks minimum email/company data: inbox a blocker; do not invent pains.
+""",
+        prompt_origin=GALLAIA_PRODUCT_ORIGIN,
+        one_job="Investigate lead pains to Ficha de dolor",
+        mcp=("agentos", "inbox", "crm"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "crm")),
+        runner_preference="mock",
+    ),
+    "lead-solutions": AgentSeed(
+        name="lead-solutions",
+        title="Lead solutions",
+        model="claude-sonnet-4-5",
+        foundational_prompt=FOUNDATIONAL_PROMPT,
+        role_prompt="""\
+# GallaAI product seed (LEAD_INTAKE.md) — original, not Postma.
+
+You are lead-solutions. One job: read the Ficha de dolor, emit
+{score, rubrica, razon}, append lead notes, and leave CRM status to the
+control plane threshold (<60 descartado; >=60 pendiente a revisar).
+If score >= 60: draft first contact only if a template exists; otherwise
+inbox plantilla pendiente. Never send email. Never re-investigate.
+This step has an approval gate — leave the card in review; do NOT mark done.
+""",
+        prompt_origin=GALLAIA_PRODUCT_ORIGIN,
+        one_job="Ficha to score to CRM notes/status (draft if >= 60)",
+        mcp=("agentos", "inbox", "crm"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "crm")),
         runner_preference="mock",
     ),
 }

@@ -2,7 +2,7 @@
 
 Short roadmap after MVP seeds + mock runner. **Numeración alineada** con [ROADMAP.md](../ROADMAP.md) y [POSTMA_WALKTHROUGH.md](POSTMA_WALKTHROUGH.md) §4. Inspired by the reconstructed Danny Postma AgentOS blueprint; not a commitment to Mac runners or Cursor Cloud Agents.
 
-**En curso:** **Phase 3 Templates** (slice 3: Skills CRUD). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
+**En curso:** **Phase 3 Templates** (slice 4: lead-intake seed). Phase 2 Isolation is **done**. UI Files / Connections remain follow-ups. Goals / Triggers: not this phase.
 
 Sidebar surfaces (Skills, Environment, Connections, Activity, Ripples, Admin, Knowledge, Templates, Goals): see [CONTROL_PLANE_NAV.md](../product/CONTROL_PLANE_NAV.md). **Doc only** until the matching AgentOS phase.
 
@@ -43,20 +43,26 @@ Cadencia autónoma (slices ~1 h, docs Hecho/Por hacer antes de cada PR): [ROADMA
 - Instantiate → 9 cards with `depends_on` chain
 - Pytest: count=9; step 2 blocked until 1 `done`; step 3 blocked until 2 `done`
 
-### Slice 3 (este PR) — Hecho
+### Slice 3 — Hecho (merged #20)
 
 - SQLite `Skill` catalog (`slug` / `name` / `description` / `kind` / `body`) + seed `plan-mode`
 - API list/get/create/patch/put-upsert/delete under `/api/v1/skills`
 - Minimal glue: `AgentSeed.skills` stay as slugs; agentos list/get fills `resolved_skills` from catalog
 - Pytest: seed + CRUD + agent slug resolve
 
+### Slice 4 (este PR) — Hecho
+
+- Product seed `lead-intake-workflow` (2 steps, `leadId`): step 2 `requires_previous_done` + approval gate
+- Lean agent seeds `lead-researcher` / `lead-solutions` (GallaAI product prompts)
+- Pytest: instantiate → 2 cards + prior-step gate; assignees resolve
+
 ### Por hacer (siguientes slices)
 
 - Schedule-at / recurring cron on tasks; follow-up chain scheduler
-- Product seed (doc): `lead-intake-workflow` (2 steps, `leadId`) — [LEAD_INTAKE.md](../product/LEAD_INTAKE.md) if not done
 - Assignee agents for compound steps (missing role seeds: `spec`, `review-coordinator`, etc.)
 - Approval gates also via MCP actor/token (agent cannot PATCH gated `done`)
 - UI Templates / Skills surfaces
+- Phase 3 close criteria: agent token cannot mark gated `done`; schedule/cron landed or explicitly deferred
 
 **Done when (full Phase 3):** instantiating compound creates 9 cards; step 2 does not start until a human marks step 1 `done`; an agent token cannot mark a gated step `done`. (`lead-intake-workflow`: 2 cards; score gate documented in LEAD_INTAKE.)
 

@@ -20,6 +20,7 @@ from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
 from app.services.templates import (
     COMPOUND_ENGINEER_SLUG,
     DEMO_TWO_STEP_SLUG,
+    LEAD_INTAKE_SLUG,
     assert_prior_step_done,
     get_template,
     instantiate_template,
@@ -153,6 +154,12 @@ def test_instantiate_idempotent_seed():
             ).all()
         )
         assert len(compound_rows) == 1
+        lead_rows = list(
+            db.scalars(
+                select(TaskTemplate).where(TaskTemplate.slug == LEAD_INTAKE_SLUG)
+            ).all()
+        )
+        assert len(lead_rows) == 1
     finally:
         db.close()
 
@@ -216,3 +223,64 @@ def test_compound_instantiate_nine_cards_and_gates():
         assert_prior_step_done(db, t3)  # no raise
     finally:
         db.close()
+
+def test_lead_intake_seed_two_steps():
+    db = _memory_db()
+    try:
+        templates = list_templates(db)
+        slugs = {t.slug for t in templates}
+        assert LEAD_INTAKE_SLUG in slugs
+        tpl = get_template(db, LEAD_INTAKE_SLUG)
+        steps = sorted(tpl.steps, key=lambda s: s.position)
+        assert len(steps) == 2
+        assert steps[0].position == 1
+        assert steps[0].name == "Investigar dolores"
+        assert steps[0].assignee_agent_name == "lead-researcher"
+        assert steps[0].approval_gate is False
+        assert steps[0].requires_previous_done is False
+        assert steps[1].position == 2
+        assert steps[1].assignee_agent_name == "lead-solutions"
+        assert steps[1].approval_gate is True
+        assert steps[1].requires_previous_done is True
+    finally:
+        db.close()
+
+
+def test_lead_intake_instantiate_two_cards_and_gate():
+    db = _memory_db()
+    try:
+        template = get_template(db, LEAD_INTAKE_SLUG)
+        result = instantiate_template(db, template, name_prefix="Lead #42 — ")
+        assert result.template_slug == LEAD_INTAKE_SLUG
+        assert len(result.tasks) == 2
+        t1, t2 = result.tasks
+        assert t1.step_index == 1
+        assert t2.step_index == 2
+        assert t1.depends_on_task_id is None
+        assert t2.depends_on_task_id == t1.id
+        assert t1.approval_gate is False
+        assert t2.approval_gate is True
+        assert t1.template_run_id == t2.template_run_id == result.run_id
+        assert t1.name.startswith("Lead #42")
+        assert t2.name.startswith("Lead #42")
+
+        researcher = db.scalar(select(Agent).where(Agent.name == "lead-researcher"))
+        solutions = db.scalar(select(Agent).where(Agent.name == "lead-solutions"))
+        assert researcher is not None and solutions is not None
+        assert t1.assignee_agent_id == researcher.id
+        assert t2.assignee_agent_id == solutions.id
+
+        task2 = db.get(Task, t2.id)
+        assert task2 is not None
+        with pytest.raises(BadRequestError) as blocked:
+            assert_prior_step_done(db, task2)
+        assert "blocked" in blocked.value.message.lower()
+
+        task1 = db.get(Task, t1.id)
+        assert task1 is not None
+        task1.status = "done"
+        db.commit()
+        assert_prior_step_done(db, task2)  # no raise
+    finally:
+        db.close()
+
