@@ -13,6 +13,8 @@ Shared staging on the box: `/workspace/gallaia-agentos/`
 | GET | `/agents/{name}` | One seed (prompts included) |
 | GET | `/agents/{name}/grants` | SQLite grants (mcp / repo / env); default deny |
 | PUT | `/agents/{name}/grants` | Replace grants `{ "grants": [ { "kind", "name" } ] }` |
+| GET | `/agents/{name}/network` | SQLite network policy (`open` \| `limited` + host allowlist) |
+| PUT | `/agents/{name}/network` | Replace `{ "mode": "open"\|"limited", "allowlist": ["api.front.com"] }` |
 | POST | `/tasks` | `{ "name", "description"?, "assignee_agent"? }` → status `todo` |
 | GET | `/tasks` | |
 | GET | `/tasks/{id}` | |
@@ -79,4 +81,4 @@ Every seed `foundational_prompt` / `role_prompt` labeled:
 - `backend/tests/test_agentos_runner.py`
 - `docs/agentos/{README,PHASE2_PLUS}.md`
 
-Phase 2 Isolation: grants wall is implemented (`agent_grants` + default-deny in mock runner). Network / filesystem ACL / secret refs remain later slices.
+Phase 2 Isolation: grants wall + network policy are implemented (`agent_grants` default-deny; `agent_network_policies` `open`|`limited` + allowlist on mock `http.fetch`). Filesystem ACL / secret refs remain later slices.

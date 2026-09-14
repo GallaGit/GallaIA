@@ -15,6 +15,7 @@ from typing import Any, Literal
 
 from app.agentos.grants import GrantSet, gated_output
 from app.agentos.models import Session, Task, ToolEvent
+from app.agentos.network import NetworkPolicy, gated_http_output
 from app.agentos.seeds import AgentSeed, get_seed
 from app.agentos.store import AgentOSStore, store as default_store
 
@@ -81,6 +82,7 @@ class SessionRunner:
         agent_name: str | None = None,
         runner: RunnerKind | None = None,
         grants: GrantSet | None = None,
+        network: NetworkPolicy | None = None,
     ) -> RunResult:
         task = self.store.get_task(task_id)
         if task is None:
@@ -90,6 +92,7 @@ class SessionRunner:
         seed = get_seed(seed_name)
         kind = resolve_runner(runner or seed.runner_preference)
         grant_set = grants if grants is not None else seed.grant_set()
+        network_policy = network if network is not None else seed.network_policy()
 
         session = Session(
             task_id=task.id,
@@ -125,7 +128,8 @@ class SessionRunner:
                     "skills": list(seed.skills),
                     "prompt_origin": seed.prompt_origin,
                     "grants": grant_set.as_list(),
-                    "isolation": "grants-default-deny",
+                    "network": network_policy.as_dict(),
+                    "isolation": "grants-default-deny+network-policy",
                 },
             )
         )
@@ -136,16 +140,16 @@ class SessionRunner:
 
         if kind == "openrouter":
             summary, or_events, used_openrouter = self._run_openrouter(
-                seed, task, grant_set
+                seed, task, grant_set, network_policy
             )
             events.extend(or_events)
         elif kind == "anthropic":
             summary, anthropic_events, used_anthropic = self._run_anthropic(
-                seed, task, grant_set
+                seed, task, grant_set, network_policy
             )
             events.extend(anthropic_events)
         else:
-            summary, mock_events = self._run_mock(seed, task, grant_set)
+            summary, mock_events = self._run_mock(seed, task, grant_set, network_policy)
             events.extend(mock_events)
 
         # doing -> review (agents leave gated work in review; MVP marks review then done)
@@ -210,8 +214,20 @@ class SessionRunner:
             output=gated_output(grants, name, tool_input, allowed_output),
         )
 
+    def _http(
+        self,
+        policy: NetworkPolicy,
+        url: str,
+        allowed_output: dict[str, Any],
+    ) -> ToolEvent:
+        return ToolEvent(
+            name="http.fetch",
+            input={"url": url},
+            output=gated_http_output(policy, url, allowed_output),
+        )
+
     def _run_mock(
-        self, seed: AgentSeed, task: Task, grants: GrantSet
+        self, seed: AgentSeed, task: Task, grants: GrantSet, network: NetworkPolicy
     ) -> tuple[str, list[ToolEvent]]:
         events = [
             self._tool(
@@ -254,6 +270,13 @@ class SessionRunner:
                     {"sha": "mockdeadbeef"},
                 )
             )
+            events.append(
+                self._http(
+                    network,
+                    "https://api.github.com/repos/GallaGit/GallaIA",
+                    {"status": 200, "sha": "mockdeadbeef"},
+                )
+            )
             summary = f"Mock implementation committed for {task.name!r}"
         elif seed.name == "support":
             events.append(
@@ -273,13 +296,34 @@ class SessionRunner:
                     {"sha": "must-not-land"},
                 )
             )
-            summary = f"Mock support handled {task.name!r} via Front (GitHub denied)"
+            events.append(
+                self._http(
+                    network,
+                    "https://api.front.com/conversations",
+                    {"status": 200, "source": "fake-front"},
+                )
+            )
+            events.append(
+                self._http(
+                    network,
+                    "https://api.github.com/repos/GallaGit/GallaIA",
+                    {"status": 200, "must-not-land": True},
+                )
+            )
+            summary = (
+                f"Mock support handled {task.name!r} via Front "
+                "(GitHub MCP + GitHub HTTP denied)"
+            )
         else:
             summary = f"Mock default agent completed {task.name!r}"
         return summary, events
 
     def _run_openrouter(
-        self, seed: AgentSeed, task: Task, grants: GrantSet
+        self,
+        seed: AgentSeed,
+        task: Task,
+        grants: GrantSet,
+        network: NetworkPolicy,
     ) -> tuple[str, list[ToolEvent], bool]:
         from app.providers.openrouter import (
             OpenRouterError,
@@ -290,7 +334,7 @@ class SessionRunner:
 
         events: list[ToolEvent] = []
         if not openrouter_api_key():
-            summary, mock_events = self._run_mock(seed, task, grants)
+            summary, mock_events = self._run_mock(seed, task, grants, network)
             events.append(
                 ToolEvent(
                     name="openrouter.skip",
@@ -337,17 +381,21 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task, grants)
+            summary, mock_events = self._run_mock(seed, task, grants, network)
             events.extend(mock_events)
             return f"OpenRouter failed ({exc}); mock: {summary}", events, False
 
     def _run_anthropic(
-        self, seed: AgentSeed, task: Task, grants: GrantSet
+        self,
+        seed: AgentSeed,
+        task: Task,
+        grants: GrantSet,
+        network: NetworkPolicy,
     ) -> tuple[str, list[ToolEvent], bool]:
         api_key = _anthropic_key()
         events: list[ToolEvent] = []
         if not api_key:
-            summary, mock_events = self._run_mock(seed, task, grants)
+            summary, mock_events = self._run_mock(seed, task, grants, network)
             events.append(
                 ToolEvent(
                     name="anthropic.skip",
@@ -425,6 +473,6 @@ class SessionRunner:
                     output={"error": str(exc)},
                 )
             )
-            summary, mock_events = self._run_mock(seed, task, grants)
+            summary, mock_events = self._run_mock(seed, task, grants, network)
             events.extend(mock_events)
             return f"Anthropic failed ({exc}); mock: {summary}", events, False

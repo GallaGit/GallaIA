@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from app.agentos.grants import GrantSet
+from app.agentos.network import NetworkPolicy
 
 PROMPT_ORIGIN = (
     "Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt."
@@ -58,12 +59,17 @@ class AgentSeed:
     skills: tuple[str, ...] = ()
     mcp: tuple[str, ...] = ("agentos", "inbox")
     grants: tuple[tuple[str, str], ...] = (("mcp", "agentos"), ("mcp", "inbox"))
+    network_mode: Literal["open", "limited"] = "open"
+    network_allowlist: tuple[str, ...] = ()
     runner_preference: Literal["mock", "anthropic", "openrouter", "inherit"] = "inherit"
     collaboration: tuple[str, ...] = ()
     one_job: str = ""
 
     def grant_set(self) -> GrantSet:
         return GrantSet.from_pairs(self.grants)
+
+    def network_policy(self) -> NetworkPolicy:
+        return NetworkPolicy.from_parts(self.network_mode, self.network_allowlist)
 
 
 AGENT_SEEDS: dict[str, AgentSeed] = {
@@ -130,9 +136,11 @@ You are a customer support agent. You have one job: handle inbound
 support via the Front MCP. You do not have GitHub. You do not have
 repo access. You do not have Gmail. Finish or inbox if stuck.
 """,
-        one_job="Inbound support via Front MCP — no GitHub, no repo",
+        one_job="Inbound support via Front MCP — no GitHub, no repo; limited network",
         mcp=("front",),
         grants=(("mcp", "front"),),
+        network_mode="limited",
+        network_allowlist=("api.front.com",),
         runner_preference="mock",
     ),
 }

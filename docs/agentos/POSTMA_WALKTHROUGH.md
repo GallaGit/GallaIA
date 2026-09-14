@@ -315,11 +315,11 @@ Runtime real (cuando toque sustituir el stub):
 
 ### Fase 2 — Isolation (lo más importante y lo más difícil)
 
-**Candidato de implementación siguiente en GallaIA.** Grants wall: done. Remaining walls: network policy, filesystem ACL, secret refs — one wall per slice.
+**Candidato de implementación siguiente en GallaIA.** Grants + network walls: done. Remaining walls: filesystem ACL, secret refs — one wall per slice.
 
 1. Default deny en el **session manifest**.
 2. Grants por agente: MCP, repo, env, filesystem, collaboration list.
-3. Network `open` | `limited` + allowlist en el proxy del runner.
+3. Network `open` | `limited` + allowlist en el proxy del runner. **Done** (mock `http.fetch`).
 4. R2 + filesystem MCP con ACL server-side (`canRead`/`canWrite`/`canDelete`, path prefix, deny `../`).
 5. Secret refs; inyección solo al start; DB solo guarda el puntero.
 6. File browser en UI.

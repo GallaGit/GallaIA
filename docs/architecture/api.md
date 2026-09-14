@@ -14,12 +14,12 @@ Draft
   - `GET /` — simple ping / static UI entry when built
   - `GET /health` — infra health (unversioned)
   - `GET /api/v1/health` — versioned API health
-  - Control plane: `/api/v1/projects|agents|tasks|sessions|inbox` (SQLite), plus `GET/PUT /agents/{id}/grants`
-  - AgentOS package: `/api/v1/agentos/*` — [CONTRACT.md](../agentos/CONTRACT.md) (includes grants by agent name)
+  - Control plane: `/api/v1/projects|agents|tasks|sessions|inbox` (SQLite), plus `GET/PUT /agents/{id}/grants` and `GET/PUT /agents/{id}/network`
+  - AgentOS package: `/api/v1/agentos/*` — [CONTRACT.md](../agentos/CONTRACT.md) (includes grants and network policy by agent name)
   - OpenAPI at `/docs`
   - Router composition via `app.include_router(api_router, prefix="/api/v1")`
   - Global `AppError` JSON envelope; `X-Request-ID` on responses
-- Planned: Phase 2+ endpoints (network policy, filesystem ACL, templates, goals, webhooks) only when those phases start — [ROADMAP.md](../ROADMAP.md).
+- Planned: Phase 2+ endpoints (filesystem ACL, templates, goals, webhooks) only when those phases start — [ROADMAP.md](../ROADMAP.md).
 - Future: pagination, filtering, richer versioning policy; single-operator auth.
 
 ## Related docs

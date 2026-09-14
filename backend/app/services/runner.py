@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.agentos.grants import evaluate_tool
+from app.agentos.network import evaluate_http
 from app.models import Agent, AgentSession, InboxMessage, Task
 from app.providers.openrouter import (
     complete as openrouter_complete,
@@ -20,6 +21,7 @@ from app.providers.openrouter import (
     openrouter_model,
 )
 from app.services.grants import grant_set_for_agent
+from app.services.network import network_policy_for_agent
 
 
 def _now() -> datetime:
@@ -55,6 +57,27 @@ def _append_gated(
         events,
         name,
         f"DENIED {decision.reason}",
+    )
+    return False
+
+
+def _append_http(
+    session: AgentSession,
+    events: list,
+    policy,
+    url: str,
+    detail: str,
+) -> bool:
+    """Record a mock fetch; return False when limited policy blocked the host."""
+    decision = evaluate_http(policy, url)
+    if decision.allowed:
+        _append_event(session, events, "http.fetch", f"{url} {detail}")
+        return True
+    _append_event(
+        session,
+        events,
+        "http.fetch",
+        f"DENIED {decision.reason} url={url}",
     )
     return False
 
@@ -98,6 +121,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
     events: list = []
     session.status = "running"
     grants = grant_set_for_agent(agent)
+    network = network_policy_for_agent(agent)
     _append_event(session, events, "session.start", f"Runner={runner_name} agent={agent.name}")
     _append_event(
         session,
@@ -110,7 +134,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         session,
         events,
         "session.manifest",
-        f"grants={grants.as_list()} isolation=grants-default-deny",
+        f"grants={grants.as_list()} network={network.as_dict()} isolation=grants-default-deny+network-policy",
     )
 
     if runner_name == "openrouter":
@@ -155,6 +179,20 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 grants,
                 "github.commit",
                 "must not succeed without mcp:github",
+            )
+            _append_http(
+                session,
+                events,
+                network,
+                "https://api.front.com/conversations",
+                "fake Front HTTP",
+            )
+            _append_http(
+                session,
+                events,
+                network,
+                "https://api.github.com/user",
+                "must not succeed outside allowlist",
             )
         elif agent.name == "senior-dev":
             _append_gated(
