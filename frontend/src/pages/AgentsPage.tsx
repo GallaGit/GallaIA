@@ -64,7 +64,6 @@ export default function AgentsPage() {
   const [error, setError] = useState<string | null>(null)
   const [apiDown, setApiDown] = useState(false)
   const [filter, setFilter] = useState<StatusFilter>('all')
-  const [ctaNote, setCtaNote] = useState(false)
 
   useEffect(() => {
     setError(null)
@@ -171,21 +170,15 @@ export default function AgentsPage() {
           <h2>Agentes</h2>
           <p>Fleet del control plane · seeds GET /agents</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <button
-            type="button"
-            className="btn btn-primary btn-muted"
-            title="POST /agents no está en el contrato Fase 1"
-            onClick={() => setCtaNote(true)}
-          >
-            Registrar agente
-          </button>
-          {ctaNote && (
-            <span className="muted" style={{ fontSize: '0.78rem' }}>
-              Próximamente — seeds son GET-only
-            </span>
-          )}
-        </div>
+        <button
+          type="button"
+          className="btn btn-primary btn-muted"
+          disabled
+          title="Próximamente"
+          aria-label="Registrar agente (Próximamente)"
+        >
+          Registrar agente · Próximamente
+        </button>
       </div>
       {error && <div className="error">{error}</div>}
 

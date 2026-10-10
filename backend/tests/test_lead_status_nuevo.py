@@ -1,4 +1,4 @@
-"""Phase 5 slice 3: lead-status-nuevo -> instantiate lead-intake-workflow."""
+"""Phase 5 slice 3: lead-status-nuevo -> instantiate demo-two-step."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from app.main import app
 from app.models import Task
 from app.schemas.trigger import LeadStatusNuevoIn
 from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
-from app.services.templates import LEAD_INTAKE_SLUG
+from app.services.templates import DEMO_TWO_STEP_SLUG
 from app.services.triggers import handle_lead_status_nuevo
 
 TEST_SECRET = "test-webhook-secret-phase5"
@@ -143,7 +143,7 @@ def test_http_valid_creates_two_tasks_200(monkeypatch):
             assert resp.status_code == 200, resp.text
             body = resp.json()
             assert body["lead_id"] == "42"
-            assert body["template_slug"] == LEAD_INTAKE_SLUG
+            assert body["template_slug"] == DEMO_TWO_STEP_SLUG
             assert body["task_count"] == 2
             assert len(body["task_ids"]) == 2
             assert body["run_id"]
@@ -175,7 +175,7 @@ def test_service_instantiates_lead_intake(monkeypatch):
         )
         assert out.lead_id == "99"
         assert out.task_count == 2
-        assert out.template_slug == LEAD_INTAKE_SLUG
+        assert out.template_slug == DEMO_TWO_STEP_SLUG
     finally:
         db.close()
         engine.dispose()

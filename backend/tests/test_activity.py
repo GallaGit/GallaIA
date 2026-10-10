@@ -151,7 +151,7 @@ def test_automation_fire_emits_activity():
                 action=AutomationAction(
                     type="create_task",
                     name="auto-task-act",
-                    assignee_agent="default",
+                    assignee_agent="orquestador",
                 ),
             ),
         )

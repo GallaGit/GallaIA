@@ -26,7 +26,7 @@ def seed_if_empty(db: Session) -> None:
     project = Project(
         name="default",
         slug="default",
-        description="Proyecto AgentOS por defecto (MVP Phase 1)",
+        description="Proyecto GallaIA v2 por defecto (Orquestador / FE / BE)",
     )
     db.add(project)
     db.flush()
@@ -34,39 +34,30 @@ def seed_if_empty(db: Session) -> None:
     agents = [
         Agent(
             project_id=project.id,
-            name="default",
-            title="Agente por defecto",
-            model="claude-sonnet-4",
+            name="orquestador",
+            title="Orquestador",
+            model="claude-sonnet-4-5",
             foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["default"],
+            role_prompt=ROLE_PROMPTS["orquestador"],
             runner_preference="cloud",
         ),
         Agent(
             project_id=project.id,
-            name="plan",
-            title="Agente de planificación",
-            model="claude-opus-4",
+            name="fe",
+            title="FE",
+            model="claude-sonnet-4-5",
             foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["plan"],
-            runner_preference="cloud",
-        ),
-        Agent(
-            project_id=project.id,
-            name="senior-dev",
-            title="Senior developer",
-            model="claude-sonnet-4",
-            foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["senior-dev"],
-            runner_preference="local",
-        ),
-        Agent(
-            project_id=project.id,
-            name="support",
-            title="Customer support",
-            model="claude-sonnet-4",
-            foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["support"],
+            role_prompt=ROLE_PROMPTS["fe"],
             runner_preference="mock",
+        ),
+        Agent(
+            project_id=project.id,
+            name="be",
+            title="BE",
+            model="claude-sonnet-4-5",
+            foundational_prompt=FOUNDATIONAL_PROMPT,
+            role_prompt=ROLE_PROMPTS["be"],
+            runner_preference="local",
         ),
     ]
     db.add_all(agents)

@@ -75,7 +75,7 @@ def _make_automation(
                 type="create_task",
                 name=task_name,
                 description="from test",
-                assignee_agent="default",
+                assignee_agent="orquestador",
             ),
         ),
     )
@@ -201,7 +201,7 @@ def test_http_crud_and_tick():
                 "action": {
                     "type": "create_task",
                     "name": "http-task",
-                    "assignee_agent": "default",
+                    "assignee_agent": "orquestador",
                 },
             },
         )

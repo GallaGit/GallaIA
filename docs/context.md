@@ -82,7 +82,7 @@ Esta fase incluye:
 
 No se implementan Isolation real, Goals, Templates, Triggers ni RAG hasta las fases documentadas en el roadmap.
 
-Calendario: [ROADMAP.md](ROADMAP.md). Producto: [product/AGENTOS.md](product/AGENTOS.md). Alcance: [alcance.md](alcance.md).
+Calendario: [ROADMAP.md](ROADMAP.md). Visión: [VISION.md](VISION.md). Archivo v1: [archive/](archive/).
 
 ---
 
@@ -135,4 +135,4 @@ La Phase 1 se considera completada cuando el operador pueda:
 - ver el avance del Kanban y el log de tool-calls en la session;
 - usar el Inbox para atención humana cuando aplique.
 
-Detalle y non-goals: [alcance.md](alcance.md), [product/AGENTOS.md](product/AGENTOS.md).
+Detalle y non-goals: [VISION.md](VISION.md), [archive/alcance.md](archive/alcance.md).

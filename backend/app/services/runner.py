@@ -206,13 +206,13 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
         )
         _append_event(session, events, "mock.think", "Simulating tool use…")
         _append_event(session, events, "mock.write", "Would write via filesystem MCP")
-        if agent.name == "support":
+        if agent.name == "fe":
             _append_gated(
                 session,
                 events,
                 grants,
-                "front.list_conversations",
-                "fake Front inbox",
+                "agentos.task.write_activity",
+                "FE UI progress",
             )
             _append_gated(
                 session,
@@ -225,8 +225,8 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 session,
                 events,
                 network,
-                "https://api.front.com/conversations",
-                "fake Front HTTP",
+                "https://registry.npmjs.org/react",
+                "npm registry HTTP",
             )
             _append_http(
                 session,
@@ -235,16 +235,16 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 "https://api.github.com/user",
                 "must not succeed outside allowlist",
             )
-            _append_fs(session, events, filesystem, "read", "/agents/support/ticket.md")
+            _append_fs(session, events, filesystem, "read", "/agents/fe/ui.md")
             _append_fs(
-                session, events, filesystem, "read", "/agents/senior-dev/notes.md"
+                session, events, filesystem, "read", "/agents/be/api.md"
             )
             _append_fs(
                 session,
                 events,
                 filesystem,
                 "read",
-                "/agents/support/../senior-dev/notes.md",
+                "/agents/fe/../be/api.md",
             )
             for secret_name in secret_runtime.values:
                 _append_event(
@@ -253,7 +253,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                     "secret.get",
                     f"name={secret_name} present=true",
                 )
-        elif agent.name == "senior-dev":
+        elif agent.name == "be":
             _append_gated(
                 session,
                 events,
@@ -262,7 +262,7 @@ def run_task_session(db: Session, task: Task, agent: Agent) -> AgentSession:
                 f"feat: {task.name} (mock)",
             )
             _append_fs(
-                session, events, filesystem, "read", "/agents/senior-dev/notes.md"
+                session, events, filesystem, "read", "/agents/be/api.md"
             )
         _append_gated(
             session, events, grants, "agentos.task_update", "Marking task complete"

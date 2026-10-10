@@ -39,8 +39,8 @@ Draft
 | **Admin** | Gobierno del único operador (absorbe Settings) |
 | **Lead** | Contacto comercial en el CRM externo (Connection `crm`); **no** es entidad AgentOS |
 | **Ficha de dolor** | Artefacto estructurado del paso 1 de Lead Intake (dolores rankeados + evidencia) |
-| **Lead intake** | Template `lead-intake-workflow` + trigger `lead-status-nuevo` — [LEAD_INTAKE.md](product/LEAD_INTAKE.md) |
-| **n8n (lead intake)** | Pipeline externo de captura/alta; deja el lead en CRM con estado `nuevo` (JSON fuera del repo) — [LEAD_INTAKE.md](product/LEAD_INTAKE.md) §3 |
+| **Lead intake (v1)** | Histórico; ver [archive/LEAD_INTAKE.md](archive/LEAD_INTAKE.md) |
+| **Orquestador / FE / BE** | Seeds v2 — [VISION.md](VISION.md) |
 | **Score lead (umbral 60)** | `&lt; 60` → CRM `descartado`; `&gt;= 60` → CRM `pendiente a revisar` (política en control plane) |
 
 Detalle de pantallas: [CONTROL_PLANE_NAV.md](product/CONTROL_PLANE_NAV.md).

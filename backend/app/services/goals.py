@@ -56,7 +56,7 @@ def _resolve_project(db: Session, project_id: int | None) -> Project:
 
 
 def _pick_agent(db: Session) -> Agent:
-    agent = db.scalar(select(Agent).where(Agent.name == "default"))
+    agent = db.scalar(select(Agent).where(Agent.name == "orquestador"))
     if agent is None:
         agent = db.scalar(select(Agent).order_by(Agent.id).limit(1))
     if agent is None:

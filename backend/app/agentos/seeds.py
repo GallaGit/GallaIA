@@ -1,13 +1,11 @@
-"""Agent seed catalog for AgentOS MVP.
+"""Agent seed catalog for GallaIA v2 (F0).
 
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
-Source blueprint (also reconstructed, not verbatim):
-https://gist.github.com/iannuttall/8152098b5ce8e6c1a7499ee561ed93f4
+Three personal software teammates: Orquestador, FE, BE.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 from app.agentos.filesystem import FilesystemAcl, FsRoot
@@ -15,18 +13,13 @@ from app.agentos.grants import GrantSet
 from app.agentos.network import NetworkPolicy
 from app.agentos.secrets import SecretRefSet
 
-PROMPT_ORIGIN = (
-    "Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt."
-)
+PROMPT_ORIGIN = "GallaIA v2 seed — Orquestador / FE / BE."
 
-# Product agents (Lead Intake) — GallaAI originals, not Postma.
-GALLAIA_PRODUCT_ORIGIN = "GallaAI product seed (LEAD_INTAKE.md) — original, not Postma."
-
-# Shared foundational prompt (reconstructed, not verbatim).
+# Shared foundational prompt for the personal agentic stack.
 FOUNDATIONAL_PROMPT = """\
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
+# GallaIA v2 — foundational prompt
 
-You are running inside AgentOS (GallaIA).
+You are running inside GallaIA, a personal agentic tool for building software.
 
 You have only the tools, MCPs, repos, environment variables, and filesystem
 folders listed in your session manifest. If a tool is not listed, you cannot
@@ -53,7 +46,7 @@ KanbanStatus = Literal["todo", "doing", "review", "done"]
 
 @dataclass(frozen=True)
 class AgentSeed:
-    """One AgentOS role seed."""
+    """One GallaIA v2 role seed."""
 
     name: str
     title: str
@@ -91,115 +84,62 @@ class AgentSeed:
 
 
 AGENT_SEEDS: dict[str, AgentSeed] = {
-    "default": AgentSeed(
-        name="default",
-        title="Default agent",
+    "orquestador": AgentSeed(
+        name="orquestador",
+        title="Orquestador",
         model="claude-sonnet-4-5",
         foundational_prompt=FOUNDATIONAL_PROMPT,
         role_prompt="""\
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
+# GallaIA v2 — Orquestador
 
-You are the default AgentOS agent. Do the assigned task with the tools
-you have. Finish or inbox if stuck.
+You talk to Ociel. You plan work, split it into tasks, assign FE and BE,
+review their output, and integrate results. You do not implement UI or API
+yourself unless asked. Prefer clear briefs and approval gates when the human
+must decide.
 """,
-        one_job="General workhorse",
-        mcp=("agentos", "inbox"),
-        grants=(("mcp", "agentos"), ("mcp", "inbox")),
-    ),
-    "plan": AgentSeed(
-        name="plan",
-        title="Plan agent",
-        model="claude-sonnet-4-5",
-        foundational_prompt=FOUNDATIONAL_PROMPT,
-        role_prompt="""\
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
-
-You are a plan agent. You have one job: turn an approved specification
-into a concrete, ordered implementation plan. Write the plan onto the
-task (and as a file attachment). Then finish the task. You do not
-implement. You do not open unrelated tools.
-""",
-        one_job="Turn an approved spec into a concrete implementation plan",
+        one_job="Hablar con Ociel, planificar, delegar a FE/BE, revisar e integrar",
         skills=("plan-mode",),
         mcp=("agentos", "inbox"),
         grants=(("mcp", "agentos"), ("mcp", "inbox")),
+        collaboration=("fe", "be"),
         runner_preference="anthropic",
     ),
-    "senior-dev": AgentSeed(
-        name="senior-dev",
-        title="Senior developer",
+    "fe": AgentSeed(
+        name="fe",
+        title="FE",
         model="claude-sonnet-4-5",
         foundational_prompt=FOUNDATIONAL_PROMPT,
         role_prompt="""\
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
+# GallaIA v2 — FE
 
-You are a senior developer. Implement the assigned work, or apply review
-fixes, in the granted repo. Follow the plan if one is attached. Commit
-when done. Run available tests. Inbox the human only if you are blocked.
+You own React, TypeScript, Vite, and UI. Implement frontend tasks from the
+Orquestador brief. Do not change FastAPI/backend unless the brief says so.
+Run available frontend checks when granted. Inbox if blocked.
 """,
-        one_job="Implement / apply review fixes",
+        one_job="React / TypeScript / UI",
+        mcp=("agentos", "inbox"),
+        grants=(("mcp", "agentos"), ("mcp", "inbox")),
+        network_mode="limited",
+        network_allowlist=("registry.npmjs.org",),
+        collaboration=("orquestador",),
+        runner_preference="mock",
+    ),
+    "be": AgentSeed(
+        name="be",
+        title="BE",
+        model="claude-sonnet-4-5",
+        foundational_prompt=FOUNDATIONAL_PROMPT,
+        role_prompt="""\
+# GallaIA v2 — BE
+
+You own FastAPI, API design, and data. Implement backend tasks from the
+Orquestador brief. Do not change React/UI unless the brief says so.
+Run available backend tests when granted. Inbox if blocked.
+""",
+        one_job="FastAPI / API / datos",
         mcp=("agentos", "inbox", "github"),
         grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "github")),
-        runner_preference="mock",
-    ),
-    "support": AgentSeed(
-        name="support",
-        title="Customer support",
-        model="claude-sonnet-4-5",
-        foundational_prompt=FOUNDATIONAL_PROMPT,
-        role_prompt="""\
-# Reconstructed from Danny Postma's AgentOS talk — not his verbatim prompt.
-
-You are a customer support agent. You have one job: handle inbound
-support via the Front MCP. You do not have GitHub. You do not have
-repo access. You do not have Gmail. Finish or inbox if stuck.
-""",
-        one_job="Inbound support via Front MCP — no GitHub, no repo; limited network",
-        mcp=("front",),
-        grants=(("mcp", "front"),),
-        network_mode="limited",
-        network_allowlist=("api.front.com",),
-        runner_preference="mock",
-    ),
-    "lead-researcher": AgentSeed(
-        name="lead-researcher",
-        title="Lead researcher",
-        model="claude-sonnet-4-5",
-        foundational_prompt=FOUNDATIONAL_PROMPT,
-        role_prompt="""\
-# GallaAI product seed (LEAD_INTAKE.md) — original, not Postma.
-
-You are lead-researcher. One job: investigate the lead pains and
-persist a structured Ficha de dolor on the task. Do not write CRM notes.
-Do not compute the cut-off score. Do not draft the first-contact email.
-Do not spawn lead-solutions (the template scheduler unlocks step 2).
-If CRM lacks minimum email/company data: inbox a blocker; do not invent pains.
-""",
-        prompt_origin=GALLAIA_PRODUCT_ORIGIN,
-        one_job="Investigate lead pains to Ficha de dolor",
-        mcp=("agentos", "inbox", "crm"),
-        grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "crm")),
-        runner_preference="mock",
-    ),
-    "lead-solutions": AgentSeed(
-        name="lead-solutions",
-        title="Lead solutions",
-        model="claude-sonnet-4-5",
-        foundational_prompt=FOUNDATIONAL_PROMPT,
-        role_prompt="""\
-# GallaAI product seed (LEAD_INTAKE.md) — original, not Postma.
-
-You are lead-solutions. One job: read the Ficha de dolor, emit
-{score, rubrica, razon}, append lead notes, and leave CRM status to the
-control plane threshold (<60 descartado; >=60 pendiente a revisar).
-If score >= 60: draft first contact only if a template exists; otherwise
-inbox plantilla pendiente. Never send email. Never re-investigate.
-This step has an approval gate — leave the card in review; do NOT mark done.
-""",
-        prompt_origin=GALLAIA_PRODUCT_ORIGIN,
-        one_job="Ficha to score to CRM notes/status (draft if >= 60)",
-        mcp=("agentos", "inbox", "crm"),
-        grants=(("mcp", "agentos"), ("mcp", "inbox"), ("mcp", "crm")),
+        collaboration=("orquestador",),
         runner_preference="mock",
     ),
 }

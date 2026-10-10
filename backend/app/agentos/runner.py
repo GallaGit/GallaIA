@@ -297,13 +297,13 @@ class SessionRunner:
                 {},
             ),
         ]
-        if seed.name == "plan":
+        if seed.name == "orquestador":
             plan = (
-                f"## Implementation plan for: {task.name}\n"
+                f"## Plan for: {task.name}\n"
                 "1. Clarify acceptance criteria\n"
-                "2. Sketch modules and interfaces\n"
-                "3. Ordered implementation steps\n"
-                "4. Test checklist\n\n"
+                "2. Split FE vs BE work\n"
+                "3. Assign and review\n"
+                "4. Integrate\n\n"
                 f"(Mock plan — {seed.prompt_origin})"
             )
             events.append(
@@ -314,8 +314,8 @@ class SessionRunner:
                     {"plan_preview": plan[:240]},
                 )
             )
-            summary = f"Mock plan written for task {task.name!r}"
-        elif seed.name == "senior-dev":
+            summary = f"Mock orquestador plan for task {task.name!r}"
+        elif seed.name == "be":
             events.append(
                 self._tool(
                     grants,
@@ -332,19 +332,19 @@ class SessionRunner:
                 )
             )
             events.append(
-                self._fs(filesystem, fs_store, "read", "/agents/senior-dev/notes.md")
+                self._fs(filesystem, fs_store, "read", "/agents/be/api.md")
             )
-            summary = f"Mock implementation committed for {task.name!r}"
-        elif seed.name == "support":
+            summary = f"Mock BE implementation committed for {task.name!r}"
+        elif seed.name == "fe":
             events.append(
                 self._tool(
                     grants,
-                    "front.list_conversations",
-                    {"inbox": "support"},
-                    {"conversations": [], "source": "fake-front"},
+                    "agentos.task.write_activity",
+                    {"message": f"FE UI work on {task.name}"},
+                    {"ok": True},
                 )
             )
-            # Isolation assertion: Front-only must not get GitHub.
+            # Isolation: FE has no GitHub grant and limited network.
             events.append(
                 self._tool(
                     grants,
@@ -356,8 +356,8 @@ class SessionRunner:
             events.append(
                 self._http(
                     network,
-                    "https://api.front.com/conversations",
-                    {"status": 200, "source": "fake-front"},
+                    "https://registry.npmjs.org/react",
+                    {"status": 200, "source": "npm"},
                 )
             )
             events.append(
@@ -368,27 +368,27 @@ class SessionRunner:
                 )
             )
             events.append(
-                self._fs(filesystem, fs_store, "read", "/agents/support/ticket.md")
+                self._fs(filesystem, fs_store, "read", "/agents/fe/ui.md")
             )
             events.append(
-                self._fs(filesystem, fs_store, "read", "/agents/senior-dev/notes.md")
+                self._fs(filesystem, fs_store, "read", "/agents/be/api.md")
             )
             events.append(
                 self._fs(
                     filesystem,
                     fs_store,
                     "read",
-                    "/agents/support/../senior-dev/notes.md",
+                    "/agents/fe/../be/api.md",
                 )
             )
             for secret_name in secrets.values:
                 events.append(self._secret(secrets, secret_name))
             summary = (
-                f"Mock support handled {task.name!r} via Front "
+                f"Mock FE handled {task.name!r} "
                 "(GitHub MCP + GitHub HTTP denied; peer folder + ../ denied)"
             )
         else:
-            summary = f"Mock default agent completed {task.name!r}"
+            summary = f"Mock agent completed {task.name!r}"
         return summary, events
 
     def _run_openrouter(

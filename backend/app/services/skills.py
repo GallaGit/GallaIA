@@ -19,15 +19,15 @@ _SKILL_SEEDS: tuple[dict[str, str], ...] = (
         "name": "Plan mode",
         "description": (
             "Turn an approved spec into a concrete ordered implementation plan. "
-            "Referenced by the plan agent seed."
+            "Referenced by the orquestador agent seed."
         ),
         "kind": "prompt",
         "body": (
             "# Plan mode skill\n\n"
             "When this skill is attached, produce a concrete, ordered implementation "
-            "plan from the approved specification. Do not implement. Write the plan "
-            "onto the task (and as a file attachment if filesystem is granted). "
-            "Finish when the plan is complete.\n"
+            "plan from the approved specification. Split FE vs BE work. Do not "
+            "implement. Write the plan onto the task (and as a file attachment if "
+            "filesystem is granted). Finish when the plan is complete.\n"
         ),
     },
 )

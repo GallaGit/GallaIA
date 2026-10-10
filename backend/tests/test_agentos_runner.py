@@ -1,4 +1,4 @@
-"""Smoke tests for AgentOS seeds + mock runner (no LLM key required)."""
+"""Smoke tests for GallaIA v2 seeds + mock runner (no LLM key required)."""
 
 from __future__ import annotations
 
@@ -28,30 +28,22 @@ def _clear_llm_env(monkeypatch) -> None:
 
 def test_seeds_labeled_origin():
     names = {s.name for s in list_seeds()}
-    assert names == {
-        "default",
-        "plan",
-        "senior-dev",
-        "support",
-        "lead-researcher",
-        "lead-solutions",
-    }
-    product = {"lead-researcher", "lead-solutions"}
+    assert names == {"orquestador", "fe", "be"}
     for seed in AGENT_SEEDS.values():
-        assert "Reconstructed" in seed.foundational_prompt
-        if seed.name in product:
-            assert "GallaAI" in seed.prompt_origin
-            assert "GallaAI" in seed.role_prompt
-        else:
-            assert "not his verbatim" in seed.prompt_origin.lower() or "not his verbatim" in seed.role_prompt.lower()
-            assert "Reconstructed" in seed.prompt_origin or "Reconstructed" in seed.role_prompt
+        assert "GallaIA" in seed.foundational_prompt or "GallaIA" in seed.prompt_origin
+        assert seed.prompt_origin
+        assert seed.role_prompt
 
 
 def test_mock_runner_advances_kanban_and_logs_tools(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
     task = store.create_task(
-        Task(name="Ship AgentOS MVP", description="seeds + runner", assignee_agent="plan")
+        Task(
+            name="Ship GallaIA v2",
+            description="seeds + runner",
+            assignee_agent="orquestador",
+        )
     )
     result = SessionRunner(store).run(task.id, runner="mock")
     assert result.runner == "mock"
@@ -62,7 +54,7 @@ def test_mock_runner_advances_kanban_and_logs_tools(monkeypatch):
     names = [e.name for e in result.tool_events]
     assert names.count("kanban.move") >= 3
     assert "session.destroy" in names
-    assert get_seed("plan").name == "plan"
+    assert get_seed("orquestador").name == "orquestador"
 
 
 def test_resolve_runner_defaults_to_mock(monkeypatch):
@@ -134,7 +126,7 @@ def test_openrouter_runner_logs_tool_event(monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **k: _FakeResp())
 
     store = AgentOSStore()
-    task = store.create_task(Task(name="Try Nemotron", assignee_agent="default"))
+    task = store.create_task(Task(name="Try Nemotron", assignee_agent="orquestador"))
     result = SessionRunner(store).run(task.id)
     assert result.runner == "openrouter"
     assert result.used_openrouter is True
@@ -160,7 +152,7 @@ def test_openrouter_http_error_falls_back_to_mock(monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
 
     store = AgentOSStore()
-    task = store.create_task(Task(name="Bad key", assignee_agent="default"))
+    task = store.create_task(Task(name="Bad key", assignee_agent="orquestador"))
     result = SessionRunner(store).run(task.id, runner="openrouter")
     assert result.used_openrouter is False
     assert result.task.status == "done"

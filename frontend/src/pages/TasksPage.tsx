@@ -18,9 +18,9 @@ const LABELS: Record<KanbanStatus, string> = {
 }
 
 const FALLBACK_AGENTS = [
-  { name: 'default', title: 'Default' },
-  { name: 'plan', title: 'Plan' },
-  { name: 'senior-dev', title: 'Senior Dev' },
+  { name: 'orquestador', title: 'Orquestador' },
+  { name: 'fe', title: 'FE' },
+  { name: 'be', title: 'BE' },
 ]
 
 export default function TasksPage() {
@@ -28,7 +28,7 @@ export default function TasksPage() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [assignee, setAssignee] = useState('default')
+  const [assignee, setAssignee] = useState('orquestador')
   const [error, setError] = useState<string | null>(null)
   const [apiDown, setApiDown] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -81,7 +81,7 @@ export default function TasksPage() {
       await api.createTask({
         name,
         description: description || undefined,
-        assignee_agent: assignee || 'default',
+        assignee_agent: assignee || 'orquestador',
       })
       setName('')
       setDescription('')
