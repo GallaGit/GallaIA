@@ -21,6 +21,8 @@ from app.models import (  # noqa: F401
     PushSubscription,
     TaskTemplate,
     TaskTemplateStep,
+    Thread,
+    Message,
 )
 from app.services.seed import ensure_seed_agents_and_grants, seed_if_empty
 from app.services.skills import ensure_seed_skills

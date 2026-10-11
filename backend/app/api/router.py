@@ -17,6 +17,7 @@ from app.api.routes import (
     activity,
     runners,
     push,
+    threads,
 )
 
 api_router = APIRouter()
@@ -37,6 +38,7 @@ api_router.include_router(automations.router)
 api_router.include_router(activity.router)
 api_router.include_router(runners.router)
 api_router.include_router(push.router)
+api_router.include_router(threads.router)
 
 # Teammate in-memory AgentOS module (contract: /api/v1/agentos/*)
 api_router.include_router(agentos.router)

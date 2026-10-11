@@ -13,6 +13,7 @@ from app.models.automation import Automation
 from app.models.activity import ActivityEvent
 from app.models.push import PushSubscription
 from app.models.template import TaskTemplate, TaskTemplateStep
+from app.models.thread import Message, Thread
 
 __all__ = [
     "Project",
@@ -31,4 +32,6 @@ __all__ = [
     "AgentSession",
     "InboxMessage",
     "PushSubscription",
+    "Thread",
+    "Message",
 ]

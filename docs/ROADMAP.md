@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (11-10-2026):** F0 hecho y fusionado. Siguiente: F1, primer slice = modelo de hilos/mensajes entre agentes (backend + tests).
+**Estado (11-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) hecho. Siguiente: F1 (vista de conversación, UI + stream).
 
 ---
 
@@ -24,11 +24,23 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 ## F1 — Mensajería entre agentes
 
+### Slice F1.1 — Hilos y mensajes (backend)
+
+**Hecho**
+
+- Modelos `Thread` (título, proyecto opcional, autor, estado open/closed) y `Message` (emisor, receptor, kind text/delegation/result, cuerpo)
+- Validación de emisores/receptores contra agentes existentes (`orquestador`, `fe`, `be`) o `user`
+- Schemas Pydantic + rutas REST `/api/v1/threads`: crear, listar, detalle (con mensajes ordenados), publicar mensaje y cerrar
+- Reglas de error: 422 actor desconocido / delegación no autorizada, 404 hilo inexistente, 409 publicar en hilo cerrado
+- Evento de actividad `message.created` reutilizando el helper existente
+- Tests en `backend/tests/test_threads.py`
+
 **Por hacer**
 
-- Hilos y mensajes entre agentes
-- Delegación Orquestador → FE / BE
 - Vista de conversación en la UI
+- Stream en vivo (SSE) de mensajes nuevos
+- Delegación Orquestador → FE / BE visible en el grafo del orquestador
+
 
 ---
 
