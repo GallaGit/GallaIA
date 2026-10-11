@@ -2,9 +2,11 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
+**Estado (11-10-2026):** F0 hecho y fusionado. Siguiente: F1, primer slice = modelo de hilos/mensajes entre agentes (backend + tests).
+
 ---
 
-## F0 — Reset *(Hecho en este PR)*
+## F0 — Reset *(Hecho — PR #35, 11-10-2026)*
 
 **Hecho**
 
