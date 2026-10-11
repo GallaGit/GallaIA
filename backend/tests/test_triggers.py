@@ -113,7 +113,7 @@ def test_valid_secret_creates_task_and_session_stub(monkeypatch):
         get_settings.cache_clear()
 
 
-def test_support_inbound_shape_assigns_support_agent(monkeypatch):
+def test_support_inbound_shape_assigns_orquestador_agent(monkeypatch):
     _set_secret(monkeypatch)
     db, engine = _memory_db()
     try:
@@ -124,13 +124,13 @@ def test_support_inbound_shape_assigns_support_agent(monkeypatch):
             body=WebhookTriggerIn(shape="support-inbound"),
         )
         assert out.shape == "support-inbound"
-        assert out.agent_name == "support"
+        assert out.agent_name == "orquestador"
         task = db.get(Task, out.task_id)
         assert task is not None
         assert task.name == "support-inbound"
         agent = db.get(Agent, task.assignee_agent_id)
         assert agent is not None
-        assert agent.name == "support"
+        assert agent.name == "orquestador"
     finally:
         db.close()
         engine.dispose()

@@ -1,91 +1,67 @@
-# GallaIA — AgentOS control plane
+# GallaIA v2 — equipo agéntico personal
 
-Plataforma de aprendizaje + **AgentOS MVP**: control plane web (Kanban, sesiones, inbox), inspirado en el talk de Danny Postma, con **FastAPI + React + Lucide**.
+Herramienta personal para que **Ociel** construya software con tres agentes que se coordinan:
+
+| Agente | Rol |
+|--------|-----|
+| **Orquestador** | Habla con el usuario, planifica, divide, delega a FE/BE, revisa e integra |
+| **FE** | React / TypeScript / UI |
+| **BE** | FastAPI / API / datos |
+
+Stack actual: **FastAPI + SQLAlchemy/SQLite** (backend) y **React + Vite** (frontend). Runtime mock por defecto; OpenRouter/Anthropic opcionales. LangGraph / LiteLLM / MCP llegan en F2+.
 
 | | |
 | --- | --- |
-| **Branch** | `feat/agentos-mvp` (desde `master`) |
-| **Plataformas** | Windows / Linux / macOS — navegador + API |
-| **UI** | Atelier (cream / indigo / coral). No es el tema Linear de Leads_CRM. |
-| **Runtime default** | Mock. Opcional OpenRouter (Nemotron) o Anthropic Messages stub. |
-
-**No** Electron, Tauri ni exclusividad Mac. **No** Cursor Cloud Agents como runtime de este MVP.
+| **Branch base** | `master` |
+| **UI** | Atelier (cream / indigo / coral) |
+| **Agentes seed** | `orquestador`, `fe`, `be` |
 
 ## Docs
 
-- Roadmap (fases 0–7): [docs/ROADMAP.md](docs/ROADMAP.md)
-- Mapa: [docs/product/AGENTOS.md](docs/product/AGENTOS.md)
-- Sidebar (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md)
-- Modulos: [docs/product/MODULE_BOUNDARIES.md](docs/product/MODULE_BOUNDARIES.md)
-- AgentOS slice: [docs/agentos/README.md](docs/agentos/README.md)
-- Walkthrough Postma: [docs/agentos/POSTMA_WALKTHROUGH.md](docs/agentos/POSTMA_WALKTHROUGH.md)
-- Phase 2+: [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md)
+- Visión: [docs/VISION.md](docs/VISION.md)
+- Arquitectura (6 capas): [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)
+- Roadmap F0–F5: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Índice: [docs/README.md](docs/README.md)
+- Archivo v1 (AgentOS): [docs/archive/README.md](docs/archive/README.md)
 - Backend: [backend/README.md](backend/README.md)
 - Frontend: [frontend/README.md](frontend/README.md)
-- Docker (UI+API un contenedor): [docs/deployment/docker.md](docs/deployment/docker.md) · [docker-compose.md](docs/deployment/docker-compose.md)
-
-## Vision
-
-Defines agentes, creas tareas y lanzas **Ejecutar ahora**. Cada run genera una **Session** con tool-call log y avanza el Kanban (todo / doing / review / done). El **Inbox** concentra decisiones humanas.
-
-Modelo: **Project · Agent · Task · Session · Inbox**.
-
-Seeds: `default`, `plan`, `senior-dev`. Prompts en `backend/app/services/prompts.py` etiquetados RECONSTRUCTED (no verbatim).
-
+- Docker: [docs/deployment/docker.md](docs/deployment/docker.md)
 
 ## Requisitos
 
 - Python 3.11+
 - Node.js para el frontend
-- SQLite (incluido; backend/data/gallaia.db)
+- SQLite (`backend/data/gallaia.db`)
 
 ## Arranque con Docker (recomendado)
 
-Una imagen, un contenedor (UI + API). Desde la **raíz** del repo:
-
 ```bash
 cp backend/.env.example backend/.env
-# Windows: copy backend\.env.example backend\.env
 npm --prefix frontend ci
 npm --prefix frontend run build
 docker compose up --build
 ```
 
-O con el script: `bash scripts/docker-up.sh` (añade `-d` para segundo plano).
-
-- App (UI + API): http://127.0.0.1:8000/
+- App: http://127.0.0.1:8000/
 - OpenAPI: http://127.0.0.1:8000/docs
 
-El build de Vite se hace en el host (npm dentro de Docker Build falla en algunos entornos Windows/proxy); el **runtime** es un solo contenedor.
+## Arranque local
 
-Detalle: [docs/deployment/docker-compose.md](docs/deployment/docker-compose.md).
-
-## Arranque local (sin Docker)
-
-### Backend (puerto 8000)
+### Backend (:8000)
 
 ```bash
 cd backend
 python -m venv .venv
-# Linux / macOS:
 source .venv/bin/activate
-# Windows PowerShell:
-#   .\.venv\Scripts\Activate.ps1
-# Windows Git Bash:
-#   source .venv/Scripts/activate
 python -m pip install -U pip
 python -m pip install -e .
 cp .env.example .env
-# Windows: copy .env.example .env
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-- App: http://127.0.0.1:8000/
-- OpenAPI: http://127.0.0.1:8000/docs
+Al arrancar: tablas SQLite + seeds `orquestador` / `fe` / `be`.
 
-Al arrancar: tablas SQLite + seeds default / plan / senior-dev.
-
-### Frontend (puerto 5173)
+### Frontend (:5173)
 
 ```bash
 cd frontend
@@ -93,33 +69,19 @@ npm install
 npm run dev
 ```
 
-UI: http://127.0.0.1:5173/ (proxy /api → FastAPI :8000).
+UI: http://127.0.0.1:5173/ (proxy `/api` → FastAPI :8000).
 
 ### LLM stub (opcional)
 
-En backend/.env (nunca commitear la clave):
+En `backend/.env` (nunca commit):
 
 ```env
 OPENROUTER_API_KEY=
 OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-
-# Fallback si no usas OpenRouter:
-# ANTHROPIC_API_KEY=
-# ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-Sin claves → runner mock. Con `OPENROUTER_API_KEY` → Chat Completions (UI). Anthropic Messages solo si no hay clave OpenRouter.
+Sin claves → runner mock.
 
-## Dos superficies API
+## Plataforma
 
-1. SQLAlchemy (UI primaria): /api/v1/projects|agents|tasks|sessions|inbox → SQLite
-2. In-memory AgentOS: /api/v1/agentos/* — ver docs/agentos/CONTRACT.md
-
-Detalle: docs/product/MODULE_BOUNDARIES.md.
-
-## Phase 2+ (siguiente implementación: Isolation)
-
-**Siguiente implementación:** Phase 2 Isolation (spec; no runtime en PRs de higiene). Después: Templates → Goals → Triggers → YAML/CLI → PWA. Sketch: [docs/agentos/PHASE2_PLUS.md](docs/agentos/PHASE2_PLUS.md). Calendario y operación autónoma: [docs/ROADMAP.md](docs/ROADMAP.md). Sidebar futuro (doc only): [docs/product/CONTROL_PLANE_NAV.md](docs/product/CONTROL_PLANE_NAV.md).
-
-Skills de código en Cursor (`npx skills add`, **no** commitear `.agents/skills`): [docs/agentos/SKILLS.md](docs/agentos/SKILLS.md).
+Kanban, sesiones, inbox, activity, triggers, grants/network/fs Isolation y demas superficies del control plane siguen disponibles. «Registrar agente» está visible pero deshabilitado («Próximamente») hasta F5.

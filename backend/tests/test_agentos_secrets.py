@@ -120,15 +120,15 @@ def test_schema_forbids_value_field():
 def test_sqlite_rejects_raw_looking_key_and_persists_refs_only():
     db = _memory_db()
     try:
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
-        assert support is not None
-        listed = secrets_out(support)
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
+        assert fe is not None
+        listed = secrets_out(fe)
         assert listed.secrets == []
 
         with pytest.raises(BadRequestError, match="raw secret"):
             replace_agent_secrets(
                 db,
-                support,
+                fe,
                 [
                     SecretRefItem(
                         name="FOO",
@@ -140,15 +140,15 @@ def test_sqlite_rejects_raw_looking_key_and_persists_refs_only():
 
         replace_agent_secrets(
             db,
-            support,
+            fe,
             [SecretRefItem(name="FOO", provider="env", key=ENV_KEY)],
         )
-        db.refresh(support)
-        refs = secret_refs_for_agent(support)
+        db.refresh(fe)
+        refs = secret_refs_for_agent(fe)
         assert refs.as_list() == [
             {"name": "FOO", "provider": "env", "key": ENV_KEY}
         ]
-        row = db.scalar(select(AgentSecretRef).where(AgentSecretRef.agent_id == support.id))
+        row = db.scalar(select(AgentSecretRef).where(AgentSecretRef.agent_id == fe.id))
         assert row is not None
         assert row.name == "FOO"
         assert row.key == ENV_KEY
@@ -166,7 +166,7 @@ def test_session_resolves_from_env_and_db_has_no_plaintext(monkeypatch):
     monkeypatch.setenv(ENV_KEY, FIXTURE_VALUE)
     store = AgentOSStore()
     task = store.create_task(
-        Task(name="Reset password", description="Front ticket", assignee_agent="support")
+        Task(name="UI polish", description="FE ticket", assignee_agent="fe")
     )
     refs = SecretRefSet.from_items(
         (SecretRef(name="FOO", provider="env", key=ENV_KEY),)
@@ -194,7 +194,7 @@ def test_unresolved_ref_denies_session(monkeypatch):
     _clear_llm_env(monkeypatch)
     monkeypatch.delenv(ENV_KEY, raising=False)
     store = AgentOSStore()
-    task = store.create_task(Task(name="Front ticket", assignee_agent="support"))
+    task = store.create_task(Task(name="FE ticket", assignee_agent="fe"))
     refs = SecretRefSet.from_items(
         (SecretRef(name="FOO", provider="env", key=ENV_KEY),)
     )
@@ -210,26 +210,26 @@ def test_sqlite_session_gets_fixture_value_db_dump_clean(monkeypatch):
     db = _memory_db()
     try:
         project = db.scalar(select(Project).where(Project.slug == "default"))
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
         replace_agent_secrets(
             db,
-            support,
+            fe,
             [SecretRefItem(name="FOO", provider="env", key=ENV_KEY)],
         )
-        db.refresh(support)
-        runtime = resolve_agent_secrets(support)
+        db.refresh(fe)
+        runtime = resolve_agent_secrets(fe)
         assert runtime.get("FOO") == FIXTURE_VALUE
 
         task = DbTask(
             project_id=project.id,
-            name="Front ticket",
-            assignee_agent_id=support.id,
+            name="FE ticket",
+            assignee_agent_id=fe.id,
             status="todo",
         )
         db.add(task)
         db.commit()
         db.refresh(task)
-        session = run_task_session(db, task, support)
+        session = run_task_session(db, task, fe)
         assert session.runtime_secrets.get("FOO") == FIXTURE_VALUE
         events = session.get_tool_events()
         details = " ".join(str(row.get("detail", "")) for row in events)
@@ -249,24 +249,24 @@ def test_sqlite_unresolved_ref_denies_run(monkeypatch):
     db = _memory_db()
     try:
         project = db.scalar(select(Project).where(Project.slug == "default"))
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
         replace_agent_secrets(
             db,
-            support,
+            fe,
             [SecretRefItem(name="FOO", provider="env", key=ENV_KEY)],
         )
-        db.refresh(support)
+        db.refresh(fe)
         task = DbTask(
             project_id=project.id,
-            name="Front ticket",
-            assignee_agent_id=support.id,
+            name="FE ticket",
+            assignee_agent_id=fe.id,
             status="todo",
         )
         db.add(task)
         db.commit()
         db.refresh(task)
         with pytest.raises(UnresolvedSecretRefError, match="FOO"):
-            run_task_session(db, task, support)
+            run_task_session(db, task, fe)
         dump = _sqlite_dump(db)
         assert FIXTURE_VALUE not in dump
     finally:

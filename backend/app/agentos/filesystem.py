@@ -203,10 +203,9 @@ class MockFilesystem:
     def seeded(cls) -> MockFilesystem:
         return cls(
             files={
-                "/agents/support/ticket.md": "Front ticket #1",
-                "/agents/senior-dev/notes.md": "private senior-dev notes",
-                "/agents/plan/spec.md": "plan spec",
-                "/agents/default/scratch.md": "scratch",
+                "/agents/fe/ui.md": "FE UI notes",
+                "/agents/be/api.md": "private BE API notes",
+                "/agents/orquestador/plan.md": "orquestador plan",
             }
         )
 

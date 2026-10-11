@@ -62,170 +62,170 @@ def _memory_db():
 
 def test_empty_acl_default_deny():
     acl = FilesystemAcl.empty()
-    denied = evaluate_fs(acl, "read", "/agents/support/ticket.md")
+    denied = evaluate_fs(acl, "read", "/agents/fe/ui.md")
     assert denied.allowed is False
     assert "outside allowed roots" in denied.reason
 
 
 def test_allow_own_folder_deny_peer():
-    support = FilesystemAcl.for_agent("support")
-    own = evaluate_fs(support, "read", "/agents/support/ticket.md")
+    fe = FilesystemAcl.for_agent("fe")
+    own = evaluate_fs(fe, "read", "/agents/fe/ui.md")
     assert own.allowed is True
-    peer = evaluate_fs(support, "read", "/agents/senior-dev/notes.md")
+    peer = evaluate_fs(fe, "read", "/agents/be/api.md")
     assert peer.allowed is False
     assert "outside allowed roots" in peer.reason
-    # Prefix-not-boundary: /agents/support-other is not under /agents/support
-    sneak = evaluate_fs(support, "read", "/agents/support-other/x")
+    # Prefix-not-boundary: /agents/fe-other is not under /agents/fe
+    sneak = evaluate_fs(fe, "read", "/agents/fe-other/x")
     assert sneak.allowed is False
 
 
 def test_traversal_denied_even_if_resolved_stays_in_root():
-    acl = FilesystemAcl.for_agent("support")
-    assert has_traversal("/agents/support/../senior-dev/notes.md")
-    assert has_traversal("..\\senior-dev\\notes.md")
-    denied = evaluate_fs(acl, "read", "/agents/support/../senior-dev/notes.md")
+    acl = FilesystemAcl.for_agent("fe")
+    assert has_traversal("/agents/fe/../be/api.md")
+    assert has_traversal("..\\be\\api.md")
+    denied = evaluate_fs(acl, "read", "/agents/fe/../be/api.md")
     assert denied.allowed is False
     assert denied.traversal is True
     assert "traversal" in denied.reason
-    still_in_root = evaluate_fs(acl, "read", "/agents/support/foo/../ticket.md")
+    still_in_root = evaluate_fs(acl, "read", "/agents/fe/foo/../ui.md")
     assert still_in_root.allowed is False
     assert still_in_root.traversal is True
 
 
 def test_write_does_not_imply_delete():
     acl = FilesystemAcl.from_roots(
-        (FsRoot("/agents/support", can_read=True, can_write=True, can_delete=False),)
+        (FsRoot("/agents/fe", can_read=True, can_write=True, can_delete=False),)
     )
-    assert evaluate_fs(acl, "write", "/agents/support/note.txt").allowed is True
-    delete = evaluate_fs(acl, "delete", "/agents/support/note.txt")
+    assert evaluate_fs(acl, "write", "/agents/fe/note.txt").allowed is True
+    delete = evaluate_fs(acl, "delete", "/agents/fe/note.txt")
     assert delete.allowed is False
     assert "delete denied" in delete.reason
 
 
 def test_gated_output_does_not_leak_peer_content():
     store = MockFilesystem.seeded()
-    support = FilesystemAcl.for_agent("support")
-    allowed = gated_fs_output(support, "read", "/agents/support/ticket.md", store=store)
+    fe = FilesystemAcl.for_agent("fe")
+    allowed = gated_fs_output(fe, "read", "/agents/fe/ui.md", store=store)
     assert allowed["ok"] is True
-    assert allowed["content"] == "Front ticket #1"
+    assert allowed["content"] == "FE UI notes"
     denied = gated_fs_output(
-        support, "read", "/agents/senior-dev/notes.md", store=store
+        fe, "read", "/agents/be/api.md", store=store
     )
     assert denied["ok"] is False
     assert denied["denied"] is True
-    assert "private senior-dev notes" not in str(denied)
+    assert "private BE API notes" not in str(denied)
     traversal = gated_fs_output(
-        support, "read", "/agents/support/../senior-dev/notes.md", store=store
+        fe, "read", "/agents/fe/../be/api.md", store=store
     )
     assert traversal["denied"] is True
     assert traversal["fs"]["traversal"] is True
-    assert "private senior-dev notes" not in str(traversal)
+    assert "private BE API notes" not in str(traversal)
 
 
-def test_support_seed_cannot_read_senior_dev_folder():
-    support = get_seed("support").filesystem_acl()
-    senior = get_seed("senior-dev").filesystem_acl()
-    assert support.roots[0].root == "/agents/support"
-    assert senior.roots[0].root == "/agents/senior-dev"
-    assert evaluate_fs(support, "read", "/agents/support/ticket.md").allowed
-    assert not evaluate_fs(support, "read", "/agents/senior-dev/notes.md").allowed
-    assert evaluate_fs(senior, "read", "/agents/senior-dev/notes.md").allowed
-    assert not evaluate_fs(senior, "read", "/agents/support/ticket.md").allowed
+def test_fe_seed_cannot_read_be_folder():
+    fe = get_seed("fe").filesystem_acl()
+    be = get_seed("be").filesystem_acl()
+    assert fe.roots[0].root == "/agents/fe"
+    assert be.roots[0].root == "/agents/be"
+    assert evaluate_fs(fe, "read", "/agents/fe/ui.md").allowed
+    assert not evaluate_fs(fe, "read", "/agents/be/api.md").allowed
+    assert evaluate_fs(be, "read", "/agents/be/api.md").allowed
+    assert not evaluate_fs(be, "read", "/agents/fe/ui.md").allowed
 
 
-def test_support_mock_fs_allow_deny_traversal(monkeypatch):
+def test_fe_mock_fs_allow_deny_traversal(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
     task = store.create_task(
-        Task(name="Reset password", description="Front ticket", assignee_agent="support")
+        Task(name="Reset password", description="FE ticket", assignee_agent="fe")
     )
     result = SessionRunner(store).run(task.id, runner="mock")
     reads = [e for e in result.tool_events if e.name == "fs.read"]
     assert len(reads) == 3
     by_path = {e.input["path"]: e for e in reads}
-    own = by_path["/agents/support/ticket.md"]
+    own = by_path["/agents/fe/ui.md"]
     assert own.output.get("ok") is True
     assert own.output.get("denied") is not True
-    assert own.output.get("content") == "Front ticket #1"
-    peer = by_path["/agents/senior-dev/notes.md"]
+    assert own.output.get("content") == "FE UI notes"
+    peer = by_path["/agents/be/api.md"]
     assert peer.output.get("ok") is False
     assert peer.output.get("denied") is True
-    assert "private senior-dev notes" not in str(peer.output)
-    traversal = by_path["/agents/support/../senior-dev/notes.md"]
+    assert "private BE API notes" not in str(peer.output)
+    traversal = by_path["/agents/fe/../be/api.md"]
     assert traversal.output.get("denied") is True
     assert traversal.output.get("fs", {}).get("traversal") is True
-    assert "private senior-dev notes" not in str(traversal.output)
+    assert "private BE API notes" not in str(traversal.output)
 
 
-def test_senior_dev_mock_fs_allows_own(monkeypatch):
+def test_be_mock_fs_allows_own(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
-    task = store.create_task(Task(name="Fix bug", assignee_agent="senior-dev"))
+    task = store.create_task(Task(name="Fix bug", assignee_agent="be"))
     result = SessionRunner(store).run(task.id, runner="mock")
     reads = [e for e in result.tool_events if e.name == "fs.read"]
     assert len(reads) == 1
-    assert reads[0].input["path"] == "/agents/senior-dev/notes.md"
+    assert reads[0].input["path"] == "/agents/be/api.md"
     assert reads[0].output.get("ok") is True
-    assert reads[0].output.get("content") == "private senior-dev notes"
+    assert reads[0].output.get("content") == "private BE API notes"
 
 
-def test_sqlite_support_fs_api():
+def test_sqlite_fe_fs_api():
     db = _memory_db()
     try:
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
-        senior = db.scalar(select(Agent).where(Agent.name == "senior-dev"))
-        assert support is not None and senior is not None
-        acl = filesystem_acl_for_agent(support)
-        assert acl.roots[0].root == "/agents/support"
-        assert evaluate_fs(acl, "read", "/agents/support/x").allowed
-        assert not evaluate_fs(acl, "read", "/agents/senior-dev/x").allowed
-        listed = fs_out(support)
-        assert listed.agent_name == "support"
-        assert listed.roots[0].root == "/agents/support"
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
+        be = db.scalar(select(Agent).where(Agent.name == "be"))
+        assert fe is not None and be is not None
+        acl = filesystem_acl_for_agent(fe)
+        assert acl.roots[0].root == "/agents/fe"
+        assert evaluate_fs(acl, "read", "/agents/fe/x").allowed
+        assert not evaluate_fs(acl, "read", "/agents/be/x").allowed
+        listed = fs_out(fe)
+        assert listed.agent_name == "fe"
+        assert listed.roots[0].root == "/agents/fe"
         assert listed.roots[0].can_read is True
 
         replace_agent_fs(
             db,
-            support,
-            [FsRootItem(root="/agents/support", can_read=True, can_write=False, can_delete=False)],
+            fe,
+            [FsRootItem(root="/agents/fe", can_read=True, can_write=False, can_delete=False)],
         )
-        db.refresh(support)
-        updated = filesystem_acl_for_agent(support)
+        db.refresh(fe)
+        updated = filesystem_acl_for_agent(fe)
         assert updated.roots[0].can_write is False
-        assert evaluate_fs(updated, "read", "/agents/support/x").allowed
-        assert not evaluate_fs(updated, "write", "/agents/support/x").allowed
+        assert evaluate_fs(updated, "read", "/agents/fe/x").allowed
+        assert not evaluate_fs(updated, "write", "/agents/fe/x").allowed
 
-        replace_agent_fs(db, support, [])
-        db.refresh(support)
-        assert filesystem_acl_for_agent(support).roots == ()
-        assert db.scalar(select(AgentFsAcl).where(AgentFsAcl.agent_id == support.id)) is None
+        replace_agent_fs(db, fe, [])
+        db.refresh(fe)
+        assert filesystem_acl_for_agent(fe).roots == ()
+        assert db.scalar(select(AgentFsAcl).where(AgentFsAcl.agent_id == fe.id)) is None
     finally:
         db.close()
 
 
-def test_sqlite_mock_runner_support_cannot_read_peer(monkeypatch):
+def test_sqlite_mock_runner_fe_cannot_read_peer(monkeypatch):
     _clear_llm_env(monkeypatch)
     db = _memory_db()
     try:
         project = db.scalar(select(Project).where(Project.slug == "default"))
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
         task = DbTask(
             project_id=project.id,
-            name="Front ticket",
-            assignee_agent_id=support.id,
+            name="FE ticket",
+            assignee_agent_id=fe.id,
             status="todo",
         )
         db.add(task)
         db.commit()
         db.refresh(task)
-        session = run_task_session(db, task, support)
+        session = run_task_session(db, task, fe)
         fs_events = [
             row for row in session.get_tool_events() if str(row.get("tool", "")).startswith("fs.")
         ]
         assert len(fs_events) == 3
         details = [row.get("detail", "") for row in fs_events]
-        assert any("/agents/support/ticket.md" in d and "DENIED" not in d for d in details)
-        peer = next(d for d in details if "/agents/senior-dev/notes.md" in d and "../" not in d)
+        assert any("/agents/fe/ui.md" in d and "DENIED" not in d for d in details)
+        peer = next(d for d in details if "/agents/be/api.md" in d and "../" not in d)
         assert "DENIED" in peer
         traversal = next(d for d in details if "../" in d)
         assert "DENIED" in traversal

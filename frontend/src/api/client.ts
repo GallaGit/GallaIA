@@ -153,7 +153,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
-  /** assignee_agent = seed NAME (default|plan|senior-dev), not numeric id */
+  /** assignee_agent = seed NAME (orquestador|fe|be), not numeric id */
   patchTask: (
     id: string,
     body: { assignee_agent?: string; status?: KanbanStatus },

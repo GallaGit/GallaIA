@@ -43,7 +43,7 @@ def _make_task(db, *, name: str = "scheduled", assignee: bool = True) -> Task:
     assert project is not None
     agent_id = None
     if assignee:
-        agent = db.scalar(select(Agent).where(Agent.name == "default"))
+        agent = db.scalar(select(Agent).where(Agent.name == "orquestador"))
         assert agent is not None
         agent_id = agent.id
     task = Task(

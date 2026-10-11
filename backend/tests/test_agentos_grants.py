@@ -1,4 +1,4 @@
-"""Isolation grants wall: default-deny + Front-only cannot use GitHub."""
+"""Isolation grants wall: default-deny + FE cannot use GitHub."""
 
 from __future__ import annotations
 
@@ -64,30 +64,26 @@ def test_empty_grants_default_deny():
     assert denied.reason == "missing grant mcp:github"
 
 
-def test_support_seed_is_front_only():
-    seed = get_seed("support")
+def test_fe_seed_has_no_github():
+    seed = get_seed("fe")
     grants = seed.grant_set()
-    assert seed.mcp == ("front",)
-    assert grants.allows("mcp", "front")
+    assert seed.mcp == ("agentos", "inbox")
+    assert grants.allows("mcp", "agentos")
+    assert grants.allows("mcp", "inbox")
     assert not grants.allows("mcp", "github")
-    assert not grants.allows("mcp", "agentos")
     assert not grants.allows("repo", "GallaGit/GallaIA")
-    assert not grants.allows("env", "GITHUB_TOKEN")
     names = {s.name for s in list_seeds()}
-    assert "support" in names
+    assert names == {"orquestador", "fe", "be"}
 
 
-def test_support_mock_allows_front_denies_github(monkeypatch):
+def test_fe_mock_denies_github(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
     task = store.create_task(
-        Task(name="Reset password", description="Front ticket", assignee_agent="support")
+        Task(name="UI polish", description="FE work", assignee_agent="fe")
     )
     result = SessionRunner(store).run(task.id, runner="mock")
     events = {e.name: e for e in result.tool_events}
-    front = events["front.list_conversations"]
-    assert front.output.get("ok") is True
-    assert front.output.get("denied") is not True
     github = events["github.commit"]
     assert github.output.get("ok") is False
     assert github.output.get("denied") is True
@@ -95,10 +91,10 @@ def test_support_mock_allows_front_denies_github(monkeypatch):
     assert "must-not-land" not in str(github.output)
 
 
-def test_senior_dev_github_commit_allowed(monkeypatch):
+def test_be_github_commit_allowed(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
-    task = store.create_task(Task(name="Fix bug", assignee_agent="senior-dev"))
+    task = store.create_task(Task(name="Fix bug", assignee_agent="be"))
     result = SessionRunner(store).run(task.id, runner="mock")
     github = next(e for e in result.tool_events if e.name == "github.commit")
     assert github.output.get("ok") is True
@@ -106,57 +102,55 @@ def test_senior_dev_github_commit_allowed(monkeypatch):
     assert github.output.get("sha") == "mockdeadbeef"
 
 
-def test_sqlite_support_seed_and_grant_api():
+def test_sqlite_fe_seed_and_grant_api():
     db = _memory_db()
     try:
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
-        assert support is not None
-        grants = grant_set_for_agent(support)
-        assert grants.allows("mcp", "front")
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
+        assert fe is not None
+        grants = grant_set_for_agent(fe)
+        assert grants.allows("mcp", "agentos")
         assert not grants.allows("mcp", "github")
-        listed = grants_out(support)
-        assert listed.agent_name == "support"
-        assert {"kind": "mcp", "name": "front"} in [
+        listed = grants_out(fe)
+        assert listed.agent_name == "fe"
+        assert {"kind": "mcp", "name": "agentos"} in [
             g.model_dump() for g in listed.grants
         ]
 
         replace_agent_grants(
             db,
-            support,
-            [GrantItem(kind="mcp", name="front"), GrantItem(kind="mcp", name="inbox")],
+            fe,
+            [GrantItem(kind="mcp", name="agentos"), GrantItem(kind="mcp", name="inbox")],
         )
-        db.refresh(support)
-        updated = grant_set_for_agent(support)
+        db.refresh(fe)
+        updated = grant_set_for_agent(fe)
         assert updated.allows("mcp", "inbox")
         assert not updated.allows("mcp", "github")
 
-        replace_agent_grants(db, support, [])
-        db.refresh(support)
-        assert grant_set_for_agent(support).items == frozenset()
-        assert db.scalar(select(AgentGrant).where(AgentGrant.agent_id == support.id)) is None
+        replace_agent_grants(db, fe, [])
+        db.refresh(fe)
+        assert grant_set_for_agent(fe).items == frozenset()
+        assert db.scalar(select(AgentGrant).where(AgentGrant.agent_id == fe.id)) is None
     finally:
         db.close()
 
 
-def test_sqlite_mock_runner_support_cannot_github(monkeypatch):
+def test_sqlite_mock_runner_fe_cannot_github(monkeypatch):
     _clear_llm_env(monkeypatch)
     db = _memory_db()
     try:
         project = db.scalar(select(Project).where(Project.slug == "default"))
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
         task = DbTask(
             project_id=project.id,
-            name="Front ticket",
-            assignee_agent_id=support.id,
+            name="FE ticket",
+            assignee_agent_id=fe.id,
             status="todo",
         )
         db.add(task)
         db.commit()
         db.refresh(task)
-        session = run_task_session(db, task, support)
-        details = [row.get("detail", "") for row in session.get_tool_events()]
+        session = run_task_session(db, task, fe)
         tools = [row.get("tool") for row in session.get_tool_events()]
-        assert "front.list_conversations" in tools
         assert "github.commit" in tools
         github_detail = next(
             row["detail"]
@@ -165,12 +159,5 @@ def test_sqlite_mock_runner_support_cannot_github(monkeypatch):
         )
         assert "DENIED" in github_detail
         assert "mcp:github" in github_detail
-        front_detail = next(
-            row["detail"]
-            for row in session.get_tool_events()
-            if row.get("tool") == "front.list_conversations"
-        )
-        assert "DENIED" not in front_detail
-        assert details  # session recorded events
     finally:
         db.close()

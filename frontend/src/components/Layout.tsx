@@ -45,7 +45,7 @@ export default function Layout() {
           <div className="brand-mark">G</div>
           <div>
             <h1>GallaIA</h1>
-            <p>AgentOS control plane</p>
+            <p>Equipo agéntico personal · v2</p>
           </div>
         </div>
         <nav className="nav">

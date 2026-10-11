@@ -17,7 +17,7 @@ Draft — lean **actor headers** landed in Phase 3 (gate authz only). Full login
   - Helpers: pp.core.security.parse_actor_headers / FastAPI ActorDep.
   - Authz: ssert_actor_may_mark_done — agent callers get **403** when marking done on an pproval_gate task or a task with unmet depends_on. Humans may still mark done (prior-step gate still applies).
   - Wired on PATCH /api/v1/tasks/{id}/status and as a belt-and-suspenders check on the control-plane run→done path.
-- Planned: Out of Phase 1–3 core (see [alcance.md](../alcance.md)). Single-operator login (CLI token / session cookie) when a public surface needs it.
+- Planned: Out of F0–F1 core (see [../ROADMAP.md](../ROADMAP.md)). Single-operator login (CLI token / session cookie) when a public surface needs it.
 - Future: Authn/authz for one human; **not** multi-tenant SaaS RBAC as the MVP path.
 
 ## Notes

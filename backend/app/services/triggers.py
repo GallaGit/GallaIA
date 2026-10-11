@@ -26,16 +26,16 @@ from app.schemas.trigger import (
 )
 from app.services.activity import append_activity, notify_after_commit
 from app.services.templates import (
-    LEAD_INTAKE_SLUG,
+    DEMO_TWO_STEP_SLUG,
     get_template,
     instantiate_template,
 )
 
-# Seed agent preferred per inbound shape (lean Phase 5 slice 1).
+# Seed agent preferred per inbound shape (v2: Orquestador / FE / BE).
 SHAPE_AGENT: dict[str, str] = {
-    "generic": "default",
-    "support-inbound": "support",
-    "bug-report": "senior-dev",
+    "generic": "orquestador",
+    "support-inbound": "orquestador",
+    "bug-report": "be",
 }
 
 RUNNER = "webhook"
@@ -59,7 +59,7 @@ def _default_project(db: Session) -> Project:
 
 
 def _agent_for_shape(db: Session, shape: WebhookShape) -> Agent:
-    name = SHAPE_AGENT.get(shape, "default")
+    name = SHAPE_AGENT.get(shape, "orquestador")
     agent = db.scalar(select(Agent).where(Agent.name == name))
     if agent is None:
         # Fall back to any agent so tests/dev still get a stub.
@@ -152,7 +152,7 @@ def handle_lead_status_nuevo(
     secret_header: str | None,
     body: LeadStatusNuevoIn | None = None,
 ) -> LeadStatusNuevoOut:
-    """Validate secret + leadId, then instantiate lead-intake-workflow (2 cards)."""
+    """Validate secret + leadId, then instantiate demo-two-step (2 cards)."""
     verify_webhook_secret(secret_header, settings)
 
     payload = body or LeadStatusNuevoIn()
@@ -161,7 +161,7 @@ def handle_lead_status_nuevo(
         raise BadRequestError("leadId is required")
 
     lead_id = str(raw).strip()
-    template = get_template(db, LEAD_INTAKE_SLUG)
+    template = get_template(db, DEMO_TWO_STEP_SLUG)
     result = instantiate_template(
         db,
         template,

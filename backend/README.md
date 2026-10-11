@@ -1,6 +1,6 @@
-# GallaAI Backend — AgentOS control plane
+# GallaIA Backend — control plane v2
 
-API HTTP (FastAPI) del control plane AgentOS (Phase 0 + Phase 1 MVP).
+API HTTP (FastAPI) del control plane GallaIA v2 (equipo Orquestador / FE / BE).
 
 ## Requisitos
 
@@ -30,7 +30,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - App: http://127.0.0.1:8000/
 - OpenAPI: http://127.0.0.1:8000/docs
 
-Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `default`, `plan`, `senior-dev`, `support` (grants + network + fs + secret refs Isolation).
+Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `orquestador`, `fe`, `be` (grants + network + fs + secret refs Isolation).
 
 ## Docker (UI + API, un contenedor)
 

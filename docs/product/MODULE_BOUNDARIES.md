@@ -10,7 +10,7 @@
 2. **In-memory AgentOS package** (Backend teammate contract)
    - Routes: `/api/v1/agentos/*`
    - Code: `backend/app/agentos/*` + `api/routes/agentos.py`
-   - Docs: `docs/agentos/CONTRACT.md`
+   - Docs: `docs/archive/agentos/CONTRACT.md`
 
 Do not delete either surface without coordinating. Prefer converging runners later behind one service interface.
 

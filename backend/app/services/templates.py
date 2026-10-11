@@ -15,72 +15,71 @@ from app.schemas.template import TemplateInstantiateOut, TemplateOut
 
 DEMO_TWO_STEP_SLUG = "demo-two-step"
 COMPOUND_ENGINEER_SLUG = "compound-engineer-workflow"
-LEAD_INTAKE_SLUG = "lead-intake-workflow"
 
-# Phase 3 sketch (POSTMA_WALKTHROUGH §2.8): N+1 gated on N done.
+# v2 software cycle sketch: Orquestador plans; FE/BE implement; human gates.
 _COMPOUND_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
     # position, name, description, assignee_agent_name, approval_gate, requires_previous_done
     (
         1,
         "Escribir spec",
         "Draft feature spec (human approval gate). Typical variable: branchName.",
-        "spec",
+        "orquestador",
         True,
         False,
     ),
     (
         2,
         "Plan",
-        "Write implementation plan; notify via inbox/activity.",
-        "plan",
+        "Write implementation plan; split FE/BE; notify via inbox/activity.",
+        "orquestador",
         False,
         True,
     ),
     (
         3,
         "Plan review",
-        "Coordinator spawns plan reviewers (feasibility, scope, coherence, risk).",
-        "review-coordinator",
+        "Orquestador reviews plan for feasibility, scope, coherence, risk.",
+        "orquestador",
         False,
         True,
     ),
     (
         4,
         "Revisar plan",
-        "Plan agent revises plan from review feedback.",
-        "plan",
+        "Orquestador revises plan from review feedback.",
+        "orquestador",
         False,
         True,
     ),
     (
         5,
-        "Implementacion + E2E",
-        "Implement feature and run E2E inside the workflow.",
-        "implementation-plan-executioner",
+        "Implementacion FE",
+        "FE implements UI and runs available frontend checks.",
+        "fe",
         False,
         True,
     ),
     (
         6,
-        "Code review",
-        "Coordinator-driven code review of the implementation.",
-        "review-coordinator",
+        "Implementacion BE",
+        "BE implements API/data and runs available backend tests.",
+        "be",
         False,
         True,
     ),
     (
         7,
-        "Aplicar fixes",
-        "Senior-dev applies review fixes.",
-        "senior-dev",
+        "Integracion + review",
+        "Orquestador integrates FE/BE and does code review.",
+        "orquestador",
         False,
         True,
     ),
     (
         8,
-        "Wiki",
-        "Librarian updates product wiki / knowledge.",
-        "librarian",
+        "Aplicar fixes",
+        "BE applies review fixes on the API/data side.",
+        "be",
         False,
         True,
     ),
@@ -88,7 +87,7 @@ _COMPOUND_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
         9,
         "Review humano del PR",
         "Human merge gate on the final PR.",
-        "human",
+        "orquestador",
         True,
         True,
     ),
@@ -120,7 +119,7 @@ def _seed_demo_two_step(db: Session, project_id: int) -> bool:
                 position=1,
                 name="Draft plan",
                 description="Human-reviewed first step (approval gate).",
-                assignee_agent_name="plan",
+                assignee_agent_name="orquestador",
                 approval_gate=True,
                 requires_previous_done=False,
             ),
@@ -129,7 +128,7 @@ def _seed_demo_two_step(db: Session, project_id: int) -> bool:
                 position=2,
                 name="Implement",
                 description="Blocked until step 1 is marked done.",
-                assignee_agent_name="senior-dev",
+                assignee_agent_name="be",
                 approval_gate=False,
                 requires_previous_done=True,
             ),
@@ -174,67 +173,8 @@ def _seed_compound_engineer(db: Session, project_id: int) -> bool:
     return True
 
 
-
-# Phase 3 product seed (LEAD_INTAKE.md): 2 steps, typical variable leadId.
-_LEAD_INTAKE_STEPS: tuple[tuple[int, str, str, str | None, bool, bool], ...] = (
-    # position, name, description, assignee_agent_name, approval_gate, requires_previous_done
-    (
-        1,
-        "Investigar dolores",
-        "Investigate lead pains; persist Ficha de dolor. Typical variable: leadId.",
-        "lead-researcher",
-        False,
-        False,
-    ),
-    (
-        2,
-        "Soluciones + score + primer contacto",
-        "Read ficha; emit score; CRM notes/status; draft or inbox if score >= 60. Human gate.",
-        "lead-solutions",
-        True,
-        True,
-    ),
-)
-
-
-def _seed_lead_intake(db: Session, project_id: int) -> bool:
-    existing = db.scalar(
-        select(TaskTemplate).where(TaskTemplate.slug == LEAD_INTAKE_SLUG)
-    )
-    if existing is not None:
-        return False
-
-    template = TaskTemplate(
-        project_id=project_id,
-        slug=LEAD_INTAKE_SLUG,
-        name="Lead intake workflow",
-        description=(
-            "Phase 3 product seed: 2-step lead intake (LEAD_INTAKE.md). "
-            "Step 2 gated on step 1 done + human approval gate. "
-            "Typical variable: leadId. Trigger lead-status-nuevo is Phase 5."
-        ),
-    )
-    db.add(template)
-    db.flush()
-    db.add_all(
-        [
-            TaskTemplateStep(
-                template_id=template.id,
-                position=pos,
-                name=name,
-                description=desc,
-                assignee_agent_name=assignee,
-                approval_gate=gate,
-                requires_previous_done=req_prev,
-            )
-            for pos, name, desc, assignee, gate, req_prev in _LEAD_INTAKE_STEPS
-        ]
-    )
-    return True
-
-
 def ensure_seed_templates(db: Session) -> None:
-    """Idempotent Phase 3 seeds: demo + compound + lead-intake."""
+    """Idempotent v2 seeds: demo two-step + compound engineer."""
     project = db.scalar(select(Project).where(Project.slug == "default"))
     if project is None:
         return
@@ -242,7 +182,6 @@ def ensure_seed_templates(db: Session) -> None:
     dirty = False
     dirty = _seed_demo_two_step(db, project.id) or dirty
     dirty = _seed_compound_engineer(db, project.id) or dirty
-    dirty = _seed_lead_intake(db, project.id) or dirty
     if dirty:
         db.commit()
 

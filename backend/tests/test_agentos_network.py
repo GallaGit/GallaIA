@@ -62,9 +62,9 @@ def test_open_allows_any_host():
 
 
 def test_limited_denies_host_outside_allowlist():
-    policy = NetworkPolicy.limited(["api.front.com"])
-    assert policy.allows_host("https://API.Front.COM/conversations")
-    assert policy.allows_host("https://api.front.com:443/v1")
+    policy = NetworkPolicy.limited(["registry.npmjs.org"])
+    assert policy.allows_host("https://registry.npmjs.org/react")
+    assert policy.allows_host("https://REGISTRY.NPMJS.ORG/react")
     assert not policy.allows_host("https://api.github.com/repos/GallaGit/GallaIA")
     assert not policy.allows_host("evil.example")
     denied = gated_http_output(
@@ -75,45 +75,46 @@ def test_limited_denies_host_outside_allowlist():
     assert "api.github.com" in denied["reason"]
     assert "must-not-land" not in str(denied)
     allowed = gated_http_output(
-        policy, "https://api.front.com/conversations", {"status": 200, "source": "fake-front"}
+        policy, "https://registry.npmjs.org/react", {"status": 200, "source": "npm"}
     )
     assert allowed["ok"] is True
     assert allowed.get("denied") is not True
-    assert allowed["source"] == "fake-front"
+    assert allowed["source"] == "npm"
 
 
 def test_limited_empty_allowlist_denies_all():
     policy = NetworkPolicy.limited([])
-    assert not policy.allows_host("https://api.front.com/x")
+    assert not policy.allows_host("https://registry.npmjs.org/x")
     missing = evaluate_http(policy, "")
     assert missing.allowed is False
     assert "missing host" in missing.reason
 
 
-def test_support_seed_is_limited_front_host():
-    seed = get_seed("support")
+def test_fe_seed_is_limited_npm_host():
+    seed = get_seed("fe")
     policy = seed.network_policy()
     assert seed.network_mode == "limited"
-    assert seed.network_allowlist == ("api.front.com",)
+    assert seed.network_allowlist == ("registry.npmjs.org",)
     assert policy.mode == "limited"
-    assert policy.allows_host("https://api.front.com/conversations")
+    assert policy.allows_host("https://registry.npmjs.org/react")
     assert not policy.allows_host("https://api.github.com/user")
-    assert get_seed("senior-dev").network_policy().mode == "open"
+    assert get_seed("be").network_policy().mode == "open"
+    assert get_seed("orquestador").network_policy().mode == "open"
 
 
-def test_support_mock_fetch_denies_github_host(monkeypatch):
+def test_fe_mock_fetch_denies_github_host(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
     task = store.create_task(
-        Task(name="Reset password", description="Front ticket", assignee_agent="support")
+        Task(name="UI polish", description="FE work", assignee_agent="fe")
     )
     result = SessionRunner(store).run(task.id, runner="mock")
     fetches = [e for e in result.tool_events if e.name == "http.fetch"]
     assert len(fetches) == 2
     by_url = {e.input["url"]: e for e in fetches}
-    front = by_url["https://api.front.com/conversations"]
-    assert front.output.get("ok") is True
-    assert front.output.get("denied") is not True
+    npm = by_url["https://registry.npmjs.org/react"]
+    assert npm.output.get("ok") is True
+    assert npm.output.get("denied") is not True
     github = by_url["https://api.github.com/repos/GallaGit/GallaIA"]
     assert github.output.get("ok") is False
     assert github.output.get("denied") is True
@@ -124,7 +125,7 @@ def test_support_mock_fetch_denies_github_host(monkeypatch):
 def test_open_mock_fetch_allows_github(monkeypatch):
     _clear_llm_env(monkeypatch)
     store = AgentOSStore()
-    task = store.create_task(Task(name="Probe", assignee_agent="senior-dev"))
+    task = store.create_task(Task(name="Probe", assignee_agent="be"))
     result = SessionRunner(store).run(task.id, runner="mock")
     fetches = [e for e in result.tool_events if e.name == "http.fetch"]
     assert len(fetches) == 1
@@ -134,60 +135,62 @@ def test_open_mock_fetch_allows_github(monkeypatch):
     assert fetches[0].output.get("sha") == "mockdeadbeef"
 
 
-def test_sqlite_support_network_api():
+def test_sqlite_fe_network_api():
     db = _memory_db()
     try:
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
-        assert support is not None
-        policy = network_policy_for_agent(support)
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
+        assert fe is not None
+        policy = network_policy_for_agent(fe)
         assert policy.mode == "limited"
-        assert "api.front.com" in policy.allowlist
+        assert "registry.npmjs.org" in policy.allowlist
         assert not policy.allows_host("https://api.github.com/user")
-        listed = network_out(support)
-        assert listed.agent_name == "support"
+        listed = network_out(fe)
+        assert listed.agent_name == "fe"
         assert listed.mode == "limited"
-        assert listed.allowlist == ["api.front.com"]
+        assert listed.allowlist == ["registry.npmjs.org"]
 
-        replace_agent_network(db, support, "limited", ["api.front.com", "https://hooks.front.com/x"])
-        db.refresh(support)
-        updated = network_policy_for_agent(support)
-        assert updated.allows_host("hooks.front.com")
+        replace_agent_network(
+            db, fe, "limited", ["registry.npmjs.org", "https://cdn.jsdelivr.net/x"]
+        )
+        db.refresh(fe)
+        updated = network_policy_for_agent(fe)
+        assert updated.allows_host("cdn.jsdelivr.net")
         assert not updated.allows_host("api.github.com")
 
-        replace_agent_network(db, support, "open", [])
-        db.refresh(support)
-        opened = network_policy_for_agent(support)
+        replace_agent_network(db, fe, "open", [])
+        db.refresh(fe)
+        opened = network_policy_for_agent(fe)
         assert opened.mode == "open"
         assert opened.allows_host("https://api.github.com/user")
-        row = db.get(AgentNetworkPolicy, support.id)
+        row = db.get(AgentNetworkPolicy, fe.id)
         assert row is not None
         assert row.mode == "open"
     finally:
         db.close()
 
 
-def test_sqlite_mock_runner_support_cannot_fetch_github(monkeypatch):
+def test_sqlite_mock_runner_fe_cannot_fetch_github(monkeypatch):
     _clear_llm_env(monkeypatch)
     db = _memory_db()
     try:
         project = db.scalar(select(Project).where(Project.slug == "default"))
-        support = db.scalar(select(Agent).where(Agent.name == "support"))
+        fe = db.scalar(select(Agent).where(Agent.name == "fe"))
         task = DbTask(
             project_id=project.id,
-            name="Front ticket",
-            assignee_agent_id=support.id,
+            name="FE ticket",
+            assignee_agent_id=fe.id,
             status="todo",
         )
         db.add(task)
         db.commit()
         db.refresh(task)
-        session = run_task_session(db, task, support)
+        session = run_task_session(db, task, fe)
         http_events = [
             row for row in session.get_tool_events() if row.get("tool") == "http.fetch"
         ]
         assert len(http_events) == 2
         details = [row.get("detail", "") for row in http_events]
-        assert any("api.front.com" in d and "DENIED" not in d for d in details)
+        assert any("registry.npmjs.org" in d and "DENIED" not in d for d in details)
         github_detail = next(d for d in details if "api.github.com" in d)
         assert "DENIED" in github_detail
         assert "not allowlisted" in github_detail

@@ -115,7 +115,7 @@ def _session_out(session) -> SessionOut:
 
 @router.get("/agents", response_model=list[AgentSeedOut])
 def get_agents(db: DbSession) -> list[AgentSeedOut]:
-    """List seeded agents (default, plan, senior-dev, support)."""
+    """List seeded agents (orquestador, fe, be)."""
     return [_seed_out(s, db) for s in list_seeds()]
 
 
