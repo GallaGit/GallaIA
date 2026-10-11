@@ -51,3 +51,7 @@ class ThreadOut(BaseModel):
 
 class ThreadDetailOut(ThreadOut):
     messages: list[MessageOut] = []
+
+
+class ThreadAdvanceOut(BaseModel):
+    created: list[MessageOut] = []

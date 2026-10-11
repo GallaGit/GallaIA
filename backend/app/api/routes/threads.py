@@ -1,14 +1,23 @@
 """F1.1 — Agent-to-agent threads and messages (backend only)."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from sqlalchemy import select
 
 from app.api.dependencies.db import DbSession
 from app.exceptions import ConflictError, NotFoundError, UnprocessableError
 from app.models import Agent, Message, Project, Thread
 from app.models.thread import HUMAN_ACTOR
-from app.schemas import MessageCreate, MessageOut, ThreadCreate, ThreadDetailOut, ThreadOut, ThreadUpdate
+from app.schemas import (
+    MessageCreate,
+    MessageOut,
+    ThreadAdvanceOut,
+    ThreadCreate,
+    ThreadDetailOut,
+    ThreadOut,
+    ThreadUpdate,
+)
 from app.services.activity import append_activity, notify_after_commit
+from app.services.thread_agents import advance_thread as advance_thread_service
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 
@@ -112,3 +121,16 @@ def create_message(thread_id: int, payload: MessageCreate, db: DbSession):
     db.refresh(message)
     notify_after_commit(evt)
     return message
+
+
+@router.post("/{thread_id}/advance", response_model=ThreadAdvanceOut)
+def advance_thread(
+    thread_id: int,
+    db: DbSession,
+    max_steps: int = Query(6, ge=1, le=20),
+):
+    thread = db.get(Thread, thread_id)
+    if thread is None:
+        raise NotFoundError(f"Thread {thread_id} not found")
+    created = advance_thread_service(db, thread, max_steps=max_steps)
+    return ThreadAdvanceOut(created=[MessageOut.model_validate(m) for m in created])
