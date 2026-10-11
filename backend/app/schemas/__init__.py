@@ -40,6 +40,7 @@ from app.schemas.template import (
 from app.schemas.thread import (
     MessageCreate,
     MessageOut,
+    ThreadAdvanceOut,
     ThreadCreate,
     ThreadDetailOut,
     ThreadOut,
@@ -105,6 +106,7 @@ __all__ = [
     "ThreadUpdate",
     "ThreadOut",
     "ThreadDetailOut",
+    "ThreadAdvanceOut",
     "MessageCreate",
     "MessageOut",
 ]

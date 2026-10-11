@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (11-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) hecho. Siguiente: F1 (vista de conversación, UI + stream).
+**Estado (11-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) hecho. F1.2 (agentes responden en hilos, backend) hecho. Siguiente: F1 (vista de conversación, UI + stream).
 
 ---
 
@@ -40,6 +40,27 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 - Vista de conversación en la UI
 - Stream en vivo (SSE) de mensajes nuevos
 - Delegación Orquestador → FE / BE visible en el grafo del orquestador
+
+
+### Slice F1.2 — Agentes responden en hilos (backend)
+
+**Hecho**
+
+- Servicio `advance_thread(db, thread, max_steps=6, llm=None)`: responde mensajes dirigidos a un agente (`orquestador`/`fe`/`be`) que aún no tienen respuesta suya, de más antiguo a más nuevo, con tope de `max_steps` por llamada (evita bucles)
+- Orquestador con `text` de `user`: plan corto + una o dos `delegation` a `fe`/`be`; decide vía LLM pidiendo solo JSON `{"plan", "delegations"}` con parseo defensivo y fallback a delegar el texto del usuario a ambos
+- `fe`/`be` con `delegation`: una `result` de vuelta al orquestador usando `foundational_prompt` + `role_prompt` como system
+- Orquestador con `result`: cuando todas sus delegaciones del hilo tienen resultado, publica un `text` de resumen a `user`; si no, no responde
+- LLM inyectable; por defecto usa OpenRouter si hay clave y si no un mock determinista (rol-etiquetado y, para el plan, el fallback)
+- Nunca responde a sí mismo ni a mensajes a `user`/broadcast; hilo cerrado → `ConflictError`
+- Cada mensaje creado emite el evento de actividad `message.created`
+- Ruta `POST /api/v1/threads/{id}/advance` (query `max_steps` 1..20, default 6) → `{"created": [MessageOut...]}`; 404 hilo inexistente, 409 cerrado
+- Tests en `backend/tests/test_thread_agents.py` con LLM falso inyectado (sin red)
+
+**Por hacer**
+
+- Botón / auto-advance en la UI para disparar las respuestas
+- Resumen y delegaciones visibles en el grafo del orquestador
+- Enrutado real por modelo (LiteLLM) en lugar del mock (F2+)
 
 
 ---
