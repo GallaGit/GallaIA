@@ -37,6 +37,14 @@ from app.schemas.template import (
     TemplateOut,
     TemplateStepOut,
 )
+from app.schemas.thread import (
+    MessageCreate,
+    MessageOut,
+    ThreadCreate,
+    ThreadDetailOut,
+    ThreadOut,
+    ThreadUpdate,
+)
 
 __all__ = [
     "ProjectOut",
@@ -93,4 +101,10 @@ __all__ = [
     "PushSubscriptionOut",
     "PushTestIn",
     "PushTestOut",
+    "ThreadCreate",
+    "ThreadUpdate",
+    "ThreadOut",
+    "ThreadDetailOut",
+    "MessageCreate",
+    "MessageOut",
 ]
