@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (11-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) hecho. F1.2 (agentes responden en hilos, backend) hecho. Siguiente: F1 (vista de conversación, UI + stream).
+**Estado (13-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) y F1.2 (agentes responden en hilos, backend) hechos. F1.3 (vista de conversación en la UI) en curso. Siguiente: F1.4 (stream en vivo SSE de mensajes).
 
 ---
 
@@ -62,6 +62,23 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 - Resumen y delegaciones visibles en el grafo del orquestador
 - Enrutado real por modelo (LiteLLM) en lugar del mock (F2+)
 
+
+
+### Slice F1.3 — Vista de conversación (UI)
+
+**Hecho**
+
+- Cliente API (`frontend/src/api/client.ts`): tipos `Thread`, `ThreadDetail`, `ThreadMessage` y llamadas a `/api/v1/threads` (listar, crear, detalle, publicar mensaje, avanzar, cerrar)
+- Página `Conversaciones` (`/threads` y `/threads/:id`) en la navegación principal: lista de hilos, crear hilo, detalle con mensajes en orden (emisor → receptor, tipo `text`/`delegation`/`result` con etiqueta)
+- Composer para escribir al Orquestador como `user`, botón «Avanzar» (`POST /advance`) que añade las respuestas de los agentes y botón «Cerrar hilo»
+- Estados de error: API caída, hilo cerrado (409) y vacío
+
+**Por hacer**
+
+- Stream en vivo (SSE) de mensajes nuevos en lugar de recargar tras «Avanzar» (F1.4)
+- Auto-advance opcional al enviar
+- Delegaciones visibles en el grafo del orquestador
+- Tests de frontend (no hay runner de tests en el frontend todavía; hoy se valida con `npm run build`)
 
 ---
 
