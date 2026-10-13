@@ -78,6 +78,29 @@ export type ActivityEvent = {
   created_at: string
 }
 
+export type Thread = {
+  id: number
+  title: string
+  project_id: number | null
+  created_by: string
+  status: 'open' | 'closed'
+  created_at: string
+}
+
+export type ThreadMessage = {
+  id: number
+  thread_id: number
+  sender: string
+  recipient: string | null
+  kind: 'text' | 'delegation' | 'result'
+  body: string
+  created_at: string
+}
+
+export type ThreadDetail = Thread & {
+  messages: ThreadMessage[]
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = 'API no disponible') {
     super(message)
@@ -198,4 +221,40 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  threads: () => requestAt<Thread[]>(`${API_ROOT}/threads`),
+  createThread: (title: string) =>
+    requestAt<Thread>(`${API_ROOT}/threads`, {
+      method: 'POST',
+      body: JSON.stringify({ title, created_by: 'user' }),
+    }),
+  thread: (id: number | string) =>
+    requestAt<ThreadDetail>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}`,
+    ),
+  postThreadMessage: (id: number | string, body: string) =>
+    requestAt<ThreadMessage>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}/messages`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          sender: 'user',
+          recipient: 'orquestador',
+          kind: 'text',
+          body,
+        }),
+      },
+    ),
+  advanceThread: (id: number | string, maxSteps = 6) =>
+    requestAt<{ created: ThreadMessage[] }>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}/advance?max_steps=${encodeURIComponent(String(maxSteps))}`,
+      { method: 'POST' },
+    ),
+  closeThread: (id: number | string) =>
+    requestAt<Thread>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'closed' }),
+      },
+    ),
 }

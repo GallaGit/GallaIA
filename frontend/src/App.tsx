@@ -4,6 +4,7 @@ import AgentsPage from './pages/AgentsPage'
 import TasksPage from './pages/TasksPage'
 import SessionsPage from './pages/SessionsPage'
 import InboxPage from './pages/InboxPage'
+import ThreadsPage from './pages/ThreadsPage'
 import ActivityPage from './pages/ActivityPage'
 import LivePage from './pages/LivePage'
 import PlaceholderPage from './pages/PlaceholderPage'
@@ -19,6 +20,8 @@ export default function App() {
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="sessions/:id" element={<SessionsPage />} />
         <Route path="inbox" element={<InboxPage />} />
+        <Route path="threads" element={<ThreadsPage />} />
+        <Route path="threads/:id" element={<ThreadsPage />} />
         <Route path="activity" element={<ActivityPage />} />
         <Route path="live" element={<LivePage />} />
         <Route path="live/:id" element={<LivePage />} />
