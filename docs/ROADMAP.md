@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (13-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) y F1.2 (agentes responden en hilos, backend) hechos. F1.3 (vista de conversación en la UI) en curso. Siguiente: F1.4 (stream en vivo SSE de mensajes).
+**Estado (13-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) y F1.2 (agentes responden en hilos, backend) hechos. F1.3 (vista de conversación en la UI) hecho. Siguiente: F1.4 (stream en vivo SSE de mensajes).
 
 ---
 
@@ -64,7 +64,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 
 
-### Slice F1.3 — Vista de conversación (UI)
+### Slice F1.3 — Vista de conversación (UI) *(Hecho — 13-10-2026)*
 
 **Hecho**
 

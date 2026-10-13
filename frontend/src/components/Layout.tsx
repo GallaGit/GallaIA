@@ -10,11 +10,13 @@ import {
   Activity,
   Radio,
   Eye,
+  MessagesSquare,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const primaryLinks = [
   { to: '/agents', label: 'Agentes', icon: Bot },
+  { to: '/threads', label: 'Conversaciones', icon: MessagesSquare },
   { to: '/tasks', label: 'Tareas', icon: Columns3 },
   { to: '/sessions', label: 'Sesiones', icon: Activity },
   { to: '/inbox', label: 'Inbox', icon: Inbox },
