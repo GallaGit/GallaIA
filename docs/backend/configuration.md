@@ -35,6 +35,8 @@ Draft (reflects current implementation)
 | `OPENROUTER_API_KEY` | `openrouter_api_key` | Primary provider (Chat Completions); empty → skip OpenRouter |
 | `OPENROUTER_MODEL` | `openrouter_model` | Default `nvidia/nemotron-3-ultra-550b-a55b:free` |
 | `OPENROUTER_BASE_URL` | `openrouter_base_url` | Default `https://openrouter.ai/api/v1` |
+| `CORS_ORIGINS` | `cors_origins` | Comma-separated browser origins (no `*`). Also used by the SEC-011 Origin guard: POST/PUT/PATCH/DELETE on `/api/v1` with an `Origin` not listed (and not same-origin) → 403; missing `Origin` allowed; `/api/v1/triggers` exempt |
+| `ALLOWED_HOSTS` | `allowed_hosts` | GALLAIA-SEC-011 `TrustedHostMiddleware` allow-list; default `localhost,127.0.0.1,testserver`. Other `Host` → 400 |
 | `GALLAIA_WEBHOOK_SECRET` | `gallaia_webhook_secret` | Phase 5 public webhook; empty → 401 |
 
 ## Conventions

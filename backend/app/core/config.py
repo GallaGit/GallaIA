@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     # MVP: SQLite. Postgres later: postgresql+psycopg://gallaai:gallaai@localhost:5432/gallaai
     database_url: str = "sqlite:///./data/gallaia.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # GALLAIA-SEC-011: Host header allow-list (DNS rebinding). "testserver" = TestClient.
+    allowed_hosts: str = "localhost,127.0.0.1,testserver"
     # Optional AgentOS LLM — empty keys mean mock runner only. Never hardcode secrets.
     # LEGACY: Anthropic runner kept for compatibility; primary provider is
     # OpenRouter (Groq planned as fallback, not implemented yet).
@@ -60,6 +62,10 @@ class Settings(BaseSettings):
         if any("*" in o for o in origins):
             raise ValueError("CORS_ORIGINS must list explicit origins; '*' is not allowed")
         return origins
+
+    @property
+    def allowed_host_list(self) -> list[str]:
+        return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
 
 
 @lru_cache
