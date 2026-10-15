@@ -12,6 +12,11 @@ from app.agentos.filesystem import FilesystemAcl, FsRoot
 from app.agentos.grants import GrantSet
 from app.agentos.network import NetworkPolicy
 from app.agentos.secrets import SecretRefSet
+from app.core.config import DEFAULT_OPENROUTER_MODEL
+
+# Agents default to the OpenRouter model (primary provider). Groq is the
+# planned fallback; "anthropic" stays accepted as a legacy runner value.
+DEFAULT_AGENT_MODEL = DEFAULT_OPENROUTER_MODEL
 
 PROMPT_ORIGIN = "GallaIA v2 seed — Orquestador / FE / BE."
 
@@ -87,7 +92,7 @@ AGENT_SEEDS: dict[str, AgentSeed] = {
     "orquestador": AgentSeed(
         name="orquestador",
         title="Orquestador",
-        model="claude-sonnet-4-5",
+        model=DEFAULT_AGENT_MODEL,
         foundational_prompt=FOUNDATIONAL_PROMPT,
         role_prompt="""\
 # GallaIA v2 — Orquestador
@@ -102,12 +107,12 @@ must decide.
         mcp=("agentos", "inbox"),
         grants=(("mcp", "agentos"), ("mcp", "inbox")),
         collaboration=("fe", "be"),
-        runner_preference="anthropic",
+        runner_preference="openrouter",
     ),
     "fe": AgentSeed(
         name="fe",
         title="FE",
-        model="claude-sonnet-4-5",
+        model=DEFAULT_AGENT_MODEL,
         foundational_prompt=FOUNDATIONAL_PROMPT,
         role_prompt="""\
 # GallaIA v2 — FE
@@ -127,7 +132,7 @@ Run available frontend checks when granted. Inbox if blocked.
     "be": AgentSeed(
         name="be",
         title="BE",
-        model="claude-sonnet-4-5",
+        model=DEFAULT_AGENT_MODEL,
         foundational_prompt=FOUNDATIONAL_PROMPT,
         role_prompt="""\
 # GallaIA v2 — BE

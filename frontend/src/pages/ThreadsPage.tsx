@@ -46,6 +46,10 @@ export default function ThreadsPage() {
   const [advanceInfo, setAdvanceInfo] = useState<string | null>(null)
   const [streamKey, setStreamKey] = useState(0)
   const [live, setLive] = useState(false)
+  // Thread the user explicitly asked to stream (Avanzar / send). Selecting a
+  // thread never opens the stream: opening it runs advance_thread.
+  const [streamFor, setStreamFor] = useState<string | null>(null)
+  const [streamError, setStreamError] = useState<string | null>(null)
   const addedRef = useRef(0)
 
   const loadThreads = useCallback(async () => {
@@ -78,6 +82,8 @@ export default function ThreadsPage() {
     setDraft('')
     setAdvanceInfo(null)
     setDetailError(null)
+    setStreamError(null)
+    setStreamFor(null)
     if (!id) {
       setDetail(null)
       return
@@ -86,9 +92,10 @@ export default function ThreadsPage() {
   }, [id, loadDetail])
 
   // F1.4 live stream: replay + advance_thread output appended as it arrives.
+  // Only opened on explicit user action (Avanzar / send), never on select.
   // Closed when switching threads or leaving the page.
   useEffect(() => {
-    if (!id) return
+    if (!id || streamFor !== String(id) || streamKey === 0) return
     addedRef.current = 0
     setLive(true)
     const es = new EventSource(api.threadStreamUrl(id, 6))
@@ -140,16 +147,19 @@ export default function ThreadsPage() {
       }
     })
     es.onerror = () => {
-      // Transport-level failure (no frame data): stop the spinner; the
+      // Transport-level failure (no frame data): close so the browser does
+      // not auto-reconnect (each reconnect would re-run agent steps). The
       // snapshot loaded via GET remains visible.
+      es.close()
       setLive(false)
+      setStreamError('Se perdió la conexión en directo. Pulsa Avanzar para reintentar.')
     }
 
     return () => {
       es.close()
       setLive(false)
     }
-  }, [id, streamKey])
+  }, [id, streamKey, streamFor])
 
   const handleCreate = async () => {
     if (!newTitle.trim() || busy) return
@@ -180,7 +190,9 @@ export default function ThreadsPage() {
           ? { ...prev, messages: mergeMessages(prev.messages, [msg]).merged }
           : prev,
       )
-      // Reopen the stream so the agents' replies arrive live.
+      // Open the stream so the agents' replies arrive live.
+      setStreamError(null)
+      setStreamFor(String(id))
       setStreamKey((k) => k + 1)
     } catch (e) {
       setDetailError(errorMessage(e))
@@ -195,6 +207,8 @@ export default function ThreadsPage() {
     setAdvanceInfo('Transmitiendo en directo…')
     // Reopen the stream: the backend replays + runs advance_thread (mock LLM)
     // and pushes each new message without reloading.
+    setStreamError(null)
+    setStreamFor(String(id))
     setStreamKey((k) => k + 1)
   }
 
@@ -208,8 +222,8 @@ export default function ThreadsPage() {
       await loadThreads()
       await loadDetail(id)
       // Drop any live stream so it cannot report the (now expected) closed
-      // state as an error; the reopened EventSource ends silently on 409.
-      setStreamKey((k) => k + 1)
+      // state as an error.
+      setStreamFor(null)
     } catch (e) {
       setDetailError(errorMessage(e))
     } finally {
@@ -275,7 +289,7 @@ export default function ThreadsPage() {
                   <h4>
                     <span
                       className={
-                        t.status === 'open' ? 'pill-green pill' : 'pill'
+                        t.status === 'open' ? 'pill pill-green' : 'pill'
                       }
                     >
                       {t.status}
@@ -304,16 +318,21 @@ export default function ThreadsPage() {
               <p>
                 <span
                   className={
-                    detail.status === 'open' ? 'pill-green pill' : 'pill'
+                    detail.status === 'open' ? 'pill pill-green' : 'pill'
                   }
                 >
                   {detail.status}
                 </span>{' '}
                 {live && (
-                  <span className="pill pill-green pill">en directo</span>
+                  <span className="pill pill-green">en directo</span>
                 )}
               </p>
               {detailError && <div className="error">{detailError}</div>}
+              {streamError && (
+                <div className="error" role="alert">
+                  {streamError}
+                </div>
+              )}
               {advanceInfo && (
                 <p className="muted" style={{ fontSize: '0.85rem' }}>
                   {advanceInfo}

@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from app.api.dependencies.db import DbSession
+from app.db.session import SessionLocal
 from app.exceptions import ConflictError, NotFoundError, UnprocessableError
 from app.models import Agent, Message, Project, Thread
 from app.models.thread import HUMAN_ACTOR
@@ -164,8 +165,6 @@ async def stream_thread(
         raise ConflictError(f"Thread {thread_id} is closed")
 
     # Prefer the same sessionmaker the app uses (request.app.state or db bind).
-    from app.db.session import SessionLocal
-
     factory = getattr(request.app.state, "session_factory", None) or SessionLocal
 
     async def gen():

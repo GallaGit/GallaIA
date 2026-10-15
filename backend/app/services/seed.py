@@ -15,7 +15,35 @@ from app.models import (
     AgentSecretRef,
     Project,
 )
-from app.services.prompts import FOUNDATIONAL_PROMPT, ROLE_PROMPTS
+
+
+def map_runner_preference(seed_pref: str) -> str:
+    """Map seed runner_preference (mock/anthropic/openrouter/inherit) to DB (mock/cloud/local).
+
+    openrouter -> cloud; anthropic -> cloud (legacy); inherit/mock -> mock.
+    """
+    mapping = {
+        "openrouter": "cloud",
+        "anthropic": "cloud",  # legacy provider
+        "inherit": "mock",
+        "mock": "mock",
+    }
+    try:
+        return mapping[seed_pref]
+    except KeyError as exc:
+        raise ValueError(f"Unknown seed runner_preference {seed_pref!r}") from exc
+
+
+def _agent_from_seed(project_id: int, seed: AgentSeed) -> Agent:
+    return Agent(
+        project_id=project_id,
+        name=seed.name,
+        title=seed.title,
+        model=seed.model,
+        foundational_prompt=seed.foundational_prompt,
+        role_prompt=seed.role_prompt,
+        runner_preference=map_runner_preference(seed.runner_preference),
+    )
 
 
 def seed_if_empty(db: Session) -> None:
@@ -31,35 +59,7 @@ def seed_if_empty(db: Session) -> None:
     db.add(project)
     db.flush()
 
-    agents = [
-        Agent(
-            project_id=project.id,
-            name="orquestador",
-            title="Orquestador",
-            model="claude-sonnet-4-5",
-            foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["orquestador"],
-            runner_preference="cloud",
-        ),
-        Agent(
-            project_id=project.id,
-            name="fe",
-            title="FE",
-            model="claude-sonnet-4-5",
-            foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["fe"],
-            runner_preference="mock",
-        ),
-        Agent(
-            project_id=project.id,
-            name="be",
-            title="BE",
-            model="claude-sonnet-4-5",
-            foundational_prompt=FOUNDATIONAL_PROMPT,
-            role_prompt=ROLE_PROMPTS["be"],
-            runner_preference="local",
-        ),
-    ]
+    agents = [_agent_from_seed(project.id, seed) for seed in AGENT_SEEDS.values()]
     db.add_all(agents)
     db.commit()
 
@@ -91,17 +91,7 @@ def ensure_seed_agents_and_grants(db: Session) -> None:
     for seed in AGENT_SEEDS.values():
         if seed.name in existing:
             continue
-        agent = Agent(
-            project_id=project.id,
-            name=seed.name,
-            title=seed.title,
-            model=seed.model,
-            foundational_prompt=seed.foundational_prompt,
-            role_prompt=seed.role_prompt,
-            runner_preference=seed.runner_preference
-            if seed.runner_preference in {"mock", "cloud", "local"}
-            else "mock",
-        )
+        agent = _agent_from_seed(project.id, seed)
         db.add(agent)
         db.flush()
         existing[seed.name] = agent
