@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (13-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend) y F1.2 (agentes responden en hilos, backend) hechos. F1.3 (vista de conversación en la UI) hecho. Siguiente: F1.4 (stream en vivo SSE de mensajes).
+**Estado (15-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI) y F1.4 (stream en vivo SSE de mensajes) hechos. Siguiente: F2 (runtime real).
 
 ---
 
@@ -37,8 +37,8 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
-- Vista de conversación en la UI
-- Stream en vivo (SSE) de mensajes nuevos
+- Vista de conversación en la UI (hecho en F1.3)
+- Stream en vivo (SSE) de mensajes nuevos (hecho en F1.4)
 - Delegación Orquestador → FE / BE visible en el grafo del orquestador
 
 
@@ -70,15 +70,29 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 - Cliente API (`frontend/src/api/client.ts`): tipos `Thread`, `ThreadDetail`, `ThreadMessage` y llamadas a `/api/v1/threads` (listar, crear, detalle, publicar mensaje, avanzar, cerrar)
 - Página `Conversaciones` (`/threads` y `/threads/:id`) en la navegación principal: lista de hilos, crear hilo, detalle con mensajes en orden (emisor → receptor, tipo `text`/`delegation`/`result` con etiqueta)
-- Composer para escribir al Orquestador como `user`, botón «Avanzar» (`POST /advance`) que añade las respuestas de los agentes y botón «Cerrar hilo»
+- Composer para escribir al Orquestador como `user`, botón «Avanzar» (desde F1.4 reabre el stream en vivo en lugar de `POST /advance` + recargar) y botón «Cerrar hilo»
 - Estados de error: API caída, hilo cerrado (409) y vacío
 
 **Por hacer**
 
-- Stream en vivo (SSE) de mensajes nuevos en lugar de recargar tras «Avanzar» (F1.4)
+- Stream en vivo (SSE) de mensajes nuevos en lugar de recargar tras «Avanzar» (hecho en F1.4)
 - Auto-advance opcional al enviar
 - Delegaciones visibles en el grafo del orquestador
 - Tests de frontend (no hay runner de tests en el frontend todavía; hoy se valida con `npm run build`)
+
+### Slice F1.4 — Stream en vivo SSE de mensajes *(Hecho — 15-10-2026)*
+
+**Hecho**
+
+- Backend `GET /api/v1/threads/{id}/stream` (`text/event-stream`): reenvía los mensajes existentes del hilo y luego ejecuta `advance_thread` paso a paso con el LLM mock determinista (sin necesidad de clave de API), emitiendo cada mensaje nuevo (plan, delegaciones, resultados, resumen) como evento `message` en cuanto se guarda; cierra con `end: {reason: done, created}`. Mismo contrato de errores que `POST /advance`: 404 hilo inexistente, 409 hilo cerrado. Query `max_steps` (1..20, default 6), `heartbeat_seconds` y `max_seconds` opcional
+- Servicio `backend/app/services/thread_stream.py` con sesiones DB cortas por paso (mismo patrón que `session_sse_stream`)
+- Frontend (`frontend/src/pages/ThreadsPage.tsx` + `api.threadStreamUrl`): la vista Conversaciones abre un `EventSource` al hilo activo y añade los mensajes a la lista según llegan, sin recargar; «Avanzar» y «Enviar al Orquestador» reabren el stream en lugar de recargar el detalle; pill «en directo» mientras transmite; se cierra al cambiar de hilo o salir de la página
+- Tests en `backend/tests/test_thread_stream.py`: eventos recibidos (plan/delegaciones/resultados/resumen + `end: done`), 409 en hilo cerrado, 404 en hilo inexistente
+
+**Por hacer**
+
+- Auto-advance opcional al enviar (hoy enviar reabre el stream, que avanza)
+- Delegaciones visibles en el grafo del orquestador
 
 ---
 

@@ -249,6 +249,9 @@ export const api = {
       `${API_ROOT}/threads/${encodeURIComponent(String(id))}/advance?max_steps=${encodeURIComponent(String(maxSteps))}`,
       { method: 'POST' },
     ),
+  /** F1.4 live SSE: replay + advance_thread output streamed as `message` events */
+  threadStreamUrl: (id: number | string, maxSteps = 6) =>
+    `${API_ROOT}/threads/${encodeURIComponent(String(id))}/stream?max_steps=${encodeURIComponent(String(maxSteps))}`,
   closeThread: (id: number | string) =>
     requestAt<Thread>(
       `${API_ROOT}/threads/${encodeURIComponent(String(id))}`,
