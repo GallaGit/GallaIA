@@ -43,3 +43,7 @@ backend/data/*.db-*
 .DS_Store
 Thumbs.db
 frontend/_*.sh
+
+# Local DB backups and root data dir
+*.bak
+/data/
