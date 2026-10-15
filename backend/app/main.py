@@ -44,14 +44,24 @@ app = FastAPI(
     version="0.2.0",
     description="GallaAI AgentOS — control plane MVP (Phase 0+1)",
     lifespan=lifespan,
+    # GALLAIA-SEC-008: no public API docs in production.
+    docs_url=None if settings.app_env == "production" else "/docs",
+    redoc_url=None if settings.app_env == "production" else "/redoc",
+    openapi_url=None if settings.app_env == "production" else "/openapi.json",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "X-Actor-Type",
+        "X-Agent-Id",
+        "X-Request-ID",
+        "X-Webhook-Secret",
+    ],
 )
 app.add_middleware(RequestIdMiddleware)
 app.include_router(api_router, prefix="/api/v1")
@@ -99,7 +109,13 @@ def spa_fallback(full_path: str):
     }:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    candidate = STATIC_DIR / full_path
+    # GALLAIA-SEC-001: resolve and confine to STATIC_DIR (no path traversal).
+    try:
+        candidate = (STATIC_DIR / full_path).resolve()
+    except (OSError, ValueError):
+        raise HTTPException(status_code=404, detail="Not Found")
+    if not candidate.is_relative_to(STATIC_DIR):
+        raise HTTPException(status_code=404, detail="Not Found")
     if candidate.is_file():
         return FileResponse(candidate)
 
