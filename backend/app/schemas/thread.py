@@ -55,3 +55,20 @@ class ThreadDetailOut(ThreadOut):
 
 class ThreadAdvanceOut(BaseModel):
     created: list[MessageOut] = []
+
+
+class DelegationEdgeOut(BaseModel):
+    delegation_id: int
+    source: str
+    target: str
+    brief: str
+    status: Literal["pending", "answered"]
+    result_id: int | None = None
+    result_body: str | None = None
+
+
+class ThreadDelegationsOut(BaseModel):
+    thread_id: int
+    nodes: list[str]
+    edges: list[DelegationEdgeOut]
+    summary_id: int | None = None

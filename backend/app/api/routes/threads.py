@@ -10,10 +10,12 @@ from app.exceptions import ConflictError, NotFoundError, UnprocessableError
 from app.models import Agent, Message, Project, Thread
 from app.models.thread import HUMAN_ACTOR
 from app.schemas import (
+    DelegationEdgeOut,
     MessageCreate,
     MessageOut,
     ThreadAdvanceOut,
     ThreadCreate,
+    ThreadDelegationsOut,
     ThreadDetailOut,
     ThreadOut,
     ThreadUpdate,
@@ -137,6 +139,68 @@ def advance_thread(
         raise NotFoundError(f"Thread {thread_id} not found")
     created = advance_thread_service(db, thread, max_steps=max_steps)
     return ThreadAdvanceOut(created=[MessageOut.model_validate(m) for m in created])
+
+
+@router.get("/{thread_id}/delegations", response_model=ThreadDelegationsOut)
+def get_thread_delegations(thread_id: int, db: DbSession):
+    thread = db.get(Thread, thread_id)
+    if thread is None:
+        raise NotFoundError(f"Thread {thread_id} not found")
+    messages = list(
+        db.scalars(
+            select(Message)
+            .where(Message.thread_id == thread_id)
+            .order_by(Message.created_at, Message.id)
+        ).all()
+    )
+    delegations = [
+        m for m in messages if m.sender == "orquestador" and m.kind == "delegation"
+    ]
+    used_result_ids: set[int] = set()
+    edges: list[DelegationEdgeOut] = []
+    for delegation in delegations:
+        match = next(
+            (
+                m
+                for m in messages
+                if m.kind == "result"
+                and m.sender == delegation.recipient
+                and m.recipient == "orquestador"
+                and m.id > delegation.id
+                and m.id not in used_result_ids
+            ),
+            None,
+        )
+        if match is not None:
+            used_result_ids.add(match.id)
+        edges.append(
+            DelegationEdgeOut(
+                delegation_id=delegation.id,
+                source=delegation.sender,
+                target=delegation.recipient or "",
+                brief=delegation.body,
+                status="answered" if match is not None else "pending",
+                result_id=match.id if match is not None else None,
+                result_body=match.body if match is not None else None,
+            )
+        )
+    summary_id: int | None = None
+    if delegations:
+        last_delegation_id = delegations[-1].id
+        for m in messages:
+            if (
+                m.sender == "orquestador"
+                and m.recipient == "user"
+                and m.kind == "text"
+                and m.id > last_delegation_id
+            ):
+                summary_id = m.id
+    return ThreadDelegationsOut(
+        thread_id=thread.id,
+        nodes=["user", "orquestador", "fe", "be"],
+        edges=edges,
+        summary_id=summary_id,
+    )
 
 
 @router.get("/{thread_id}/stream")

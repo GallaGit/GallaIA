@@ -4,6 +4,7 @@ import {
   api,
   ApiUnavailableError,
   type Thread,
+  type ThreadDelegations,
   type ThreadDetail,
   type ThreadMessage,
 } from '../api/client'
@@ -28,6 +29,16 @@ function mergeMessages(
   }
 }
 
+const AUTO_ADVANCE_KEY = 'gallaia.autoAdvance'
+
+function loadAutoAdvance(): boolean {
+  try {
+    const raw = localStorage.getItem(AUTO_ADVANCE_KEY)
+    return raw === null ? true : raw !== 'false'
+  } catch {
+    return true
+  }
+}
 function errorMessage(e: unknown): string {
   if (e instanceof ApiUnavailableError) return 'API no disponible'
   return (e as Error).message
@@ -50,6 +61,8 @@ export default function ThreadsPage() {
   // thread never opens the stream: opening it runs advance_thread.
   const [streamFor, setStreamFor] = useState<string | null>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
+  const [delegations, setDelegations] = useState<ThreadDelegations | null>(null)
+  const [autoAdvance, setAutoAdvance] = useState<boolean>(loadAutoAdvance)
   const addedRef = useRef(0)
 
   const loadThreads = useCallback(async () => {
@@ -73,6 +86,15 @@ export default function ThreadsPage() {
     }
   }, [])
 
+  const loadDelegations = useCallback(async (threadId: string) => {
+    try {
+      const d = await api.getThreadDelegations(threadId)
+      setDelegations(d)
+    } catch {
+      setDelegations(null)
+    }
+  }, [])
+
   useEffect(() => {
     setError(null)
     void loadThreads()
@@ -84,12 +106,19 @@ export default function ThreadsPage() {
     setDetailError(null)
     setStreamError(null)
     setStreamFor(null)
+    setDelegations(null)
     if (!id) {
       setDetail(null)
       return
     }
     void loadDetail(id)
-  }, [id, loadDetail])
+    void loadDelegations(id)
+  }, [id, loadDetail, loadDelegations])
+
+  // Refetch delegations when the live stream ends.
+  useEffect(() => {
+    if (!live && id) void loadDelegations(id)
+  }, [live, id, loadDelegations])
 
   // F1.4 live stream: replay + advance_thread output appended as it arrives.
   // Only opened on explicit user action (Avanzar / send), never on select.
@@ -191,13 +220,26 @@ export default function ThreadsPage() {
           : prev,
       )
       // Open the stream so the agents' replies arrive live.
-      setStreamError(null)
-      setStreamFor(String(id))
-      setStreamKey((k) => k + 1)
+      if (autoAdvance) {
+        setStreamError(null)
+        setStreamFor(String(id))
+        setStreamKey((k) => k + 1)
+      } else {
+        void loadDelegations(id)
+      }
     } catch (e) {
       setDetailError(errorMessage(e))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const handleAutoAdvance = (checked: boolean) => {
+    setAutoAdvance(checked)
+    try {
+      localStorage.setItem(AUTO_ADVANCE_KEY, String(checked))
+    } catch {
+      /* ignore */
     }
   }
 
@@ -221,6 +263,7 @@ export default function ThreadsPage() {
       await api.closeThread(id)
       await loadThreads()
       await loadDetail(id)
+      await loadDelegations(id)
       // Drop any live stream so it cannot report the (now expected) closed
       // state as an error.
       setStreamFor(null)
@@ -370,6 +413,55 @@ export default function ThreadsPage() {
                   rows={3}
                   disabled={busy || closed}
                 />
+              </div>
+              <div className="field">
+                <label
+                  htmlFor="auto-advance"
+                  style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}
+                >
+                  <input
+                    id="auto-advance"
+                    type="checkbox"
+                    checked={autoAdvance}
+                    onChange={(e) => handleAutoAdvance(e.target.checked)}
+                  />
+                  Avanzar automáticamente al enviar
+                </label>
+              </div>
+              <div>
+                <h3>Delegaciones</h3>
+                {!delegations || !delegations.edges.length ? (
+                  <div className="empty">Sin delegaciones todavía</div>
+                ) : (
+                  <div className="tool-log">
+                    {delegations.edges.map((e) => (
+                      <div key={e.delegation_id} className="tool-row">
+                        <span className="muted mono">
+                          Orquestador → {e.target.toUpperCase()}
+                        </span>
+                        <span
+                          className={
+                            e.status === 'answered' ? 'pill pill-green' : 'pill pill-amber'
+                          }
+                        >
+                          {e.status === 'answered'
+                            ? 'respondida'
+                            : 'pendiente'}
+                        </span>
+                        <span title={e.brief}>
+                          {e.brief.length > 80
+                            ? `${e.brief.slice(0, 80)}…`
+                            : e.brief}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {delegations && delegations.summary_id != null && (
+                  <p className="muted" style={{ fontSize: '0.85rem' }}>
+                    Resumen enviado al usuario
+                  </p>
+                )}
               </div>
               <div className="actions">
                 <button
