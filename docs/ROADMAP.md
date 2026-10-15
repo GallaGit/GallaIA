@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (15-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI) y F1.4 (stream en vivo SSE de mensajes) hechos. Siguiente: F2 (runtime real).
+**Estado (15-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. Siguiente: F2 (runtime real), empezando por F2.1 LiteLLM (OpenRouter principal, Groq respaldo, mock sin clave).
 
 ---
 
@@ -39,7 +39,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 - Vista de conversación en la UI (hecho en F1.3)
 - Stream en vivo (SSE) de mensajes nuevos (hecho en F1.4)
-- Delegación Orquestador → FE / BE visible en el grafo del orquestador
+- Delegación Orquestador → FE / BE visible en el grafo del orquestador (hecho en F1.5)
 
 
 ### Slice F1.2 — Agentes responden en hilos (backend)
@@ -58,8 +58,8 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
-- Botón / auto-advance en la UI para disparar las respuestas
-- Resumen y delegaciones visibles en el grafo del orquestador
+- Botón / auto-advance en la UI para disparar las respuestas (hecho en F1.3–F1.5)
+- Resumen y delegaciones visibles en el grafo del orquestador (hecho en F1.5)
 - Enrutado real por modelo (LiteLLM) en lugar del mock (F2+)
 
 
@@ -76,8 +76,8 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 **Por hacer**
 
 - Stream en vivo (SSE) de mensajes nuevos en lugar de recargar tras «Avanzar» (hecho en F1.4)
-- Auto-advance opcional al enviar
-- Delegaciones visibles en el grafo del orquestador
+- Auto-advance opcional al enviar (hecho en F1.5)
+- Delegaciones visibles en el grafo del orquestador (hecho en F1.5)
 - Tests de frontend (no hay runner de tests en el frontend todavía; hoy se valida con `npm run build`)
 
 ### Slice F1.4 — Stream en vivo SSE de mensajes *(Hecho — 15-10-2026)*
@@ -91,8 +91,22 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
-- Auto-advance opcional al enviar (hoy enviar reabre el stream, que avanza)
-- Delegaciones visibles en el grafo del orquestador
+- Auto-advance opcional al enviar (hecho en F1.5)
+- Delegaciones visibles en el grafo del orquestador (hecho en F1.5)
+
+### Slice F1.5 — Grafo de delegaciones y auto-avance opcional *(Hecho — 15-10-2026)*
+
+**Hecho**
+
+- Backend `GET /api/v1/threads/{id}/delegations`: grafo del hilo con nodos (`user`, `orquestador`, `fe`, `be`) y una arista por cada `delegation` del Orquestador con su estado (`pending` / `answered`) y el id del `result` que la responde (mismo emparejamiento que el resumen de F1.2: primer `result` del destinatario posterior a la delegación); incluye el id del mensaje de resumen al usuario si existe. 404 hilo inexistente
+- Tests en `backend/tests/test_thread_delegations.py`
+- Frontend (`ThreadsPage.tsx`): panel «Delegaciones» con Orquestador → FE / BE, estado de cada delegación y si ya hay resumen; se refresca al terminar el stream
+- Interruptor «Avanzar automáticamente al enviar» (guardado en `localStorage`, activado por defecto): si está apagado, enviar solo publica el mensaje y hay que pulsar «Avanzar»
+
+**Por hacer**
+
+- Runtime real con LiteLLM / LangGraph (F2)
+- Tests de frontend (sigue sin runner; se valida con `npm run build`)
 
 ---
 
@@ -100,8 +114,8 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
+- F2.1 LiteLLM (capa de modelos): OpenRouter principal, Groq respaldo, mock determinista sin clave
 - LangGraph (estado + checkpoints)
-- LiteLLM (capa de modelos)
 - Migrar la base de datos de SQLite a Postgres (Docker en local o Supabase) usando el `DATABASE_URL` ya previsto en `.env`; requisito para checkpoints de LangGraph y para pgvector en F4. Hasta entonces se sigue con SQLite.
 - Herramientas MCP en workspace git con sandbox Docker
 
