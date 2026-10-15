@@ -1,11 +1,31 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { api, ApiUnavailableError, type Thread, type ThreadDetail } from '../api/client'
+import {
+  api,
+  ApiUnavailableError,
+  type Thread,
+  type ThreadDetail,
+  type ThreadMessage,
+} from '../api/client'
 
 function kindLabel(kind: string): string {
   if (kind === 'delegation') return 'delegación'
   if (kind === 'result') return 'resultado'
   return 'mensaje'
+}
+
+/** Append incoming messages without duplicates, ordered by id. */
+function mergeMessages(
+  prev: ThreadMessage[],
+  incoming: ThreadMessage[],
+): { merged: ThreadMessage[]; added: number } {
+  const ids = new Set(prev.map((m) => m.id))
+  const fresh = incoming.filter((m) => !ids.has(m.id))
+  if (!fresh.length) return { merged: prev, added: 0 }
+  return {
+    merged: [...prev, ...fresh].sort((a, b) => a.id - b.id),
+    added: fresh.length,
+  }
 }
 
 function errorMessage(e: unknown): string {
@@ -24,6 +44,9 @@ export default function ThreadsPage() {
   const [newTitle, setNewTitle] = useState('')
   const [draft, setDraft] = useState('')
   const [advanceInfo, setAdvanceInfo] = useState<string | null>(null)
+  const [streamKey, setStreamKey] = useState(0)
+  const [live, setLive] = useState(false)
+  const addedRef = useRef(0)
 
   const loadThreads = useCallback(async () => {
     try {
@@ -62,6 +85,72 @@ export default function ThreadsPage() {
     void loadDetail(id)
   }, [id, loadDetail])
 
+  // F1.4 live stream: replay + advance_thread output appended as it arrives.
+  // Closed when switching threads or leaving the page.
+  useEffect(() => {
+    if (!id) return
+    addedRef.current = 0
+    setLive(true)
+    const es = new EventSource(api.threadStreamUrl(id, 6))
+
+    es.addEventListener('message', (ev) => {
+      try {
+        const msg = JSON.parse((ev as MessageEvent).data) as ThreadMessage
+        setDetail((prev) => {
+          if (!prev || String(prev.id) !== String(id)) return prev
+          const { merged, added } = mergeMessages(prev.messages, [msg])
+          if (added > 0) addedRef.current += added
+          return added > 0 ? { ...prev, messages: merged } : prev
+        })
+      } catch {
+        /* ignore malformed frames */
+      }
+    })
+    es.addEventListener('end', (ev) => {
+      try {
+        const data = JSON.parse((ev as MessageEvent).data) as {
+          created?: number
+        }
+        const n =
+          typeof data.created === 'number' ? data.created : addedRef.current
+        setAdvanceInfo(
+          n === 0
+            ? 'Sin respuestas pendientes'
+            : n === 1
+              ? '1 respuesta nueva'
+              : `${n} respuestas nuevas`,
+        )
+      } catch {
+        setAdvanceInfo(null)
+      }
+      setLive(false)
+      es.close()
+    })
+    es.addEventListener('error', (ev) => {
+      const data = (ev as MessageEvent).data as string | null
+      if (data) {
+        try {
+          const body = JSON.parse(data) as { message?: string }
+          setDetailError(body.message ?? data)
+        } catch {
+          setDetailError(data)
+        }
+        setLive(false)
+        es.close()
+      }
+    })
+    es.onerror = () => {
+      // Transport-level failure (no frame data): stop the spinner; the
+      // snapshot loaded via GET remains visible.
+      setLive(false)
+    }
+
+    return () => {
+      es.close()
+      setLive(false)
+    }
+  }, [id, streamKey])
+
   const handleCreate = async () => {
     if (!newTitle.trim() || busy) return
     setBusy(true)
@@ -84,9 +173,15 @@ export default function ThreadsPage() {
     setAdvanceInfo(null)
     setDetailError(null)
     try {
-      await api.postThreadMessage(id, draft.trim())
+      const msg = await api.postThreadMessage(id, draft.trim())
       setDraft('')
-      await loadDetail(id)
+      setDetail((prev) =>
+        prev && String(prev.id) === String(id)
+          ? { ...prev, messages: mergeMessages(prev.messages, [msg]).merged }
+          : prev,
+      )
+      // Reopen the stream so the agents' replies arrive live.
+      setStreamKey((k) => k + 1)
     } catch (e) {
       setDetailError(errorMessage(e))
     } finally {
@@ -94,26 +189,13 @@ export default function ThreadsPage() {
     }
   }
 
-  const handleAdvance = async () => {
-    if (!id || busy || detail?.status === 'closed') return
-    setBusy(true)
+  const handleAdvance = () => {
+    if (!id || busy || live || detail?.status === 'closed') return
     setDetailError(null)
-    try {
-      const res = await api.advanceThread(id, 6)
-      const n = res.created?.length ?? 0
-      setAdvanceInfo(
-        n === 0
-          ? 'Sin respuestas pendientes'
-          : n === 1
-            ? '1 respuesta nueva'
-            : `${n} respuestas nuevas`,
-      )
-      await loadDetail(id)
-    } catch (e) {
-      setDetailError(errorMessage(e))
-    } finally {
-      setBusy(false)
-    }
+    setAdvanceInfo('Transmitiendo en directo…')
+    // Reopen the stream: the backend replays + runs advance_thread (mock LLM)
+    // and pushes each new message without reloading.
+    setStreamKey((k) => k + 1)
   }
 
   const handleClose = async () => {
@@ -125,6 +207,9 @@ export default function ThreadsPage() {
       await api.closeThread(id)
       await loadThreads()
       await loadDetail(id)
+      // Drop any live stream so it cannot report the (now expected) closed
+      // state as an error; the reopened EventSource ends silently on 409.
+      setStreamKey((k) => k + 1)
     } catch (e) {
       setDetailError(errorMessage(e))
     } finally {
@@ -223,7 +308,10 @@ export default function ThreadsPage() {
                   }
                 >
                   {detail.status}
-                </span>
+                </span>{' '}
+                {live && (
+                  <span className="pill pill-green pill">en directo</span>
+                )}
               </p>
               {detailError && <div className="error">{detailError}</div>}
               {advanceInfo && (
@@ -276,8 +364,8 @@ export default function ThreadsPage() {
                 <button
                   type="button"
                   className="btn"
-                  onClick={() => void handleAdvance()}
-                  disabled={busy || closed}
+                  onClick={() => handleAdvance()}
+                  disabled={busy || live || closed}
                 >
                   Avanzar
                 </button>

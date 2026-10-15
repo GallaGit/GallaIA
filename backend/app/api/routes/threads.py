@@ -1,6 +1,7 @@
-"""F1.1 — Agent-to-agent threads and messages (backend only)."""
+"""F1.1 — Agent-to-agent threads and messages (backend only). F1.4 adds SSE streaming."""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from app.api.dependencies.db import DbSession
@@ -18,6 +19,7 @@ from app.schemas import (
 )
 from app.services.activity import append_activity, notify_after_commit
 from app.services.thread_agents import advance_thread as advance_thread_service
+from app.services.thread_stream import thread_sse_stream
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 
@@ -134,3 +136,54 @@ def advance_thread(
         raise NotFoundError(f"Thread {thread_id} not found")
     created = advance_thread_service(db, thread, max_steps=max_steps)
     return ThreadAdvanceOut(created=[MessageOut.model_validate(m) for m in created])
+
+
+@router.get("/{thread_id}/stream")
+async def stream_thread(
+    thread_id: int,
+    request: Request,
+    db: DbSession,
+    max_steps: int = Query(6, ge=1, le=20),
+    heartbeat_seconds: float = Query(15.0, ge=0.05, le=120.0),
+    max_seconds: float | None = Query(
+        None,
+        ge=0.05,
+        le=3600.0,
+        description="End stream after N seconds (tests / short demos).",
+    ),
+):
+    """SSE (F1.4): replay thread messages, then stream advance_thread output live.
+
+    Uses the deterministic mock LLM, so no API key is needed. Mirrors the
+    error contract of POST /advance: 404 when missing, 409 when closed.
+    """
+    thread = db.get(Thread, thread_id)
+    if thread is None:
+        raise NotFoundError(f"Thread {thread_id} not found")
+    if thread.status == "closed":
+        raise ConflictError(f"Thread {thread_id} is closed")
+
+    # Prefer the same sessionmaker the app uses (request.app.state or db bind).
+    from app.db.session import SessionLocal
+
+    factory = getattr(request.app.state, "session_factory", None) or SessionLocal
+
+    async def gen():
+        async for chunk in thread_sse_stream(
+            session_factory=factory,
+            thread_id=thread_id,
+            max_steps=max_steps,
+            heartbeat_seconds=heartbeat_seconds,
+            max_seconds=max_seconds,
+        ):
+            yield chunk
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
