@@ -55,7 +55,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        origins = [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        # GALLAIA-SEC-004: credentials are enabled, so wildcards are not allowed.
+        if any("*" in o for o in origins):
+            raise ValueError("CORS_ORIGINS must list explicit origins; '*' is not allowed")
+        return origins
 
 
 @lru_cache

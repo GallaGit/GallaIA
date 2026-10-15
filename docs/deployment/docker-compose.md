@@ -44,7 +44,7 @@ Un solo servicio Compose: **`app`**. No hace falta `npm run dev` ni un segundo c
 services:
   app:
     build: .
-    ports: ["8000:8000"]
+    ports: ["127.0.0.1:8000:8000"]
     env_file: [backend/.env]
     volumes: [./backend/data:/app/data]
 ```
