@@ -101,6 +101,23 @@ export type ThreadDetail = Thread & {
   messages: ThreadMessage[]
 }
 
+export type DelegationEdge = {
+  delegation_id: number
+  source: string
+  target: string
+  brief: string
+  status: 'pending' | 'answered'
+  result_id: number | null
+  result_body: string | null
+}
+
+export type ThreadDelegations = {
+  thread_id: number
+  nodes: string[]
+  edges: DelegationEdge[]
+  summary_id: number | null
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = 'API no disponible') {
     super(message)
@@ -252,6 +269,10 @@ export const api = {
   /** F1.4 live SSE: replay + advance_thread output streamed as `message` events */
   threadStreamUrl: (id: number | string, maxSteps = 6) =>
     `${API_ROOT}/threads/${encodeURIComponent(String(id))}/stream?max_steps=${encodeURIComponent(String(maxSteps))}`,
+  getThreadDelegations: (id: number | string) =>
+    requestAt<ThreadDelegations>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}/delegations`,
+    ),
   closeThread: (id: number | string) =>
     requestAt<Thread>(
       `${API_ROOT}/threads/${encodeURIComponent(String(id))}`,

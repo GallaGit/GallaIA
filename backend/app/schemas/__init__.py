@@ -38,10 +38,12 @@ from app.schemas.template import (
     TemplateStepOut,
 )
 from app.schemas.thread import (
+    DelegationEdgeOut,
     MessageCreate,
     MessageOut,
     ThreadAdvanceOut,
     ThreadCreate,
+    ThreadDelegationsOut,
     ThreadDetailOut,
     ThreadOut,
     ThreadUpdate,
@@ -107,6 +109,8 @@ __all__ = [
     "ThreadOut",
     "ThreadDetailOut",
     "ThreadAdvanceOut",
+    "ThreadDelegationsOut",
+    "DelegationEdgeOut",
     "MessageCreate",
     "MessageOut",
 ]
