@@ -10,7 +10,9 @@ Draft (reflects current implementation)
 
 ## Scope
 
-- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); optional `OPENROUTER_*` (Chat Completions) and `ANTHROPIC_*` (Messages stub).
+- Existing: `app/core/config.py` (`Settings` via pydantic-settings), `backend/.env`, `backend/.env.example`, injection via `get_settings()` (also used from Docker Compose `env_file`); `OPENROUTER_*` (Chat Completions; primary LLM provider, implemented in `backend/app/providers/openrouter.py`) and `ANTHROPIC_*` (Messages stub; legacy/optional, not the intended provider, to be removed/replaced in a later code PR). Groq is the planned fallback provider (not implemented yet; a `GROQ_API_KEY` variable is planned). Provider routing via LiteLLM is planned for F2+.
+
+> Note: free OpenRouter models have low rate limits and can disappear without notice, so always configure a fallback model.
 - Existing: Phase 5 webhook secret `GALLAIA_WEBHOOK_SECRET`.
 - Planned: richer runner / cron settings — [ROADMAP.md](../ROADMAP.md).
 - Future: multi-environment profiles; Postgres URL when ADR-003 is accepted.
@@ -28,9 +30,9 @@ Draft (reflects current implementation)
 | `APP_ENV` | `app_env` | e.g. `development` |
 | `APP_DEBUG` | `app_debug` | Debug flag |
 | `LOG_LEVEL` | `log_level` | Logging level (`INFO`, `DEBUG`, …) |
-| `ANTHROPIC_API_KEY` | `anthropic_api_key` | Optional Messages stub; empty → skip Anthropic |
-| `ANTHROPIC_MODEL` | `anthropic_model` | Default `claude-sonnet-4-5` |
-| `OPENROUTER_API_KEY` | `openrouter_api_key` | Optional Chat Completions; empty → skip OpenRouter |
+| `ANTHROPIC_API_KEY` | `anthropic_api_key` | Legacy/optional, to be removed. Messages stub; empty → skip Anthropic |
+| `ANTHROPIC_MODEL` | `anthropic_model` | Legacy/optional, to be removed. Default `claude-sonnet-4-5` |
+| `OPENROUTER_API_KEY` | `openrouter_api_key` | Primary provider (Chat Completions); empty → skip OpenRouter |
 | `OPENROUTER_MODEL` | `openrouter_model` | Default `nvidia/nemotron-3-ultra-550b-a55b:free` |
 | `OPENROUTER_BASE_URL` | `openrouter_base_url` | Default `https://openrouter.ai/api/v1` |
 | `GALLAIA_WEBHOOK_SECRET` | `gallaia_webhook_secret` | Phase 5 public webhook; empty → 401 |

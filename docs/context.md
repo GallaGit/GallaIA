@@ -78,7 +78,9 @@ Esta fase incluye:
 - frontend con React + Vite + Lucide (atelier);
 - SQLite para el control plane;
 - seeds, Kanban, sessions, inbox;
-- runner mock y stub Anthropic Messages opcional.
+- runner mock, proveedor OpenRouter (principal, modelo gratuito por defecto `nvidia/nemotron-3-ultra-550b-a55b:free`) y stub Anthropic Messages legacy/opcional (a eliminar en un PR de código posterior);
+- Groq planificado como fallback (no implementado; variable `GROQ_API_KEY` prevista); enrutado vía LiteLLM en F2+.
+- Los modelos gratuitos de OpenRouter tienen límites bajos y pueden desaparecer sin aviso: configurar siempre un modelo de fallback.
 
 No se implementan Isolation real, Goals, Templates, Triggers ni RAG hasta las fases documentadas en el roadmap.
 
@@ -101,7 +103,7 @@ Backend (FastAPI)
 
 ↓
 
-SQLite + runner mock / stub Anthropic
+SQLite + runner mock / OpenRouter (stub Anthropic legacy)
 
 ↓
 

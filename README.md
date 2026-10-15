@@ -8,7 +8,7 @@ Herramienta personal para que **Ociel** construya software con tres agentes que 
 | **FE** | React / TypeScript / UI |
 | **BE** | FastAPI / API / datos |
 
-Stack actual: **FastAPI + SQLAlchemy/SQLite** (backend) y **React + Vite** (frontend). Runtime mock por defecto; OpenRouter/Anthropic opcionales. LangGraph / LiteLLM / MCP llegan en F2+.
+Stack actual: **FastAPI + SQLAlchemy/SQLite** (backend) y **React + Vite** (frontend). Runtime mock por defecto; OpenRouter como proveedor LLM principal (Groq planificado como fallback; Anthropic legacy). LangGraph / LiteLLM / MCP llegan en F2+.
 
 | | |
 | --- | --- |
@@ -81,6 +81,10 @@ OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
 ```
 
 Sin claves → runner mock.
+
+> **Proveedores LLM:** OpenRouter es el proveedor principal (implementado en `backend/app/providers/openrouter.py`, modelo gratuito por defecto `nvidia/nemotron-3-ultra-550b-a55b:free`). Groq está planificado como fallback (aún no implementado; se prevé una variable `GROQ_API_KEY`). Anthropic es opcional/legacy: las variables `ANTHROPIC_*` y el stub Messages siguen en el código pero no son el proveedor previsto y se eliminarán/sustituirán en un PR de código posterior. El enrutado entre proveedores se hará con LiteLLM (F2+).
+>
+> Nota: los modelos gratuitos de OpenRouter tienen límites de uso bajos y pueden desaparecer sin aviso; configura siempre un modelo de fallback.
 
 ## Plataforma
 
