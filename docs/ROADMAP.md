@@ -102,6 +102,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 - LangGraph (estado + checkpoints)
 - LiteLLM (capa de modelos)
+- Migrar la base de datos de SQLite a Postgres (Docker en local o Supabase) usando el `DATABASE_URL` ya previsto en `.env`; requisito para checkpoints de LangGraph y para pgvector en F4. Hasta entonces se sigue con SQLite.
 - Herramientas MCP en workspace git con sandbox Docker
 
 ---
@@ -119,7 +120,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
-- RAG del repo (Postgres + pgvector)
+- RAG del repo (pgvector sobre el Postgres de F2)
 - Langfuse (trazas / costes)
 
 ---
