@@ -27,13 +27,17 @@ class Settings(BaseSettings):
     # GALLAIA-SEC-011: Host header allow-list (DNS rebinding). "testserver" = TestClient.
     allowed_hosts: str = "localhost,127.0.0.1,testserver"
     # Optional AgentOS LLM — empty keys mean mock runner only. Never hardcode secrets.
-    # LEGACY: Anthropic runner kept for compatibility; primary provider is
-    # OpenRouter (Groq planned as fallback, not implemented yet).
+    # LEGACY: Anthropic runner kept for compatibility. Provider chain:
+    # OpenRouter (primary) -> Groq (fallback) -> deterministic mock.
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-5"
     openrouter_api_key: str = ""
     openrouter_model: str = DEFAULT_OPENROUTER_MODEL
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Groq: OpenAI-compatible endpoint used as fallback provider.
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
     # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
     gallaia_webhook_secret: str = ""
     # Phase 7: mock (in-process) | local (future OS binary -> local-stub for now).
