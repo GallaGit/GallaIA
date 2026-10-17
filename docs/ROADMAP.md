@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (15-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. Siguiente: F2 (runtime real), empezando por F2.1 LiteLLM (OpenRouter principal, Groq respaldo, mock sin clave).
+**Estado (17-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) hecho. Siguiente: F2.1b (backend `litellm` opcional detrás del gateway) o F2.2 (LangGraph).
 
 ---
 
@@ -112,9 +112,25 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 ## F2 — Runtime real
 
+### Slice F2.1a — Gateway de modelos: OpenRouter → Groq → mock *(Hecho — 17-10-2026)*
+
+**Hecho**
+
+- Módulo `backend/app/llm/gateway.py`: una sola entrada `complete(system, user)` para los agentos de los hilos, con cadena de proveedores en orden: **OpenRouter** (principal), **Groq** (respaldo) y **mock determinista** (sin clave o si todos fallan). Nombres de modelo estilo LiteLLM (`openrouter/<modelo>`, `groq/<modelo>`) para que el cambio a LiteLLM sea directo
+- Groq vía su endpoint compatible con OpenAI (`https://api.groq.com/openai/v1`), configurable con `GROQ_API_KEY`, `GROQ_MODEL`, `GROQ_BASE_URL` (en `.env.example`, sin claves reales)
+- Si un proveedor falla (red/HTTP/respuesta vacía) se pasa al siguiente; el resultado indica qué proveedor y modelo respondió
+- `default_llm()` de F1.2 usa el gateway (sin claves sigue siendo el mock, igual que antes)
+- Tests en `backend/tests/test_llm_gateway.py` con transporte HTTP falso (sin red)
+
 **Por hacer**
 
-- F2.1 LiteLLM (capa de modelos): OpenRouter principal, Groq respaldo, mock determinista sin clave
+- F2.1b: backend opcional con la librería `litellm` detrás del mismo gateway (extra `[llm]`), cuando entre LangGraph
+- Usar el gateway también en el runner de sesiones AgentOS (`services/runner.py`, hoy llama a OpenRouter directo)
+- Elegir modelo por agente (Orquestador/FE/BE) desde la configuración del agente
+- Registro de uso/costes por llamada (enlaza con Langfuse en F4)
+
+**Por hacer (resto de F2)**
+
 - LangGraph (estado + checkpoints)
 - Migrar la base de datos de SQLite a Postgres (Docker en local o Supabase) usando el `DATABASE_URL` ya previsto en `.env`; requisito para checkpoints de LangGraph y para pgvector en F4. Hasta entonces se sigue con SQLite.
 - Herramientas MCP en workspace git con sandbox Docker

@@ -54,19 +54,16 @@ def mock_llm(system: str, user: str) -> str:
 
 
 def default_llm() -> LLM:
-    """OpenRouter when a key is configured, deterministic mock otherwise."""
-    from app.providers.openrouter import OpenRouterError, complete, openrouter_api_key
+    """OpenRouter -> Groq -> mock, through the F2.1a gateway."""
+    from app.llm import gateway
 
-    if not openrouter_api_key():
+    if not gateway.configured_providers():
         return mock_llm
 
-    def _openrouter(system: str, user: str) -> str:
-        try:
-            return complete(system=system, user=user).text
-        except OpenRouterError:  # network/HTTP failure → offline fallback
-            return mock_llm(system, user)
+    def _gateway_llm(system: str, user: str) -> str:
+        return gateway.complete(system, user).text
 
-    return _openrouter
+    return _gateway_llm
 
 
 def _load_messages(db: Session, thread_id: int) -> list[Message]:
