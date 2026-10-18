@@ -37,7 +37,24 @@ Draft (reflects current implementation)
 | `OPENROUTER_BASE_URL` | `openrouter_base_url` | Default `https://openrouter.ai/api/v1` |
 | `CORS_ORIGINS` | `cors_origins` | Comma-separated browser origins (no `*`). Also used by the SEC-011 Origin guard: POST/PUT/PATCH/DELETE on `/api/v1` with an `Origin` not listed (and not same-origin) → 403; missing `Origin` allowed; `/api/v1/triggers` exempt |
 | `ALLOWED_HOSTS` | `allowed_hosts` | GALLAIA-SEC-011 `TrustedHostMiddleware` allow-list; default `localhost,127.0.0.1,testserver`. Other `Host` → 400 |
+| `CSP_EXTRA_CONNECT_SRC` | `csp_extra_connect_src` | GALLAIA-SEC-007: extra origins (comma-separated) for the SPA CSP `connect-src`. Empty by default; only needed if the UI is built with `VITE_API_URL` pointing to another origin |
 | `GALLAIA_WEBHOOK_SECRET` | `gallaia_webhook_secret` | Phase 5 public webhook; empty → 401 |
+
+## Security headers (GALLAIA-SEC-007)
+
+`SecurityHeadersMiddleware` (`backend/app/middleware/security_headers.py`) adds to every response:
+`Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+`Referrer-Policy: no-referrer`, `Cross-Origin-Opener-Policy: same-origin` and a restrictive `Permissions-Policy`.
+
+| Paths | CSP |
+|-------|-----|
+| SPA (`/`, client routes, `/assets`, `sw.js`…) | `default-src 'self'`; scripts only `'self'`; styles/fonts also from Google Fonts; `connect-src 'self'` (API + SSE); `frame-ancestors 'none'` |
+| `/api/*`, `/health`, `/openapi.json` | `default-src 'none'; frame-ancestors 'none'` |
+| `/docs`, `/redoc` (off in production) | Relaxed (inline script + jsDelivr) so Swagger UI / ReDoc keep working |
+
+It is pure ASGI (does not buffer SSE) and never overrides a header set by a route. In dev
+(`npm run dev`) the page comes from Vite, so only the proxied `/api` responses carry these headers.
+No HSTS: the app is served over plain HTTP on localhost.
 
 ## Conventions
 

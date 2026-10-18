@@ -45,7 +45,7 @@ No uses `:5173` con Docker; ese puerto es solo Vite en desarrollo local.
 ## Cómo funciona la imagen
 
 1. En el **host**: `npm run build` genera `frontend/dist` (`VITE_API_URL` vacío → fetch same-origin `/api/...`).
-2. Docker copia ese `dist` a `/app/static`, instala el backend con `pip install .` y arranca uvicorn en `0.0.0.0:8000`.
+2. Docker copia ese `dist` a `/app/static`, instala las dependencias desde `backend/requirements.lock` con `pip install --require-hashes --no-deps` (versiones y hashes fijados, incluidas las transitivas; GALLAIA-SEC-005) y arranca uvicorn en `0.0.0.0:8000`.
 3. FastAPI atiende `/api/v1/*`, `/health`, `/docs` y sirve la SPA desde static.
 
 Variable de runtime: `STATIC_DIR=/app/static` (por defecto en la imagen).
@@ -54,7 +54,7 @@ Variable de runtime: `STATIC_DIR=/app/static` (por defecto en la imagen).
 
 En algunos entornos Windows / Docker Desktop / proxy, `npm ci` / `npm install` dentro de BuildKit falla (`Exit handler never called` / SSL). Por eso el frontend se construye en el host y se **copia** a la imagen. El **runtime** sigue siendo un solo contenedor.
 
-`PIP_TRUSTED_HOST` en el Dockerfile mitiga el mismo tipo de problema SSL al instalar paquetes Python.
+Los Dockerfiles **no** usan `PIP_TRUSTED_HOST` (desactivaría la verificación TLS de PyPI; GALLAIA-SEC-005). Si un proxy corporativo intercepta TLS, añade su CA al build en lugar de desactivar la verificación: el lock con hashes sigue protegiendo contra paquetes alterados.
 
 ## Persistencia y config
 

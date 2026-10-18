@@ -54,7 +54,8 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
-python -m pip install -e .
+# Dependencias fijadas con hashes (GALLAIA-SEC-005): runtime + pytest
+python -m pip install --require-hashes --no-deps -r requirements-dev.lock
 cp .env.example .env
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```

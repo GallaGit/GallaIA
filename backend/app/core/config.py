@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     # GALLAIA-SEC-011: Host header allow-list (DNS rebinding). "testserver" = TestClient.
     allowed_hosts: str = "localhost,127.0.0.1,testserver"
+    # GALLAIA-SEC-007: extra origins for the SPA CSP connect-src (comma-separated).
+    # Only needed if the UI is built with VITE_API_URL pointing to another origin.
+    csp_extra_connect_src: str = ""
     # Optional AgentOS LLM — empty keys mean mock runner only. Never hardcode secrets.
     # LEGACY: Anthropic only for the in-memory AgentOS runner when explicitly
     # requested; the control-plane runner uses the gateway. Provider chain:
@@ -73,6 +76,10 @@ class Settings(BaseSettings):
         if any("*" in o for o in origins):
             raise ValueError("CORS_ORIGINS must list explicit origins; '*' is not allowed")
         return origins
+
+    @property
+    def csp_extra_connect_src_list(self) -> list[str]:
+        return [o.strip() for o in self.csp_extra_connect_src.split(",") if o.strip()]
 
     @property
     def allowed_host_list(self) -> list[str]:

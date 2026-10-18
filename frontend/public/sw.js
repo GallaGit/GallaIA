@@ -1,5 +1,5 @@
 /* GallaIA PWA stub — cache app shell only (no push yet). */
-const CACHE = 'gallaia-shell-v1'
+const CACHE = 'gallaia-shell-v2'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg']
 
 self.addEventListener('install', (event) => {
@@ -20,6 +20,9 @@ self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
   const url = new URL(req.url)
+  // Cross-origin (Google Fonts…) goes straight to the network: a fetch() from
+  // the worker would be subject to the CSP connect-src 'self' (GALLAIA-SEC-007).
+  if (url.origin !== self.location.origin) return
   // Never cache API — decisions must stay live.
   if (url.pathname.startsWith('/api')) return
   event.respondWith(

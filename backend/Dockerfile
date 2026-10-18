@@ -4,13 +4,14 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_TRUSTED_HOST="pypi.org files.pythonhosted.org pypi.python.org"
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-COPY pyproject.toml .
+# GALLAIA-SEC-005: TLS verification stays on (no PIP_TRUSTED_HOST) and every
+# dependency, direct and transitive, is pinned with hashes in requirements.lock.
+COPY requirements.lock .
+RUN pip install --no-cache-dir --require-hashes --no-deps -r requirements.lock
+
 COPY app ./app
-
-RUN pip install --no-cache-dir .
 
 EXPOSE 8000
 
