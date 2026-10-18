@@ -14,6 +14,7 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import DEFAULT_OPENROUTER_MODEL
 from app.exceptions import BadRequestError, NotFoundError
 from app.models import Agent, Project
 from app.models.template import TaskTemplate, TaskTemplateStep
@@ -200,7 +201,7 @@ def create_agent(
     name: str,
     title: str | None = None,
     role_prompt: str = "",
-    model: str = "claude-sonnet-4",
+    model: str = DEFAULT_OPENROUTER_MODEL,
     foundational_prompt: str = "",
     runner_preference: str = "mock",
     project_slug: str = "default",

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.config import DEFAULT_OPENROUTER_MODEL
+
 
 class AgentYml(BaseModel):
     """One agent entry in agentos.yml (idempotent key: name)."""
@@ -12,7 +14,7 @@ class AgentYml(BaseModel):
 
     name: str = Field(min_length=1, max_length=80)
     title: str = Field(min_length=1, max_length=160)
-    model: str = Field(default="claude-sonnet-4", max_length=80)
+    model: str = Field(default=DEFAULT_OPENROUTER_MODEL, max_length=80)
     foundational_prompt: str = ""
     role_prompt: str = ""
     runner_preference: str = Field(default="mock", max_length=20)

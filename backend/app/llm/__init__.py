@@ -1,6 +1,8 @@
-"""LLM gateway (F2.1a): OpenRouter -> Groq -> mock, provider agnostic."""
+"""LLM gateway (F2.1): OpenRouter -> Groq -> mock, provider agnostic."""
 
 from app.llm.gateway import (
+    BACKEND_HTTP,
+    BACKEND_LITELLM,
     GROQ,
     MOCK,
     OPENROUTER,
@@ -8,15 +10,23 @@ from app.llm.gateway import (
     LLMResult,
     ProviderConfig,
     Transport,
+    UsageRecord,
+    UsageSink,
     call_provider,
     complete,
     configured_providers,
+    estimate_cost,
     groq_api_key,
     groq_base_url,
     groq_model,
+    llm_backend,
+    providers_for_model,
+    resolve_model,
 )
 
 __all__ = [
+    "BACKEND_HTTP",
+    "BACKEND_LITELLM",
     "GROQ",
     "MOCK",
     "OPENROUTER",
@@ -24,10 +34,16 @@ __all__ = [
     "LLMResult",
     "ProviderConfig",
     "Transport",
+    "UsageRecord",
+    "UsageSink",
     "call_provider",
     "complete",
     "configured_providers",
+    "estimate_cost",
     "groq_api_key",
     "groq_base_url",
     "groq_model",
+    "llm_backend",
+    "providers_for_model",
+    "resolve_model",
 ]

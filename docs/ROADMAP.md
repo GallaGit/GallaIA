@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (17-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) hecho. Siguiente: F2.1b (backend `litellm` opcional detrás del gateway) o F2.2 (LangGraph).
+**Estado (17-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. Siguiente: F2.2 (LangGraph).
 
 ---
 
@@ -60,7 +60,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 - Botón / auto-advance en la UI para disparar las respuestas (hecho en F1.3–F1.5)
 - Resumen y delegaciones visibles en el grafo del orquestador (hecho en F1.5)
-- Enrutado real por modelo (LiteLLM) en lugar del mock (F2+)
+- Enrutado real por modelo en lugar del mock (hecho en F2.1a–F2.1b: gateway OpenRouter → Groq → mock, modelo por agente, `litellm` opcional)
 
 
 
@@ -122,12 +122,24 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 - `default_llm()` de F1.2 usa el gateway (sin claves sigue siendo el mock, igual que antes)
 - Tests en `backend/tests/test_llm_gateway.py` con transporte HTTP falso (sin red)
 
+**Pasado a F2.1b** (ver abajo): runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional.
+
+### Slice F2.1b — Runner por el gateway, modelo por agente, uso y `litellm` opcional *(Hecho — 18-10-2026)*
+
+**Hecho**
+
+- Runner de sesiones del control plane (`services/runner.py`, `POST /tasks/{id}/run`) y runner AgentOS en memoria (`agentos/runner.py`) llaman al gateway en lugar de a OpenRouter directo: misma cadena OpenRouter → Groq → mock. `session.runner` guarda el proveedor que respondió (`openrouter` / `groq` / `mock`); un evento `<proveedor>.error` por cada proveedor que falla y `llm.fallback` si acaba en mock. Sin claves todo sigue igual (ruta mock con los eventos de grants/red/fs). Se quita la ruta Anthropic del runner del control plane (el runner en memoria la mantiene solo si se pide explícitamente y hay `ANTHROPIC_API_KEY`)
+- Modelo por agente: `Agent.model` se respeta en el gateway (`resolve_model` / `providers_for_model`): id de OpenRouter (`vendor/modelo[:free]` u `openrouter/<id>`) sustituye el modelo de OpenRouter (Groq sigue de respaldo con su modelo); `groq/<id>` usa Groq primero con ese modelo; `mock` no llama a nadie; vacío/`inherit` y los valores heredados `claude-*` usan el modelo configurado (`OPENROUTER_MODEL`), así las filas antiguas siguen funcionando sin migrar datos. Los agentes de los hilos (F1.2) leen el modelo de la tabla `agents` (con el de la semilla como respaldo)
+- Valores por defecto `claude-sonnet-4` (modelo `Agent`, `agentos.yml`, `create_agent`, CLI `create-agent --model`) cambiados a `DEFAULT_OPENROUTER_MODEL`
+- Registro de uso: tabla `llm_usage` (creada por `create_all` en `init_db`, como el resto) con una fila por intento: origen (`thread` / `session`), agente, proveedor, modelo, backend, ok/error (recortado y sin claves), tokens de entrada/salida (si la respuesta trae `usage`), latencia en ms, coste (0 para modelos `:free` y mock; vacío en el resto), `session_id` / `thread_id`. Nunca guarda prompts ni respuestas. También se escribe una línea en el log `app.llm.usage`. Consulta: `GET /api/v1/llm/usage?limit=50` (últimas llamadas + totales por proveedor/modelo)
+- Backend `litellm` opcional detrás del mismo gateway: `GALLAIA_LLM_BACKEND=litellm` (por defecto `http`). `litellm` no es dependencia (ni en `pyproject.toml` ni en los lockfiles): hay que instalarlo a mano; si falta, se avisa en el log y se usa `http`
+- Tests sin red: `backend/tests/test_llm_f21b.py` (transporte y módulo `litellm` falsos) y `backend/tests/conftest.py`, que vacía `OPENROUTER_API_KEY` / `GROQ_API_KEY` / `ANTHROPIC_API_KEY` en cada test para que un `.env` local con claves reales nunca provoque llamadas de red
+
 **Por hacer**
 
-- F2.1b: backend opcional con la librería `litellm` detrás del mismo gateway (extra `[llm]`), cuando entre LangGraph
-- Usar el gateway también en el runner de sesiones AgentOS (`services/runner.py`, hoy llama a OpenRouter directo)
-- Elegir modelo por agente (Orquestador/FE/BE) desde la configuración del agente
-- Registro de uso/costes por llamada (enlaza con Langfuse en F4)
+- Precios reales por modelo (no `:free`) y trazas → Langfuse en F4
+- Vista del uso en la UI (hoy solo API)
+- Añadir `litellm` como extra `[llm]` con hashes cuando entre LangGraph (F2.2) y los lockfiles con hashes estén en `master`
 
 **Por hacer (resto de F2)**
 

@@ -1,7 +1,8 @@
 """Session runner: mock kanban advance + tool-event log; optional LLM.
 
-OpenRouter is used when OPENROUTER_API_KEY is set (Chat Completions).
-Anthropic is used only when ANTHROPIC_API_KEY is set and requested.
+LLM calls go through the F2.1 gateway (OpenRouter -> Groq -> mock) with the
+seed's model when OPENROUTER_API_KEY or GROQ_API_KEY is set. The legacy
+Anthropic path runs only when ANTHROPIC_API_KEY is set and explicitly requested.
 Keys are never hardcoded. Without a key, the mock runner always runs.
 """
 
@@ -26,7 +27,7 @@ from app.agentos.secrets import (
 from app.agentos.seeds import AgentSeed, get_seed
 from app.agentos.store import AgentOSStore, store as default_store
 
-RunnerKind = Literal["mock", "anthropic", "openrouter"]
+RunnerKind = Literal["mock", "anthropic", "openrouter", "groq"]
 
 
 @dataclass
@@ -64,16 +65,29 @@ def _openrouter_key() -> str:
     return openrouter_api_key()
 
 
+def _groq_key() -> str:
+    from app.llm.gateway import groq_api_key
+
+    return groq_api_key()
+
+
 def resolve_runner(preferred: str | None = None) -> RunnerKind:
-    """Pick runner. LLM only if the matching key is present; else mock."""
+    """Pick runner. LLM only if a matching key is present; else mock.
+
+    "openrouter"/"groq" both mean "gateway" (OpenRouter -> Groq -> mock); the
+    label is the first provider that will be tried.
+    """
     or_key = _openrouter_key()
     an_key = _anthropic_key()
     if preferred == "mock":
         return "mock"
     if preferred == "anthropic" and an_key:
         return "anthropic"
-    if preferred in (None, "inherit", "openrouter", "anthropic") and or_key:
-        return "openrouter"
+    if preferred in (None, "inherit", "openrouter", "groq", "anthropic"):
+        if or_key:
+            return "openrouter"
+        if _groq_key():
+            return "groq"
     return "mock"
 
 
@@ -161,7 +175,7 @@ class SessionRunner:
         used_openrouter = False
         summary: str
 
-        if kind == "openrouter":
+        if kind in ("openrouter", "groq"):
             summary, or_events, used_openrouter = self._run_openrouter(
                 seed, task, grant_set, network_policy, fs_acl, secret_runtime
             )
@@ -400,15 +414,14 @@ class SessionRunner:
         filesystem: FilesystemAcl,
         secrets: SecretRuntime,
     ) -> tuple[str, list[ToolEvent], bool]:
-        from app.providers.openrouter import (
-            OpenRouterError,
-            complete,
-            openrouter_api_key,
-            openrouter_model,
-        )
+        """LLM path through the F2.1 gateway. Returns (summary, events, used_openrouter)."""
+        from app.llm import gateway
 
         events: list[ToolEvent] = []
-        if not openrouter_api_key():
+        providers = gateway.providers_for_model(
+            seed.model, gateway.configured_providers()
+        )
+        if not providers:
             summary, mock_events = self._run_mock(
                 seed, task, grants, network, filesystem, secrets
             )
@@ -416,53 +429,67 @@ class SessionRunner:
                 ToolEvent(
                     name="openrouter.skip",
                     input={},
-                    output={"reason": "OPENROUTER_API_KEY not set; fell back to mock"},
+                    output={
+                        "reason": "no OPENROUTER_API_KEY / GROQ_API_KEY; fell back to mock"
+                    },
                 )
             )
             events.extend(mock_events)
             return summary, events, False
 
-        model = openrouter_model()
         user_msg = (
             f"Task name: {task.name}\n"
             f"Description: {task.description or '(none)'}\n"
             "Respond with a short actionable result for this role only. "
             "Do not invent tools you were not given."
         )
+        first = providers[0]
         events.append(
             ToolEvent(
-                name="openrouter.chat.completions",
-                input={"model": model, "max_tokens": 512},
+                name=f"{first.name}.chat.completions",
+                input={"model": f"{first.name}/{first.model}", "max_tokens": 512},
                 output={"status": "calling"},
             )
         )
-        try:
-            result = complete(
-                system=f"{seed.foundational_prompt}\n\n{seed.role_prompt}",
-                user=user_msg,
-            )
-            summary = result.text
-            events.append(
-                ToolEvent(
-                    name="openrouter.chat.completions",
-                    input={"model": result.model},
-                    output={"ok": True, "preview": summary[:400]},
+        result = gateway.complete(
+            f"{seed.foundational_prompt}\n\n{seed.role_prompt}",
+            user_msg,
+            providers=providers,
+            fallback=lambda _system, _user: "",
+        )
+        errors: list[str] = []
+        for attempt in result.attempts:
+            if not attempt.ok:
+                errors.append(f"{attempt.provider}: {attempt.error}")
+                events.append(
+                    ToolEvent(
+                        name=f"{attempt.provider}.error",
+                        input={"model": attempt.model},
+                        output={"error": attempt.error},
+                    )
                 )
-            )
-            return summary, events, True
-        except OpenRouterError as exc:
-            events.append(
-                ToolEvent(
-                    name="openrouter.error",
-                    input={"model": model},
-                    output={"error": str(exc)},
-                )
-            )
+        if result.provider == gateway.MOCK:
             summary, mock_events = self._run_mock(
                 seed, task, grants, network, filesystem, secrets
             )
             events.extend(mock_events)
-            return f"OpenRouter failed ({exc}); mock: {summary}", events, False
+            return f"LLM failed ({'; '.join(errors)}); mock: {summary}", events, False
+
+        summary = result.text
+        events.append(
+            ToolEvent(
+                name=f"{result.provider}.chat.completions",
+                input={"model": result.model},
+                output={
+                    "ok": True,
+                    "preview": summary[:400],
+                    "input_tokens": result.input_tokens,
+                    "output_tokens": result.output_tokens,
+                    "latency_ms": result.latency_ms,
+                },
+            )
+        )
+        return summary, events, result.provider == gateway.OPENROUTER
 
     def _run_anthropic(
         self,

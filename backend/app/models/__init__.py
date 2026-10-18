@@ -2,6 +2,7 @@ from app.models.agent import Agent
 from app.models.filesystem import AgentFsAcl
 from app.models.grant import AgentGrant
 from app.models.inbox import InboxMessage
+from app.models.llm_usage import LLMUsage
 from app.models.network import AgentNetworkPolicy
 from app.models.project import Project
 from app.models.secret import AgentSecretRef
@@ -34,4 +35,5 @@ __all__ = [
     "PushSubscription",
     "Thread",
     "Message",
+    "LLMUsage",
 ]

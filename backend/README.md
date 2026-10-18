@@ -73,8 +73,9 @@ El `docker-compose.yml` de esta carpeta es solo API (legado).
 ## Runtime: mock vs LLM
 
 - Sin claves: runner **mock** que actualiza la tarea (`doing` → `done`/`review`) y escribe eventos de herramientas falsos.
-- Con `OPENROUTER_API_KEY`: stub de OpenRouter Chat Completions (modelo por defecto Nemotron free). La UI usa este camino si la clave está presente.
-- Con `ANTHROPIC_API_KEY` y sin OpenRouter: stub de Anthropic Messages API (no es el Agent SDK completo ni contenedores efímeros).
+- Con `OPENROUTER_API_KEY` y/o `GROQ_API_KEY`: una llamada Chat Completions por el gateway `app/llm/gateway.py` (OpenRouter → Groq → mock) con el modelo del agente (`Agent.model`; `groq/<id>` fuerza Groq, `mock` no llama a nadie, `claude-*` antiguos usan el modelo por defecto). No es el Agent SDK completo ni contenedores efímeros.
+- Uso por llamada (proveedor, modelo, tokens, latencia, coste si es `:free`) en la tabla `llm_usage`; consulta en `GET /api/v1/llm/usage`.
+- `GALLAIA_LLM_BACKEND=litellm` usa la librería `litellm` (opcional, `pip install litellm`); si no está instalada se sigue con HTTP directo.
 
 Los prompts de agentes están **reconstruidos** a partir del talk de Danny Postma — no son sus archivos verbatim.
 
