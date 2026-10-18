@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.config import DEFAULT_OPENROUTER_MODEL
 from app.db.base import Base
 
 
@@ -13,7 +14,7 @@ class Agent(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(160), nullable=False)
-    model: Mapped[str] = mapped_column(String(80), nullable=False, default="claude-sonnet-4")
+    model: Mapped[str] = mapped_column(String(80), nullable=False, default=DEFAULT_OPENROUTER_MODEL)
     # RECONSTRUCTED from Danny Postma's AgentOS talk — not his verbatim prompts.
     foundational_prompt: Mapped[str] = mapped_column(Text, nullable=False)
     role_prompt: Mapped[str] = mapped_column(Text, nullable=False)

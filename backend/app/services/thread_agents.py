@@ -53,17 +53,74 @@ def mock_llm(system: str, user: str) -> str:
     return f"[agent] mock: {user}"
 
 
-def default_llm() -> LLM:
-    """OpenRouter -> Groq -> mock, through the F2.1a gateway."""
+def _agent_model(
+    db: Session | None, name: str, project_id: int | None = None
+) -> str | None:
+    """Agent.model from the DB (UI/CLI editable), else the seed default."""
+    if db is not None:
+        from app.models import Agent
+
+        query = select(Agent.model).where(Agent.name == name)
+        if project_id is not None:
+            query = query.order_by((Agent.project_id != project_id), Agent.id)
+        else:
+            query = query.order_by(Agent.id)
+        model = db.scalar(query.limit(1))
+        if model:
+            return model
+    try:
+        return get_seed(name).model
+    except KeyError:
+        return None
+
+
+class GatewayLLM:
+    """LLM callable backed by the F2.1 gateway, with per-agent model + usage log."""
+
+    def __init__(
+        self,
+        db: Session | None = None,
+        thread_id: int | None = None,
+        project_id: int | None = None,
+    ) -> None:
+        self.db = db
+        self.thread_id = thread_id
+        self.project_id = project_id
+        self.calls = 0
+
+    def __call__(self, system: str, user: str, agent: str | None = None) -> str:
+        from app.llm import gateway
+
+        sink = None
+        if self.db is not None:
+            from app.llm.usage import db_usage_sink
+
+            sink = db_usage_sink(
+                self.db, source="thread", agent=agent, thread_id=self.thread_id
+            )
+        model = _agent_model(self.db, agent, self.project_id) if agent else None
+        self.calls += 1
+        return gateway.complete(system, user, model=model, on_usage=sink).text
+
+
+def default_llm(
+    db: Session | None = None,
+    thread_id: int | None = None,
+    project_id: int | None = None,
+) -> LLM:
+    """OpenRouter -> Groq -> mock, through the F2.1 gateway."""
     from app.llm import gateway
 
     if not gateway.configured_providers():
         return mock_llm
+    return GatewayLLM(db, thread_id, project_id)
 
-    def _gateway_llm(system: str, user: str) -> str:
-        return gateway.complete(system, user).text
 
-    return _gateway_llm
+def _ask(llm: LLM, agent: str, system: str, user: str) -> str:
+    """Call the LLM; the gateway one also gets the agent (model + usage)."""
+    if isinstance(llm, GatewayLLM):
+        return llm(system, user, agent=agent)
+    return llm(system, user)
 
 
 def _load_messages(db: Session, thread_id: int) -> list[Message]:
@@ -148,7 +205,7 @@ def _message(thread_id: int, sender: str, recipient: str | None, kind: str, body
 
 
 def _orquestador_plan(thread: Thread, msg: Message, llm: LLM) -> list[Message]:
-    raw = llm(_agent_system("orquestador"), msg.body)
+    raw = _ask(llm, "orquestador", _agent_system("orquestador"), msg.body)
     plan, delegations = _parse_plan(raw, msg.body)
     if not plan:
         plan = f"Plan: atender \u00ab{msg.body}\u00bb coordinando FE y BE."
@@ -199,7 +256,7 @@ def _handle_specialist(thread: Thread, msg: Message, llm: LLM) -> list[Message]:
         return []
     agent = msg.recipient
     assert agent in DELEGATABLE
-    text = (llm(_agent_system(agent), msg.body) or "").strip()
+    text = (_ask(llm, agent, _agent_system(agent), msg.body) or "").strip()
     if not text:
         text = f"[{agent}] mock result: {msg.body}"
     return [_message(thread.id, agent, "orquestador", "result", text)]
@@ -215,7 +272,7 @@ def advance_thread(
     if thread.status == "closed":
         raise ConflictError(f"Thread {thread.id} is closed")
 
-    run_llm = llm or default_llm()
+    run_llm = llm or default_llm(db, thread.id, thread.project_id)
     max_steps = max(1, int(max_steps))
     created: list[Message] = []
     events = []
@@ -250,8 +307,8 @@ def advance_thread(
             created.append(reply)
         steps += 1
 
-    if created:
-        db.commit()
+    if created or (isinstance(run_llm, GatewayLLM) and run_llm.calls):
+        db.commit()  # replies + llm_usage rows
         for reply in created:
             db.refresh(reply)
         for event in events:

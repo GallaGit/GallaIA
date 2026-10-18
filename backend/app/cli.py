@@ -16,6 +16,8 @@ from pathlib import Path
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    from app.core.config import DEFAULT_OPENROUTER_MODEL
+
     parser = argparse.ArgumentParser(
         prog="python -m app.cli",
         description="GallaIA agentos.yml + agent create/update CLI (Phase 6)",
@@ -74,7 +76,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Role prompt text (maps to role_prompt)",
     )
     create.add_argument("--title", default=None, help="Display title (default: name)")
-    create.add_argument("--model", default="claude-sonnet-4")
+    create.add_argument("--model", default=DEFAULT_OPENROUTER_MODEL)
     create.add_argument("--foundational-prompt", default="", dest="foundational_prompt")
     create.add_argument(
         "--runner-preference",
