@@ -59,5 +59,5 @@ Referencia de producto: `docs/product/AGENTOS.md`. Calendario: `docs/ROADMAP.md`
 
 ## Notas / Riesgos
 
-- `backend/.env` contiene una clave OpenRouter **real**. Está en `.gitignore` (no se commitea), pero conviene **rotarla** por higiene de seguridad.
+- Los secretos locales viven solo en `backend/.env` (en `.gitignore`). No se describe en archivos versionados qué claves hay ni si son reales (GALLAIA-SEC-010).
 - El proyecto prioriza el aprendizaje profundo sobre la velocidad; cada funcionalidad debe documentarse y quedar funcional antes de continuar (`docs/context.md`).

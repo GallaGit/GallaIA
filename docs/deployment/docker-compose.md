@@ -60,7 +60,7 @@ services:
 ## Imagen (`Dockerfile` raíz)
 
 1. Host genera `frontend/dist` (Vite; same-origin `/api`)
-2. Imagen Python: `pip install .` + copia `dist` → `/app/static`
+2. Imagen Python: `pip install --require-hashes --no-deps -r requirements.lock` (lock con hashes, GALLAIA-SEC-005) + copia `dist` → `/app/static`
 3. CMD: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
 
 SPA: `STATIC_DIR` + montaje `/assets` y fallback de rutas cliente en `backend/app/main.py`.

@@ -15,10 +15,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     STATIC_DIR=/app/static
 
-COPY backend/pyproject.toml .
-COPY backend/app ./app
+# GALLAIA-SEC-005: install the exact, hash-pinned dependency set (direct and
+# transitive). --no-deps: nothing outside the lockfile can be pulled in.
+# Regenerate with `uv pip compile` (see backend/README.md) after editing pyproject.toml.
+COPY backend/requirements.lock .
+RUN pip install --no-cache-dir --require-hashes --no-deps -r requirements.lock
 
-RUN pip install --no-cache-dir .
+# The app runs from /app (uvicorn app.main:app); it does not need to be pip-installed.
+COPY backend/app ./app
 
 # Pre-built by Vite on the host (see comment above)
 COPY frontend/dist ./static

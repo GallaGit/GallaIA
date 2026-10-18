@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,11 +17,20 @@ from app.exceptions.base import AppError
 from app.exceptions.handlers import app_error_handler, unhandled_error_handler
 from app.middleware.origin_guard import OriginGuardMiddleware
 from app.middleware.request_id import RequestIdMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.api.dependencies.settings import SettingsDep
 
 settings = get_settings()
 setup_logging(settings.log_level)
 logger = get_logger(__name__)
+
+# Explicit MIME types for the SPA: with ``X-Content-Type-Options: nosniff`` a wrong
+# type is not "sniffed" back (on Windows the registry can map .js to text/plain).
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("text/javascript", ".mjs")
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("image/svg+xml", ".svg")
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 STATIC_DIR = Path(os.environ.get("STATIC_DIR", "static")).resolve()
 
@@ -70,6 +80,12 @@ app.add_middleware(RequestIdMiddleware)
 # Added last so they run first (outermost).
 app.add_middleware(OriginGuardMiddleware, allowed_origins=settings.cors_origin_list)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_host_list)
+# GALLAIA-SEC-007: CSP + security headers. Outermost, so even 400/403 from the
+# guards above carry them. Pure ASGI: does not buffer SSE streams.
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    extra_connect_src=settings.csp_extra_connect_src_list,
+)
 app.include_router(api_router, prefix="/api/v1")
 
 

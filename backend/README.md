@@ -16,9 +16,34 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate   # Windows Git Bash: source .venv/Scripts/activate
 pip install -U pip
-pip install -e .
+# Dependencias fijadas con hashes (GALLAIA-SEC-005): runtime + pytest
+pip install --require-hashes --no-deps -r requirements-dev.lock
 cp .env.example .env
 ```
+
+No hace falta `pip install -e .`: uvicorn y pytest cargan `app` desde `backend/`
+(`pythonpath = ["."]` en `pyproject.toml`). Si aun así lo quieres instalado en modo
+editable, hazlo **después** del lock y sin dependencias: `pip install --no-deps -e .`
+
+### Dependencias Python (lockfile con hashes)
+
+- `pyproject.toml`: dependencias directas con versión fija (fuente de verdad).
+- `requirements.lock`: runtime (lo usa Docker), con todas las transitivas y sus hashes SHA-256.
+- `requirements-dev.lock`: igual + `pytest` (desarrollo local y tests).
+- Son universales (Windows / Linux / macOS, Python ≥ 3.11): los marcadores de plataforma
+  (`colorama`, `uvloop`, `tzdata`…) ya van dentro.
+
+Para cambiar una dependencia, edita `pyproject.toml` y regenera ambos locks con
+[uv](https://docs.astral.sh/uv/) (desde `backend/`):
+
+```bash
+uv pip compile pyproject.toml --universal --python-version 3.11 --generate-hashes -o requirements.lock
+uv pip compile pyproject.toml --universal --python-version 3.11 --generate-hashes --extra dev -o requirements-dev.lock
+```
+
+Usa uv con `--universal` (pip-tools resuelve solo para la plataforma actual y el lock
+dejaría de servir en Windows o en Docker). Con `--require-hashes`, pip rechaza cualquier
+paquete cuyo hash no coincida o que no esté en el lock.
 
 ## Arranque
 
