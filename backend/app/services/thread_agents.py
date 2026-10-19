@@ -9,6 +9,7 @@ message, capped by `max_steps` so a reply can never start a loop.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Callable
 
@@ -20,6 +21,8 @@ from app.exceptions import ConflictError
 from app.models import Message, Thread
 from app.models.thread import HUMAN_ACTOR
 from app.services.activity import append_activity, notify_after_commit
+
+logger = logging.getLogger(__name__)
 
 AGENT_NAMES = ("orquestador", "fe", "be")
 AGENT_SET = frozenset(AGENT_NAMES)
@@ -262,20 +265,23 @@ def _handle_specialist(thread: Thread, msg: Message, llm: LLM) -> list[Message]:
     return [_message(thread.id, agent, "orquestador", "result", text)]
 
 
-def advance_thread(
-    db: Session,
-    thread: Thread,
-    max_steps: int = 6,
-    llm: LLM | None = None,
-) -> list[Message]:
-    """Let addressed agents answer pending messages. Returns created messages."""
-    if thread.status == "closed":
-        raise ConflictError(f"Thread {thread.id} is closed")
+def _persist_reply(db: Session, thread: Thread, reply: Message):
+    """Persist one reply plus its activity event. Shared by both engines."""
+    db.add(reply)
+    db.flush()
+    return append_activity(
+        db,
+        type="message.created",
+        message=f"Message in thread {thread.id} from {reply.sender}",
+    )
 
-    run_llm = llm or default_llm(db, thread.id, thread.project_id)
-    max_steps = max(1, int(max_steps))
+
+def _advance_classic(
+    db: Session, thread: Thread, max_steps: int, llm: LLM
+) -> tuple[list[Message], list]:
+    """The plain loop: answer pending messages oldest first, `max_steps` cap."""
     created: list[Message] = []
-    events = []
+    events: list = []
     handled: set[int] = set()
     steps = 0
 
@@ -286,26 +292,51 @@ def advance_thread(
             break
 
         if pending.recipient == "orquestador":
-            replies = _handle_orquestador(thread, pending, messages, run_llm)
+            replies = _handle_orquestador(thread, pending, messages, llm)
         else:
-            replies = _handle_specialist(thread, pending, run_llm)
+            replies = _handle_specialist(thread, pending, llm)
 
         if not replies:  # undefined pair → handled implicitly, no reply
             handled.add(pending.id)
             continue
 
         for reply in replies:
-            db.add(reply)
-            db.flush()
-            events.append(
-                append_activity(
-                    db,
-                    type="message.created",
-                    message=f"Message in thread {thread.id} from {reply.sender}",
-                )
-            )
+            events.append(_persist_reply(db, thread, reply))
             created.append(reply)
         steps += 1
+
+    return created, events
+
+
+def advance_thread(
+    db: Session,
+    thread: Thread,
+    max_steps: int = 6,
+    llm: LLM | None = None,
+) -> list[Message]:
+    """Let addressed agents answer pending messages. Returns created messages.
+
+    F2.2a: the LangGraph engine (`GALLAIA_THREAD_ENGINE=langgraph`) is optional
+    and produces the same messages; without the package the classic loop runs.
+    """
+    if thread.status == "closed":
+        raise ConflictError(f"Thread {thread.id} is closed")
+
+    run_llm = llm or default_llm(db, thread.id, thread.project_id)
+    max_steps = max(1, int(max_steps))
+
+    from app.runtime import thread_graph  # local: thread_graph imports this module
+
+    if thread_graph.thread_engine() == thread_graph.LANGGRAPH:
+        if thread_graph.langgraph_available():
+            created, events = thread_graph.run_thread_graph(
+                db, thread, max_steps, run_llm
+            )
+        else:
+            _warn_langgraph_missing()
+            created, events = _advance_classic(db, thread, max_steps, run_llm)
+    else:
+        created, events = _advance_classic(db, thread, max_steps, run_llm)
 
     if created or (isinstance(run_llm, GatewayLLM) and run_llm.calls):
         db.commit()  # replies + llm_usage rows
@@ -314,3 +345,18 @@ def advance_thread(
         for event in events:
             notify_after_commit(event)
     return created
+
+
+_langgraph_warned = False
+
+
+def _warn_langgraph_missing() -> None:
+    """Log once per process: langgraph engine requested but not installed."""
+    global _langgraph_warned
+    if _langgraph_warned:
+        return
+    _langgraph_warned = True
+    logger.warning(
+        "GALLAIA_THREAD_ENGINE=langgraph but langgraph is not installed; "
+        "using the classic thread engine (pip install langgraph)"
+    )

@@ -48,6 +48,17 @@ class Settings(BaseSettings):
         default="http",
         validation_alias=AliasChoices("GALLAIA_LLM_BACKEND", "LLM_BACKEND", "llm_backend"),
     )
+    # F2.2a: thread engine. "classic" (default, plain loop) | "langgraph"
+    # (optional: only if the `langgraph` package is installed; otherwise the
+    # classic loop runs and a warning is logged).
+    thread_engine: str = Field(
+        default="classic",
+        validation_alias=AliasChoices(
+            "GALLAIA_THREAD_ENGINE",
+            "THREAD_ENGINE",
+            "thread_engine",
+        ),
+    )
     # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
     gallaia_webhook_secret: str = ""
     # Phase 7: mock (in-process) | local (future OS binary -> local-stub for now).
