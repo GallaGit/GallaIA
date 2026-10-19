@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (17-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. Siguiente: F2.2 (LangGraph).
+**Estado (19-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. **F2.2 en curso**: F2.2a (motor LangGraph opcional para los hilos, con checkpoints en memoria) hecho. Siguiente: F2.2b (checkpoints persistentes en SQLite y reanudación).
 
 ---
 
@@ -141,9 +141,25 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 - Vista del uso en la UI (hoy solo API)
 - Añadir `litellm` como extra `[llm]` con hashes cuando entre LangGraph (F2.2) y los lockfiles con hashes estén en `master`
 
+### Slice F2.2a — Motor LangGraph opcional para los hilos *(Hecho — 19-10-2026)*
+
+**Hecho**
+
+- Módulo `backend/app/runtime/thread_graph.py`: el avance de un hilo (Orquestador → FE / BE → resumen) como `StateGraph` de LangGraph con nodos `pick` (siguiente mensaje pendiente), `orquestador` y `specialist`, y bucle hasta que no quedan pendientes o se alcanza `max_steps`. Reutiliza los mismos handlers de F1.2, así que el resultado es idéntico al motor clásico
+- Estado del grafo solo con datos primitivos (id del hilo, pasos, ids creados y gestionados); la sesión de BD y el LLM van por `config["configurable"]`, no en el estado
+- Checkpoints en memoria (`MemorySaver`) con `thread_id = "thread-<id>"`: se puede consultar el último estado del grafo de cada hilo (`get_thread_graph_state`)
+- Interruptor `GALLAIA_THREAD_ENGINE=langgraph` (por defecto `classic`). Si `langgraph` no está instalado, se avisa en el log y se usa el motor clásico. `advance_thread`, `POST /advance` y el stream SSE (que usa `advance_thread` paso a paso) mantienen el mismo contrato
+- `langgraph` no es dependencia (ni en `pyproject.toml` ni en los lockfiles), igual que `litellm`: hay que instalarlo a mano (`pip install langgraph`)
+- Tests en `backend/tests/test_thread_graph.py` (se saltan si falta `langgraph`): mismos mensajes que el motor clásico con LLM falso, tope de pasos, checkpoint consultable y vuelta al motor clásico si falta la librería
+
+**Por hacer**
+
+- F2.2b: checkpoints persistentes (`langgraph-checkpoint-sqlite` hoy, Postgres después) y reanudar un hilo a medias tras reiniciar. Los checkpoints en memoria de F2.2a se pierden al reiniciar y crecen mientras el proceso vive (aceptable en local, un solo usuario)
+- Añadir `langgraph` (y `litellm`) como extra `[llm]` con hashes en los lockfiles y activarlo por defecto
+- Interrupciones humanas (aprobación en Inbox) sobre el grafo, base para F3
+
 **Por hacer (resto de F2)**
 
-- LangGraph (estado + checkpoints)
 - Migrar la base de datos de SQLite a Postgres (Docker en local o Supabase) usando el `DATABASE_URL` ya previsto en `.env`; requisito para checkpoints de LangGraph y para pgvector en F4. Hasta entonces se sigue con SQLite.
 - Herramientas MCP en workspace git con sandbox Docker
 
