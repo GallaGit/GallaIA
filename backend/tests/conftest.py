@@ -25,3 +25,20 @@ def _no_real_llm_keys(monkeypatch):
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _memory_checkpoints(monkeypatch):
+    """F2.2b: never write ./data/checkpoints.db from tests; reset the runtime."""
+    monkeypatch.setenv("GALLAIA_CHECKPOINT_DB", "memory")
+    get_settings.cache_clear()
+    try:
+        from app.runtime import thread_graph
+    except Exception:  # noqa: BLE001 — runtime importable without langgraph
+        thread_graph = None  # type: ignore[assignment]
+    if thread_graph is not None and thread_graph.langgraph_available():
+        thread_graph.reset_runtime()
+    yield
+    if thread_graph is not None and thread_graph.langgraph_available():
+        thread_graph.reset_runtime()
+    get_settings.cache_clear()

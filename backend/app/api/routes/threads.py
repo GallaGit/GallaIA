@@ -9,6 +9,7 @@ from app.db.session import SessionLocal
 from app.exceptions import ConflictError, NotFoundError, UnprocessableError
 from app.models import Agent, Message, Project, Thread
 from app.models.thread import HUMAN_ACTOR
+from app.runtime import thread_graph
 from app.schemas import (
     DelegationEdgeOut,
     MessageCreate,
@@ -17,6 +18,7 @@ from app.schemas import (
     ThreadCreate,
     ThreadDelegationsOut,
     ThreadDetailOut,
+    ThreadGraphStateOut,
     ThreadOut,
     ThreadUpdate,
 )
@@ -200,6 +202,20 @@ def get_thread_delegations(thread_id: int, db: DbSession):
         nodes=["user", "orquestador", "fe", "be"],
         edges=edges,
         summary_id=summary_id,
+    )
+
+
+@router.get("/{thread_id}/graph-state", response_model=ThreadGraphStateOut)
+def get_thread_graph_state(thread_id: int, db: DbSession):
+    """F2.2b: read-only view of the LangGraph checkpoint (None state when absent)."""
+    thread = db.get(Thread, thread_id)
+    if thread is None:
+        raise NotFoundError(f"Thread {thread_id} not found")
+    return ThreadGraphStateOut(
+        thread_id=thread.id,
+        engine=thread_graph.thread_engine(),
+        checkpointer=thread_graph.checkpointer_kind(),
+        state=thread_graph.get_thread_graph_state(thread.id),
     )
 
 
