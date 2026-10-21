@@ -59,6 +59,16 @@ class Settings(BaseSettings):
             "thread_engine",
         ),
     )
+    # F2.2b: LangGraph checkpoint store. SQLite file (parent dirs are created
+    # on demand) or "memory" for the in-process MemorySaver.
+    checkpoint_db: str = Field(
+        default="./data/checkpoints.db",
+        validation_alias=AliasChoices(
+            "GALLAIA_CHECKPOINT_DB",
+            "CHECKPOINT_DB",
+            "checkpoint_db",
+        ),
+    )
     # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
     gallaia_webhook_secret: str = ""
     # Phase 7: mock (in-process) | local (future OS binary -> local-stub for now).

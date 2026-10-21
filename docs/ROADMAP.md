@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (19-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. **F2.2 en curso**: F2.2a (motor LangGraph opcional para los hilos, con checkpoints en memoria) hecho. Siguiente: F2.2b (checkpoints persistentes en SQLite y reanudación).
+**Estado (21-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. **F2.2 en curso**: F2.2a (motor LangGraph opcional para los hilos, con checkpoints en memoria) hecho; F2.2b (checkpoints persistentes en SQLite y `GET /threads/{id}/graph-state`) hecho. Siguiente: F2.2c (interrupción humana: aprobación en Inbox sobre el grafo).
 
 ---
 
@@ -154,9 +154,25 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 **Por hacer**
 
-- F2.2b: checkpoints persistentes (`langgraph-checkpoint-sqlite` hoy, Postgres después) y reanudar un hilo a medias tras reiniciar. Los checkpoints en memoria de F2.2a se pierden al reiniciar y crecen mientras el proceso vive (aceptable en local, un solo usuario)
+- ~~F2.2b: checkpoints persistentes~~ (hecho, ver abajo)
 - Añadir `langgraph` (y `litellm`) como extra `[llm]` con hashes en los lockfiles y activarlo por defecto
 - Interrupciones humanas (aprobación en Inbox) sobre el grafo, base para F3
+
+### Slice F2.2b — Checkpoints persistentes en SQLite *(Hecho — 21-10-2026)*
+
+**Hecho**
+
+- Checkpointer persistente `SqliteSaver` (`langgraph-checkpoint-sqlite`, opcional como `langgraph`) en un fichero aparte, `GALLAIA_CHECKPOINT_DB` (por defecto `./data/checkpoints.db`, fuera de git). Con `memory` o sin la librería se usa `MemorySaver` como en F2.2a
+- El estado del grafo de cada hilo sobrevive a un reinicio del backend; avanzar un hilo a medias tras reiniciar sigue desde los mensajes de la BD, sin repetir respuestas
+- Endpoint de solo lectura `GET /api/v1/threads/{id}/graph-state` (motor, tipo de checkpointer y último estado; `null` si no hay)
+- Tests sin red con fichero temporal: persistencia tras "reinicio" simulado, reanudación sin duplicados, `memory` y falta de la librería
+
+**Por hacer**
+
+- Postgres como checkpointer cuando migremos la BD (resto de F2)
+- Limpieza/retención de checkpoints antiguos
+- Interrupciones humanas (aprobación en Inbox) sobre el grafo, base para F3
+- Extra `[llm]` con `langgraph`, `langgraph-checkpoint-sqlite` y `litellm` con hashes en los lockfiles
 
 **Por hacer (resto de F2)**
 

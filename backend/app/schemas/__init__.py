@@ -45,6 +45,7 @@ from app.schemas.thread import (
     ThreadCreate,
     ThreadDelegationsOut,
     ThreadDetailOut,
+    ThreadGraphStateOut,
     ThreadOut,
     ThreadUpdate,
 )
@@ -110,6 +111,7 @@ __all__ = [
     "ThreadDetailOut",
     "ThreadAdvanceOut",
     "ThreadDelegationsOut",
+    "ThreadGraphStateOut",
     "DelegationEdgeOut",
     "MessageCreate",
     "MessageOut",

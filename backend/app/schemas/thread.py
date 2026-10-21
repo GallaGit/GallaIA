@@ -72,3 +72,10 @@ class ThreadDelegationsOut(BaseModel):
     nodes: list[str]
     edges: list[DelegationEdgeOut]
     summary_id: int | None = None
+
+
+class ThreadGraphStateOut(BaseModel):
+    thread_id: int
+    engine: str
+    checkpointer: str
+    state: dict | None = None

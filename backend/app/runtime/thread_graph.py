@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import logging
 import os
+import sqlite3
+from pathlib import Path
 from typing import Annotated, Any, TypedDict
 
 from sqlalchemy.orm import Session
@@ -29,6 +31,8 @@ logger = logging.getLogger(__name__)
 CLASSIC = "classic"
 LANGGRAPH = "langgraph"
 
+DEFAULT_CHECKPOINT_DB = "./data/checkpoints.db"
+
 _NODE_PICK = "pick"
 _NODE_ORQUESTADOR = "orquestador"
 _NODE_SPECIALIST = "specialist"
@@ -36,12 +40,14 @@ _NODE_SPECIALIST = "specialist"
 try:  # pragma: no cover — depends on the optional dependency
     from langchain_core.runnables import RunnableConfig
     from langgraph.checkpoint.memory import MemorySaver
-
-    _CHECKPOINTER: Any = MemorySaver()
 except Exception:  # noqa: BLE001 — langgraph is optional
     MemorySaver = None  # type: ignore[assignment, misc]
     RunnableConfig = dict  # type: ignore[assignment, misc]
-    _CHECKPOINTER = None
+
+_CHECKPOINTER: Any = None
+_CHECKPOINTER_KIND: str | None = None  # None = not built yet
+_CHECKPOINT_CONN: sqlite3.Connection | None = None
+_SQLITE_WARNED = False
 
 _COMPILED: Any = None
 
@@ -148,6 +154,87 @@ def _answer(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
     return {"created": created, "steps": steps, "pending": None}
 
 
+def _checkpoint_db() -> str:
+    """Configured checkpoint store: a SQLite path or "memory".
+
+    The process env is a second chance when settings cannot be read.
+    """
+    value = ""
+    try:
+        from app.core.config import get_settings
+
+        value = (getattr(get_settings(), "checkpoint_db", "") or "").strip()
+    except Exception:  # noqa: BLE001 — settings unavailable in isolation
+        value = ""
+    return (value or os.getenv("GALLAIA_CHECKPOINT_DB") or DEFAULT_CHECKPOINT_DB).strip()
+
+
+def _checkpointer() -> Any:
+    """Checkpointer, built once per process. None when langgraph is absent.
+
+    `GALLAIA_CHECKPOINT_DB=memory` (or `:memory:`) keeps the in-process
+    MemorySaver; anything else is a SQLite file (parent dirs created on
+    demand). Missing `langgraph-checkpoint-sqlite` logs once and falls back.
+    """
+    global _CHECKPOINTER, _CHECKPOINTER_KIND, _CHECKPOINT_CONN, _SQLITE_WARNED
+    if MemorySaver is None:  # langgraph itself is missing
+        return None
+    if _CHECKPOINTER_KIND is not None:
+        return _CHECKPOINTER
+
+    value = _checkpoint_db()
+    if value.lower() in ("memory", ":memory:"):
+        _CHECKPOINTER, _CHECKPOINTER_KIND = MemorySaver(), "memory"
+        return _CHECKPOINTER
+
+    try:
+        from langgraph.checkpoint.sqlite import SqliteSaver
+    except ImportError:  # optional extra package
+        if not _SQLITE_WARNED:
+            _SQLITE_WARNED = True
+            logger.warning(
+                "GALLAIA_CHECKPOINT_DB=%s but langgraph-checkpoint-sqlite is "
+                "unavailable; using the in-process MemorySaver "
+                "(pip install langgraph-checkpoint-sqlite)",
+                value,
+            )
+        _CHECKPOINTER, _CHECKPOINTER_KIND = MemorySaver(), "memory"
+        return _CHECKPOINTER
+
+    path = Path(value).expanduser()
+    if str(path.parent) not in ("", "."):
+        path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(path), check_same_thread=False)
+    saver = SqliteSaver(conn)
+    if hasattr(saver, "setup"):
+        saver.setup()
+    _CHECKPOINT_CONN = conn
+    _CHECKPOINTER, _CHECKPOINTER_KIND = saver, "sqlite"
+    return _CHECKPOINTER
+
+
+def checkpointer_kind() -> str:
+    """Backing store of the checkpointer: "sqlite", "memory" or "none"."""
+    if MemorySaver is None:
+        return "none"
+    _checkpointer()
+    return _CHECKPOINTER_KIND or "none"
+
+
+def reset_runtime() -> None:
+    """Drop the compiled graph and checkpointer (tests simulate a restart)."""
+    global _CHECKPOINTER, _CHECKPOINTER_KIND, _CHECKPOINT_CONN, _COMPILED
+    if _CHECKPOINT_CONN is not None:
+        try:
+            _CHECKPOINT_CONN.close()
+        except Exception:  # noqa: BLE001 — closing must never raise
+            logger.debug("could not close the checkpoint sqlite connection")
+        _CHECKPOINT_CONN = None
+    _COMPILED = None
+    _CHECKPOINTER = None
+    _CHECKPOINTER_KIND = None
+
+
 def _build_graph():
     from langgraph.graph import END, START, StateGraph
 
@@ -167,13 +254,14 @@ def _build_graph():
     )
     builder.add_edge(_NODE_ORQUESTADOR, _NODE_PICK)
     builder.add_edge(_NODE_SPECIALIST, _NODE_PICK)
-    return builder.compile(checkpointer=_CHECKPOINTER)
+    return builder.compile(checkpointer=_checkpointer())
 
 
 def _graph():
     """Compiled graph, built once per process. None when langgraph is absent."""
     global _COMPILED
-    if not langgraph_available() or _CHECKPOINTER is None:
+    checkpointer = _checkpointer()
+    if not langgraph_available() or checkpointer is None:
         return None
     if _COMPILED is None:
         _COMPILED = _build_graph()
