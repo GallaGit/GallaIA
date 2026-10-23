@@ -12,10 +12,14 @@ from app.schemas.trigger import (
 )
 from app.services.triggers import handle_lead_status_nuevo, handle_webhook_trigger
 
+# GALLAIA-SEC-002: the signed webhook lives on its own router, mounted in
+# app.main WITHOUT the operator-token dependency (it keeps X-Webhook-Secret).
+public_router = APIRouter(prefix="/triggers", tags=["triggers"])
+# Operator-authenticated trigger routes (included in api_router).
 router = APIRouter(prefix="/triggers", tags=["triggers"])
 
 
-@router.post("/webhook", response_model=WebhookTriggerOut, status_code=201)
+@public_router.post("/webhook", response_model=WebhookTriggerOut, status_code=201)
 def post_webhook_trigger(
     db: DbSession,
     settings: SettingsDep,

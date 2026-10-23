@@ -66,7 +66,7 @@ Los Dockerfiles **no** usan `PIP_TRUSTED_HOST` (desactivaría la verificación T
 
 ```bash
 curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/api/v1/health
+curl -H "Authorization: Bearer $GALLAIA_OPERATOR_TOKEN" http://127.0.0.1:8000/api/v1/health
 curl -I http://127.0.0.1:8000/
 docker compose ps   # un servicio: app, status healthy
 ```

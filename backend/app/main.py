@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
+from app.api.routes import triggers as triggers_routes
 from app.core.config import get_settings
 from app.core.logging import get_logger, setup_logging
 from app.db.init_db import init_db
@@ -93,6 +94,9 @@ app.include_router(
     prefix="/api/v1",
     dependencies=[Depends(require_operator_token)],
 )
+# GALLAIA-SEC-002: the only /api/v1 route without the operator token; it is
+# protected by X-Webhook-Secret instead (see app/api/routes/triggers.py).
+app.include_router(triggers_routes.public_router, prefix="/api/v1")
 
 
 @app.get("/health")

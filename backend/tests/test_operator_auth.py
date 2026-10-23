@@ -246,3 +246,114 @@ def test_app_import_fails_without_operator_token(tmp_path: Path):
     assert result.returncode != 0
     assert "GALLAIA_OPERATOR_TOKEN" in result.stderr
     assert TEST_OPERATOR_TOKEN not in result.stderr
+
+
+# --- PR #53 review follow-ups -------------------------------------------------
+
+from app.api.dependencies.operator_auth import require_operator_token  # noqa: E402
+
+
+def test_webhook_is_the_only_api_route_without_operator_token():
+    def _effective(routes):  # noqa: ANN001
+        for route in routes:
+            contexts = getattr(route, "effective_route_contexts", None)
+            if callable(contexts):  # FastAPI >= 0.13x: lazily included routers
+                yield from contexts()
+            elif isinstance(route, APIRoute):
+                yield route
+
+    unprotected = set()
+    checked = 0
+    for route in _effective(app.routes):
+        if not route.path.startswith("/api/v1"):
+            continue
+        checked += 1
+        calls = {getattr(dep, "dependency", dep) for dep in route.dependencies}
+        if require_operator_token not in calls:
+            for method in set(route.methods) - {"HEAD", "OPTIONS"}:
+                unprotected.add((method, route.path))
+    assert checked > 50
+    assert unprotected == {("POST", WEBHOOK_PATH)}
+
+
+def test_short_token_error_does_not_include_value(monkeypatch: pytest.MonkeyPatch):
+    short_value = "short-secret-value-XYZ"
+    monkeypatch.setenv("GALLAIA_OPERATOR_TOKEN", short_value)
+    with pytest.raises(ValidationError) as exc:
+        Settings(_env_file=None)
+    text = str(exc.value)
+    assert "GALLAIA_OPERATOR_TOKEN" in text
+    assert short_value not in text
+    assert "input_value" not in text
+
+
+def test_app_import_fails_with_short_token_without_leaking(tmp_path: Path):
+    short_value = "short-secret-value-XYZ"
+    env = os.environ.copy()
+    env["GALLAIA_OPERATOR_TOKEN"] = short_value
+    env["PYTHONPATH"] = str(BACKEND_DIR)
+    result = subprocess.run(
+        [sys.executable, "-c", "import app.main"],
+        cwd=str(tmp_path),
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "GALLAIA_OPERATOR_TOKEN" in result.stderr
+    assert short_value not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("authorization", "expected_ok"),
+    [
+        (f"bearer {TEST_OPERATOR_TOKEN}", True),
+        (f"BEARER {TEST_OPERATOR_TOKEN}", True),
+        (f"Basic {TEST_OPERATOR_TOKEN}", False),
+        ("Basic dXNlcjpwYXNz", False),
+        ("Bearer", False),
+        ("Bearer ", False),
+        (TEST_OPERATOR_TOKEN, False),
+        (f"Bearer {TEST_OPERATOR_TOKEN}x", False),
+    ],
+    ids=["lowercase", "uppercase", "basic-token", "basic", "bearer-no-value",
+         "bearer-empty", "no-scheme", "token-suffix"],
+)
+def test_authorization_scheme_variants(authorization: str, expected_ok: bool):
+    client = TestClient(app, raise_server_exceptions=False)
+    client.headers["Authorization"] = authorization
+    response = client.get("/api/v1/health")
+    if expected_ok:
+        assert response.status_code == 200
+    else:
+        assert response.status_code == 401
+        assert response.json() == {"detail": "Unauthorized"}
+
+
+def test_preflight_from_allowed_origin_needs_no_token():
+    client = _client_without_auth()
+    response = client.options(
+        "/api/v1/tasks",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "authorization" in response.headers["access-control-allow-headers"].lower()
+
+
+def test_preflight_from_disallowed_origin_is_rejected():
+    client = _client_without_auth()
+    response = client.options(
+        "/api/v1/tasks",
+        headers={
+            "Origin": "http://evil.example",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 400
+    assert "access-control-allow-origin" not in response.headers

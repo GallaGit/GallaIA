@@ -15,6 +15,8 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        # Never echo raw values (e.g. a short operator token) in ValidationError.
+        hide_input_in_errors=True,
     )
 
     app_name: str = "GallaAI AgentOS"

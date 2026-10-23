@@ -37,6 +37,8 @@ Stack actual: **FastAPI + SQLAlchemy/SQLite** (backend) y **React + Vite** (fron
 
 ```bash
 cp backend/.env.example backend/.env
+# Obligatorio: rellena GALLAIA_OPERATOR_TOKEN (>=32 caracteres) o el backend no arranca:
+#   python -c "import secrets;print(secrets.token_urlsafe(32))"
 npm --prefix frontend ci
 npm --prefix frontend run build
 docker compose up --build
@@ -57,6 +59,8 @@ python -m pip install -U pip
 # Dependencias fijadas con hashes (GALLAIA-SEC-005): runtime + pytest
 python -m pip install --require-hashes --no-deps -r requirements-dev.lock
 cp .env.example .env
+# Obligatorio: rellena GALLAIA_OPERATOR_TOKEN (>=32 caracteres) o el backend no arranca:
+#   python -c "import secrets;print(secrets.token_urlsafe(32))"
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 

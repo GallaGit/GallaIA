@@ -6,7 +6,6 @@ from fastapi import HTTPException, Request
 
 from app.api.dependencies.settings import SettingsDep
 
-WEBHOOK_PATH = "/api/v1/triggers/webhook"
 _WWW_AUTHENTICATE = {"WWW-Authenticate": "Bearer"}
 
 
@@ -15,9 +14,7 @@ def _unauthorized() -> HTTPException:
 
 
 def require_operator_token(request: Request, settings: SettingsDep) -> None:
-    """Require a valid operator bearer token, except for the webhook route."""
-    if request.url.path == WEBHOOK_PATH:
-        return
+    """Require a valid operator bearer token (global dependency of api_router)."""
 
     authorization = request.headers.get("Authorization")
     if not authorization:
