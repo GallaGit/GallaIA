@@ -79,3 +79,4 @@ class ThreadGraphStateOut(BaseModel):
     engine: str
     checkpointer: str
     state: dict | None = None
+    pending_approval: int | None = None

@@ -11,7 +11,10 @@ from app.runtime.thread_graph import (
     ThreadState,
     get_thread_graph_state,
     langgraph_available,
+    pending_approval,
+    resume_thread_approval,
     run_thread_graph,
+    thread_approval_enabled,
     thread_engine,
 )
 
@@ -21,6 +24,9 @@ __all__ = [
     "ThreadState",
     "get_thread_graph_state",
     "langgraph_available",
+    "pending_approval",
+    "resume_thread_approval",
     "run_thread_graph",
+    "thread_approval_enabled",
     "thread_engine",
 ]

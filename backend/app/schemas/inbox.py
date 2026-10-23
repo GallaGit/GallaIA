@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.thread import MessageOut
+
 
 class InboxMessageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -11,6 +13,8 @@ class InboxMessageOut(BaseModel):
     agent_id: int | None = None
     session_id: int | None = None
     task_id: int | None = None
+    thread_id: int | None = None
+    thread_message_id: int | None = None
     kind: str
     body: str
     status: str
@@ -29,3 +33,15 @@ class InboxResolveIn(BaseModel):
     """Resolve without a long reply (optional short note)."""
 
     note: str | None = Field(default=None, max_length=2000)
+
+
+class InboxDecideIn(BaseModel):
+    """Human decision for a thread approval request."""
+
+    approved: bool
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class InboxDecideOut(BaseModel):
+    inbox: InboxMessageOut
+    created: list[MessageOut] = []

@@ -69,6 +69,15 @@ class Settings(BaseSettings):
             "checkpoint_db",
         ),
     )
+    # F2.2c: ask the human to approve fe/be delegations before they answer.
+    thread_approval: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "GALLAIA_THREAD_APPROVAL",
+            "THREAD_APPROVAL",
+            "thread_approval",
+        ),
+    )
     # Phase 5 Triggers: shared secret for public webhook (empty = deny all).
     gallaia_webhook_secret: str = ""
     # Phase 7: mock (in-process) | local (future OS binary -> local-stub for now).
