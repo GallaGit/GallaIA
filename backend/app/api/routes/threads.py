@@ -216,6 +216,7 @@ def get_thread_graph_state(thread_id: int, db: DbSession):
         engine=thread_graph.thread_engine(),
         checkpointer=thread_graph.checkpointer_kind(),
         state=thread_graph.get_thread_graph_state(thread.id),
+        pending_approval=thread_graph.pending_approval(thread.id),
     )
 
 

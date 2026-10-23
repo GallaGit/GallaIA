@@ -76,11 +76,27 @@ def _ensure_goal_rails_columns() -> None:
             conn.execute(text(stmt))
 
 
+def _ensure_inbox_thread_columns() -> None:
+    """SQLite create_all does not ADD columns; alter existing inbox_messages if needed."""
+    with engine.begin() as conn:
+        rows = conn.execute(text("PRAGMA table_info(inbox_messages)")).fetchall()
+        if not rows:
+            return
+        cols = {r[1] for r in rows}
+        if "thread_id" not in cols:
+            conn.execute(text("ALTER TABLE inbox_messages ADD COLUMN thread_id INTEGER"))
+        if "thread_message_id" not in cols:
+            conn.execute(
+                text("ALTER TABLE inbox_messages ADD COLUMN thread_message_id INTEGER")
+            )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_task_schedule_column()
     _ensure_session_goal_column()
     _ensure_goal_rails_columns()
+    _ensure_inbox_thread_columns()
     db = SessionLocal()
     try:
         seed_if_empty(db)

@@ -14,6 +14,10 @@ class InboxMessage(Base):
     agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
     session_id: Mapped[int | None] = mapped_column(ForeignKey("sessions.id"), nullable=True)
     task_id: Mapped[int | None] = mapped_column(ForeignKey("tasks.id"), nullable=True)
+    thread_id: Mapped[int | None] = mapped_column(ForeignKey("threads.id"), nullable=True)
+    thread_message_id: Mapped[int | None] = mapped_column(
+        ForeignKey("messages.id"), nullable=True
+    )
     kind: Mapped[str] = mapped_column(String(40), nullable=False, default="text")
     body: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="open", index=True)

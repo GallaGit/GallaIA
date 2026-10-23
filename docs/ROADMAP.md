@@ -2,7 +2,7 @@
 
 Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases 0–7 está en [archive/ROADMAP-agentos-fases-0-7.md](archive/ROADMAP-agentos-fases-0-7.md).
 
-**Estado (21-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. **F2.2 en curso**: F2.2a (motor LangGraph opcional para los hilos, con checkpoints en memoria) hecho; F2.2b (checkpoints persistentes en SQLite y `GET /threads/{id}/graph-state`) hecho. Siguiente: F2.2c (interrupción humana: aprobación en Inbox sobre el grafo).
+**Estado (23-10-2026):** F0 hecho y fusionado. F1.1 (hilos y mensajes, backend), F1.2 (agentes responden en hilos, backend), F1.3 (vista de conversación en la UI), F1.4 (stream en vivo SSE de mensajes) y F1.5 (grafo de delegaciones + auto-avance opcional) hechos: **F1 cerrado**. F2 en curso: **F2.1 cerrado** — F2.1a (gateway de modelos con cadena OpenRouter → Groq → mock) y F2.1b (runner de sesiones por el gateway, modelo por agente, registro de uso y backend `litellm` opcional) hechos. **F2.2 en curso**: F2.2a (motor LangGraph opcional para los hilos, con checkpoints en memoria) hecho; F2.2b (checkpoints persistentes en SQLite y `GET /threads/{id}/graph-state`) hecho; F2.2c (aprobación humana en Inbox de las delegaciones, con interrupción del grafo) hecho. Siguiente: F2.2d (extra `[llm]` con `langgraph`, `langgraph-checkpoint-sqlite` y `litellm` con hashes en los lockfiles) o la vista de aprobaciones en la UI.
 
 ---
 
@@ -171,7 +171,23 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 
 - Postgres como checkpointer cuando migremos la BD (resto de F2)
 - Limpieza/retención de checkpoints antiguos
-- Interrupciones humanas (aprobación en Inbox) sobre el grafo, base para F3
+- ~~Interrupciones humanas (aprobación en Inbox) sobre el grafo~~ (hecho en F2.2c, ver abajo)
+- Extra `[llm]` con `langgraph`, `langgraph-checkpoint-sqlite` y `litellm` con hashes en los lockfiles
+
+### Slice F2.2c — Aprobación humana en Inbox de las delegaciones *(Hecho — 23-10-2026)*
+
+**Hecho**
+
+- Interruptor `GALLAIA_THREAD_APPROVAL=true` (por defecto apagado), solo con el motor LangGraph: antes de que FE o BE respondan a una delegación del Orquestador, el grafo se detiene con `interrupt()` de LangGraph y crea un mensaje en el Inbox (`kind="thread_approval"`, con el hilo y el mensaje de la delegación)
+- Mientras hay una aprobación pendiente, avanzar el hilo no hace nada (ni repite el aviso ni crea mensajes); el checkpoint guarda la pausa y sobrevive a un reinicio
+- Nuevo endpoint `POST /api/v1/inbox/{id}/decide` con `{"approved": bool, "note"?: str}`: al aprobar, el grafo sigue y el especialista responde; al rechazar, el especialista deja un resultado «rechazado por el humano» para que el Orquestador pueda cerrar el resumen. `reply`/`resolve` no sirven para este tipo de mensaje (400)
+- `GET /threads/{id}/graph-state` indica la aprobación pendiente (id del Inbox) o `null`
+- Tests sin red: pausa, aprobar, rechazar, sin duplicados tras reinicio y motor clásico sin cambios
+
+**Por hacer**
+
+- Vista de aprobaciones en la UI (Inbox y Conversaciones)
+- Aprobación configurable por agente o por tipo de acción (base para el ciclo de software de F3)
 - Extra `[llm]` con `langgraph`, `langgraph-checkpoint-sqlite` y `litellm` con hashes en los lockfiles
 
 **Por hacer (resto de F2)**

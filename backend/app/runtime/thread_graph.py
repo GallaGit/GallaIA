@@ -20,9 +20,10 @@ import sqlite3
 from pathlib import Path
 from typing import Annotated, Any, TypedDict
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Message, Thread
+from app.models import InboxMessage, Message, Thread
 from app.models.activity import ActivityEvent
 from app.services import thread_agents
 
@@ -34,15 +35,19 @@ LANGGRAPH = "langgraph"
 DEFAULT_CHECKPOINT_DB = "./data/checkpoints.db"
 
 _NODE_PICK = "pick"
+_NODE_APPROVE = "approve"
 _NODE_ORQUESTADOR = "orquestador"
 _NODE_SPECIALIST = "specialist"
 
 try:  # pragma: no cover — depends on the optional dependency
     from langchain_core.runnables import RunnableConfig
     from langgraph.checkpoint.memory import MemorySaver
+    from langgraph.types import Command, interrupt
 except Exception:  # noqa: BLE001 — langgraph is optional
     MemorySaver = None  # type: ignore[assignment, misc]
     RunnableConfig = dict  # type: ignore[assignment, misc]
+    Command = None  # type: ignore[assignment, misc]
+    interrupt = None  # type: ignore[assignment, misc]
 
 _CHECKPOINTER: Any = None
 _CHECKPOINTER_KIND: str | None = None  # None = not built yet
@@ -78,6 +83,25 @@ def thread_engine() -> str:
     return LANGGRAPH if value == LANGGRAPH else CLASSIC
 
 
+def thread_approval_enabled() -> bool:
+    """True when fe/be delegations require a human decision in the Inbox."""
+    value = False
+    try:
+        from app.core.config import get_settings
+
+        value = bool(getattr(get_settings(), "thread_approval", False))
+    except Exception:  # noqa: BLE001 — settings unavailable in isolation
+        value = False
+    if value:
+        return True
+    env = (
+        os.getenv("GALLAIA_THREAD_APPROVAL")
+        or os.getenv("THREAD_APPROVAL")
+        or ""
+    ).strip().lower()
+    return env in ("1", "true", "yes", "on")
+
+
 def _last(_current: Any, new: Any) -> Any:
     """Last-write-wins reducer that also accepts None (LastValue drops None)."""
     return new
@@ -90,6 +114,7 @@ class ThreadState(TypedDict):
     max_steps: int
     steps: int
     handled: list[int]
+    approved: list[int]
     created: list[int]
     pending: Annotated[int | None, _last]
 
@@ -102,7 +127,8 @@ def _pick(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
     """Next unanswered agent-addressed message id, or None when done."""
     db: Session = _configurable(config)["db"]
     messages = thread_agents._load_messages(db, state["thread_id"])
-    pending = thread_agents._next_pending(messages, set(state.get("handled") or []))
+    handled = set(state.get("handled") or []) | set(state.get("approved") or [])
+    pending = thread_agents._next_pending(messages, handled)
     pending_id = pending.id if pending is not None else None
     if int(state.get("steps", 0)) >= int(state["max_steps"]):
         pending_id = None  # step budget spent
@@ -119,7 +145,96 @@ def _route(state: ThreadState, config: RunnableConfig) -> str:
     msg = next((m for m in messages if m.id == pending), None)
     if msg is None:
         return "end"
+    approved = set(state.get("approved") or [])
+    if (
+        thread_approval_enabled()
+        and msg.kind == "delegation"
+        and msg.recipient in thread_agents.DELEGATABLE
+        and msg.id not in approved
+    ):
+        return _NODE_APPROVE
     return _NODE_ORQUESTADOR if msg.recipient == _NODE_ORQUESTADOR else _NODE_SPECIALIST
+
+
+def _route_after_approve(state: ThreadState, config: RunnableConfig) -> str:
+    """Approved delegations go straight to the specialist; others pick again."""
+    return _NODE_SPECIALIST if state.get("pending") is not None else _NODE_PICK
+
+
+def _approve(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
+    """Pause for a human decision before a specialist answers a delegation.
+
+    LangGraph re-runs this node from the start when the graph resumes, so the
+    Inbox row lookup/creation is idempotent: a second pass reuses the open row.
+    """
+    if interrupt is None:  # pragma: no cover — langgraph is optional
+        raise RuntimeError("langgraph is not installed")
+
+    cfg = _configurable(config)
+    db: Session = cfg["db"]
+    thread: Thread = cfg["thread"]
+    events: list[ActivityEvent] = cfg["events"]
+
+    pending = state.get("pending")
+    messages = thread_agents._load_messages(db, state["thread_id"])
+    msg = next((m for m in messages if m.id == pending), None)
+    if msg is None:
+        return {"pending": None}
+
+    inbox = db.scalar(
+        select(InboxMessage)
+        .where(
+            InboxMessage.thread_id == thread.id,
+            InboxMessage.thread_message_id == msg.id,
+            InboxMessage.kind == "thread_approval",
+            InboxMessage.status == "open",
+        )
+        .order_by(InboxMessage.id)
+        .limit(1)
+    )
+    if inbox is None:
+        inbox = InboxMessage(
+            from_role="agent",
+            kind="thread_approval",
+            thread_id=thread.id,
+            thread_message_id=msg.id,
+            body=(
+                f"Hilo #{thread.id}: orquestador delega a {msg.recipient}: {msg.body}"
+            ),
+            status="open",
+        )
+        db.add(inbox)
+        db.flush()
+
+    decision = interrupt({"inbox_id": inbox.id, "message_id": msg.id})
+    if isinstance(decision, dict):
+        is_approved = bool(decision.get("approved"))
+        note = decision.get("note")
+    else:
+        is_approved = bool(decision)
+        note = None
+
+    approved = list(state.get("approved") or [])
+    if msg.id not in approved:
+        approved.append(msg.id)
+
+    if is_approved:
+        return {"approved": approved, "pending": msg.id}
+
+    body = f"[rechazado por el humano] {note or ''}"
+    reply = thread_agents._message(
+        thread.id, msg.recipient, _NODE_ORQUESTADOR, "result", body
+    )
+    events.append(thread_agents._persist_reply(db, thread, reply))
+    created = list(state.get("created") or [])
+    created.append(reply.id)
+    steps = int(state.get("steps", 0)) + 1
+    return {
+        "approved": approved,
+        "created": created,
+        "steps": steps,
+        "pending": None,
+    }
 
 
 def _answer(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
@@ -240,6 +355,7 @@ def _build_graph():
 
     builder = StateGraph(ThreadState)
     builder.add_node(_NODE_PICK, _pick)
+    builder.add_node(_NODE_APPROVE, _approve)
     builder.add_node(_NODE_ORQUESTADOR, _answer)
     builder.add_node(_NODE_SPECIALIST, _answer)
     builder.add_edge(START, _NODE_PICK)
@@ -247,9 +363,18 @@ def _build_graph():
         _NODE_PICK,
         _route,
         {
+            _NODE_APPROVE: _NODE_APPROVE,
             _NODE_ORQUESTADOR: _NODE_ORQUESTADOR,
             _NODE_SPECIALIST: _NODE_SPECIALIST,
             "end": END,
+        },
+    )
+    builder.add_conditional_edges(
+        _NODE_APPROVE,
+        _route_after_approve,
+        {
+            _NODE_PICK: _NODE_PICK,
+            _NODE_SPECIALIST: _NODE_SPECIALIST,
         },
     )
     builder.add_edge(_NODE_ORQUESTADOR, _NODE_PICK)
@@ -273,27 +398,114 @@ def _thread_config(thread_id: int) -> dict[str, str]:
     return {"thread_id": f"thread-{thread_id}"}
 
 
+def _has_pending_interrupt(snapshot: Any) -> bool:
+    if snapshot is None:
+        return False
+    if getattr(snapshot, "next", None):
+        return True
+    for task in getattr(snapshot, "tasks", ()) or ():
+        if getattr(task, "interrupts", ()) or ():
+            return True
+    return False
+
+
+def _interrupt_values(snapshot: Any) -> list[Any]:
+    values: list[Any] = []
+    for task in getattr(snapshot, "tasks", ()) or ():
+        for intr in getattr(task, "interrupts", ()) or ():
+            values.append(getattr(intr, "value", None))
+    return values
+
+
+def _created_messages(
+    db: Session, thread: Thread, created_ids: list[int]
+) -> list[Message]:
+    by_id = {m.id: m for m in thread_agents._load_messages(db, thread.id)}
+    return [by_id[mid] for mid in created_ids if mid in by_id]
+
+
 def run_thread_graph(
     db: Session, thread: Thread, max_steps: int, llm: thread_agents.LLM
 ) -> tuple[list[Message], list]:
     """Advance `thread` with LangGraph. Returns (created messages, events).
 
     The caller owns the transaction (commit/refresh/notify), exactly as with
-    the classic loop.
+    the classic loop. When the graph pauses for a human decision we commit the
+    Inbox row here even if no message was created in this run.
     """
     graph = _graph()
     if graph is None:
         raise RuntimeError("langgraph is not installed")
 
-    events: list[ActivityEvent] = []
+    config = {
+        "configurable": {
+            **_thread_config(thread.id),
+            "db": db,
+            "thread": thread,
+            "llm": llm,
+            "events": [],
+        },
+        # pick + handler per step, plus the no-reply skips and the final pick.
+        "recursion_limit": 4 * int(max_steps) + 20,
+    }
+    snapshot = graph.get_state(config)
+    if _has_pending_interrupt(snapshot):
+        return [], []  # waiting for the human; do not advance
+
+    events: list[ActivityEvent] = config["configurable"]["events"]
+    prior = dict(getattr(snapshot, "values", None) or {})
     state: ThreadState = {
         "thread_id": int(thread.id),
         "max_steps": int(max_steps),
         "steps": 0,
         "handled": [],
+        "approved": list(prior.get("approved") or []),
         "created": [],
         "pending": None,
     }
+    final = graph.invoke(dict(state), config) or {}
+    snapshot = graph.get_state(config)
+    values = dict(getattr(snapshot, "values", None) or final)
+    created_ids = [int(i) for i in (values.get("created") or [])]
+    created = _created_messages(db, thread, created_ids)
+    if _has_pending_interrupt(snapshot):
+        db.commit()  # persist the Inbox row even when created is empty
+    return created, events
+
+
+def pending_approval(thread_id: int) -> int | None:
+    """Inbox id of the thread's pending approval, or None when not paused."""
+    graph = _graph()
+    if graph is None:
+        return None
+    try:
+        snapshot = graph.get_state({"configurable": _thread_config(thread_id)})
+    except Exception:  # noqa: BLE001 — inspection must never break a request
+        logger.debug("pending approval unavailable for thread %s", thread_id)
+        return None
+    if not _has_pending_interrupt(snapshot):
+        return None
+    for value in _interrupt_values(snapshot):
+        if isinstance(value, dict) and value.get("inbox_id") is not None:
+            return int(value["inbox_id"])
+    return None
+
+
+def resume_thread_approval(
+    db: Session,
+    thread: Thread,
+    inbox_msg: InboxMessage,
+    approved: bool,
+    note: str | None,
+    llm: thread_agents.LLM,
+    max_steps: int = 6,
+) -> tuple[list[Message], list]:
+    """Resume a paused graph with the human decision. Returns (created, events)."""
+    graph = _graph()
+    if graph is None or Command is None:
+        raise RuntimeError("langgraph is not installed")
+
+    events: list[ActivityEvent] = []
     config = {
         "configurable": {
             **_thread_config(thread.id),
@@ -302,13 +514,22 @@ def run_thread_graph(
             "llm": llm,
             "events": events,
         },
-        # pick + handler per step, plus the no-reply skips and the final pick.
         "recursion_limit": 4 * int(max_steps) + 20,
     }
-    final = graph.invoke(dict(state), config) or {}
-    created_ids = [int(i) for i in (final.get("created") or [])]
-    by_id = {m.id: m for m in thread_agents._load_messages(db, thread.id)}
-    created = [by_id[mid] for mid in created_ids if mid in by_id]
+    command = Command(
+        update={"steps": 0, "max_steps": int(max_steps)},
+        resume={"approved": bool(approved), "note": note},
+    )
+    before = dict(getattr(graph.get_state(config), "values", None) or {})
+    already = {int(i) for i in (before.get("created") or [])}
+    final = graph.invoke(command, config) or {}
+    snapshot = graph.get_state(config)
+    values = dict(getattr(snapshot, "values", None) or final)
+    created_ids = [int(i) for i in (values.get("created") or [])]
+    created_ids = [i for i in created_ids if i not in already]
+    created = _created_messages(db, thread, created_ids)
+    if _has_pending_interrupt(snapshot):
+        db.commit()  # next approval row must survive even before the API commits
     return created, events
 
 
