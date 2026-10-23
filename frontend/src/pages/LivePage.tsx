@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { openEventStream } from '../api/sse'
 
 type Frame = { event: string; data: string; at: string }
 
@@ -30,7 +31,6 @@ export default function LivePage() {
     setFrames([])
     setError(null)
     setStatus('connecting')
-    const es = new EventSource(streamUrl)
 
     const push = (event: string, data: string) => {
       setFrames((prev) => [
@@ -39,35 +39,39 @@ export default function LivePage() {
       ])
     }
 
-    es.addEventListener('status', (ev) => {
-      setStatus('live')
-      push('status', (ev as MessageEvent).data)
-      try {
-        const j = JSON.parse((ev as MessageEvent).data) as { status?: string }
-        if (j.status) setStatus(`live:${j.status}`)
-      } catch {
-        /* ignore */
-      }
-    })
-    es.addEventListener('tool', (ev) => push('tool', (ev as MessageEvent).data))
-    es.addEventListener('heartbeat', (ev) => push('heartbeat', (ev as MessageEvent).data))
-    es.addEventListener('error', (ev) => {
-      const data = (ev as MessageEvent).data
-      if (data) {
-        push('error', data)
-        setError(data)
-      }
-    })
-    es.addEventListener('end', (ev) => {
-      push('end', (ev as MessageEvent).data)
-      setStatus('ended')
-      es.close()
-    })
-    es.onerror = () => {
-      setStatus((s) => (s.startsWith('live') ? s : 'error'))
-    }
+    const close = openEventStream(
+      streamUrl,
+      {
+        status: (data) => {
+          setStatus('live')
+          push('status', data)
+          try {
+            const j = JSON.parse(data) as { status?: string }
+            if (j.status) setStatus(`live:${j.status}`)
+          } catch {
+            /* ignore */
+          }
+        },
+        tool: (data) => push('tool', data),
+        heartbeat: (data) => push('heartbeat', data),
+        error: (data) => {
+          if (data) {
+            push('error', data)
+            setError(data)
+          }
+        },
+        end: (data) => {
+          push('end', data)
+          setStatus('ended')
+          close()
+        },
+      },
+      () => {
+        setStatus((s) => (s.startsWith('live') ? s : 'error'))
+      },
+    )
 
-    return () => es.close()
+    return () => close()
   }, [streamUrl, activeId])
 
   const connect = () => {

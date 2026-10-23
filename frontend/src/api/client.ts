@@ -1,5 +1,7 @@
 /** AgentOS API client — canonical base /api/v1/agentos (see CONTRACT.md) */
 
+import { authFetch } from './auth'
+
 const API_ROOT = `${(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')}/api/v1`
 const BASE = `${API_ROOT}/agentos`
 
@@ -128,10 +130,11 @@ export class ApiUnavailableError extends Error {
 async function requestAt<T>(url: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-      ...init,
-    })
+    const headers = new Headers(init?.headers)
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json')
+    }
+    res = await authFetch(url, { ...init, headers })
   } catch {
     throw new ApiUnavailableError()
   }

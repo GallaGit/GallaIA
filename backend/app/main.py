@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse
@@ -18,6 +18,7 @@ from app.exceptions.handlers import app_error_handler, unhandled_error_handler
 from app.middleware.origin_guard import OriginGuardMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.api.dependencies.operator_auth import require_operator_token
 from app.api.dependencies.settings import SettingsDep
 
 settings = get_settings()
@@ -68,6 +69,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
+        "Authorization",
         "Content-Type",
         "X-Actor-Type",
         "X-Agent-Id",
@@ -86,7 +88,11 @@ app.add_middleware(
     SecurityHeadersMiddleware,
     extra_connect_src=settings.csp_extra_connect_src_list,
 )
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(
+    api_router,
+    prefix="/api/v1",
+    dependencies=[Depends(require_operator_token)],
+)
 
 
 @app.get("/health")
