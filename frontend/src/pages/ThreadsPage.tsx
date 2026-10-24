@@ -8,6 +8,7 @@ import {
   type ThreadDetail,
   type ThreadMessage,
 } from '../api/client'
+import { openEventStream } from '../api/sse'
 
 function kindLabel(kind: string): string {
   if (kind === 'delegation') return 'delegación'
@@ -127,65 +128,65 @@ export default function ThreadsPage() {
     if (!id || streamFor !== String(id) || streamKey === 0) return
     addedRef.current = 0
     setLive(true)
-    const es = new EventSource(api.threadStreamUrl(id, 6))
-
-    es.addEventListener('message', (ev) => {
-      try {
-        const msg = JSON.parse((ev as MessageEvent).data) as ThreadMessage
-        setDetail((prev) => {
-          if (!prev || String(prev.id) !== String(id)) return prev
-          const { merged, added } = mergeMessages(prev.messages, [msg])
-          if (added > 0) addedRef.current += added
-          return added > 0 ? { ...prev, messages: merged } : prev
-        })
-      } catch {
-        /* ignore malformed frames */
-      }
-    })
-    es.addEventListener('end', (ev) => {
-      try {
-        const data = JSON.parse((ev as MessageEvent).data) as {
-          created?: number
-        }
-        const n =
-          typeof data.created === 'number' ? data.created : addedRef.current
-        setAdvanceInfo(
-          n === 0
-            ? 'Sin respuestas pendientes'
-            : n === 1
-              ? '1 respuesta nueva'
-              : `${n} respuestas nuevas`,
-        )
-      } catch {
-        setAdvanceInfo(null)
-      }
-      setLive(false)
-      es.close()
-    })
-    es.addEventListener('error', (ev) => {
-      const data = (ev as MessageEvent).data as string | null
-      if (data) {
-        try {
-          const body = JSON.parse(data) as { message?: string }
-          setDetailError(body.message ?? data)
-        } catch {
-          setDetailError(data)
-        }
+    // Fetch-based SSE (not EventSource) so the operator token travels in the
+    // Authorization header, never in the URL. No auto-reconnect.
+    const close = openEventStream(
+      api.threadStreamUrl(id, 6),
+      {
+        message: (data) => {
+          try {
+            const msg = JSON.parse(data) as ThreadMessage
+            setDetail((prev) => {
+              if (!prev || String(prev.id) !== String(id)) return prev
+              const { merged, added } = mergeMessages(prev.messages, [msg])
+              if (added > 0) addedRef.current += added
+              return added > 0 ? { ...prev, messages: merged } : prev
+            })
+          } catch {
+            /* ignore malformed frames */
+          }
+        },
+        end: (data) => {
+          try {
+            const parsed = JSON.parse(data) as { created?: number }
+            const n =
+              typeof parsed.created === 'number' ? parsed.created : addedRef.current
+            setAdvanceInfo(
+              n === 0
+                ? 'Sin respuestas pendientes'
+                : n === 1
+                  ? '1 respuesta nueva'
+                  : `${n} respuestas nuevas`,
+            )
+          } catch {
+            setAdvanceInfo(null)
+          }
+          setLive(false)
+          close()
+        },
+        error: (data) => {
+          if (data) {
+            try {
+              const body = JSON.parse(data) as { message?: string }
+              setDetailError(body.message ?? data)
+            } catch {
+              setDetailError(data)
+            }
+            setLive(false)
+            close()
+          }
+        },
+      },
+      () => {
+        // Transport-level or HTTP failure: the GET snapshot remains visible.
+        close()
         setLive(false)
-        es.close()
-      }
-    })
-    es.onerror = () => {
-      // Transport-level failure (no frame data): close so the browser does
-      // not auto-reconnect (each reconnect would re-run agent steps). The
-      // snapshot loaded via GET remains visible.
-      es.close()
-      setLive(false)
-      setStreamError('Se perdió la conexión en directo. Pulsa Avanzar para reintentar.')
-    }
+        setStreamError('Se perdió la conexión en directo. Pulsa Avanzar para reintentar.')
+      },
+    )
 
     return () => {
-      es.close()
+      close()
       setLive(false)
     }
   }, [id, streamKey, streamFor])

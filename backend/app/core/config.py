@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,17 +15,27 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        # Never echo raw values (e.g. a short operator token) in ValidationError.
+        hide_input_in_errors=True,
     )
 
     app_name: str = "GallaAI AgentOS"
     app_env: str = "development"
     app_debug: bool = True
     log_level: str = "INFO"
+    gallaia_operator_token: str = Field(
+        ...,
+        repr=False,
+        validation_alias=AliasChoices(
+            "GALLAIA_OPERATOR_TOKEN",
+            "gallaia_operator_token",
+        ),
+    )
     # MVP: SQLite. Postgres later: postgresql+psycopg://gallaai:gallaai@localhost:5432/gallaai
     database_url: str = "sqlite:///./data/gallaia.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     # GALLAIA-SEC-011: Host header allow-list (DNS rebinding). "testserver" = TestClient.
-    allowed_hosts: str = "localhost,127.0.0.1,testserver"
+    allowed_hosts: str = "localhost,127.0.0.1"
     # GALLAIA-SEC-007: extra origins for the SPA CSP connect-src (comma-separated).
     # Only needed if the UI is built with VITE_API_URL pointing to another origin.
     csp_extra_connect_src: str = ""
@@ -98,6 +108,18 @@ class Settings(BaseSettings):
         default="",
         validation_alias=AliasChoices("VAPID_PRIVATE_KEY", "vapid_private_key"),
     )
+
+    @field_validator("gallaia_operator_token")
+    @classmethod
+    def _validate_operator_token(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 32:
+            raise ValueError(
+                'GALLAIA_OPERATOR_TOKEN must be set and at least 32 characters '
+                "(generate one with: python -c "
+                '"import secrets;print(secrets.token_urlsafe(32))")'
+            )
+        return value
 
     @property
     def cors_origin_list(self) -> list[str]:

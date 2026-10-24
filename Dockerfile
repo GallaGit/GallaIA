@@ -34,5 +34,7 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
 
 # Listens on 0.0.0.0 inside the container only; docker-compose publishes it on
 # 127.0.0.1:8000 of the host (GALLAIA-SEC-003). With `docker run`, use
-# `-p 127.0.0.1:8000:8000`.
+# `-p 127.0.0.1:8000:8000`. 0.0.0.0 is required inside the container because
+# Docker's port forward arrives on the container's eth0, not its loopback.
+# Browser Host headers stay localhost/127.0.0.1 (TrustedHostMiddleware, SEC-011).
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -7,6 +7,7 @@ key set it themselves with monkeypatch (after this fixture runs).
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,27 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+TEST_OPERATOR_TOKEN = "test-operator-token-0123456789abcdefghijklmnopqrstuv"
+os.environ["GALLAIA_OPERATOR_TOKEN"] = TEST_OPERATOR_TOKEN
+os.environ["ALLOWED_HOSTS"] = "localhost,127.0.0.1,testserver"
+
+from fastapi.testclient import TestClient  # noqa: E402
+
 from app.core.config import get_settings  # noqa: E402
+
+_original_testclient_init = TestClient.__init__
+
+
+def _testclient_init_with_operator_token(self, *args, **kwargs):  # noqa: ANN001
+    headers = kwargs.pop("headers", None)
+    merged_headers = {"Authorization": f"Bearer {TEST_OPERATOR_TOKEN}"}
+    if headers:
+        merged_headers.update(headers)
+    kwargs["headers"] = merged_headers
+    _original_testclient_init(self, *args, **kwargs)
+
+
+TestClient.__init__ = _testclient_init_with_operator_token
 
 
 @pytest.fixture(autouse=True)

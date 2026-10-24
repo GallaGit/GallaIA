@@ -32,7 +32,7 @@ Recrear limpio: `docker compose up --build -d --force-recreate`.
 | http://127.0.0.1:8000/ | UI AgentOS (SPA) |
 | http://127.0.0.1:8000/agents | Ruta SPA (React Router) |
 | http://127.0.0.1:8000/health | Health JSON |
-| http://127.0.0.1:8000/api/v1/health | Health + DB |
+| http://127.0.0.1:8000/api/v1/health | Health + DB (requiere `Authorization: Bearer $GALLAIA_OPERATOR_TOKEN`; `/health` es público) |
 | http://127.0.0.1:8000/api/v1/agentos/* | Superficie AgentOS (UI) |
 | http://127.0.0.1:8000/docs | OpenAPI |
 

@@ -107,3 +107,13 @@ Los prompts de agentes están **reconstruidos** a partir del talk de Danny Postm
 ## Configuración
 
 Ver `.env.example`. CORS por defecto para Vite (`localhost:5173`).
+
+## Token de operador (GALLAIA-SEC-002)
+
+Todas las rutas de `/api/v1` (salvo `POST /api/v1/triggers/webhook`, que usa
+`X-Webhook-Secret`) exigen `Authorization: Bearer <token>`. `/health` es público.
+
+1. `python -c "import secrets;print(secrets.token_urlsafe(32))"`
+2. Pega el valor en `backend/.env` como `GALLAIA_OPERATOR_TOKEN=...` (nunca lo commitees).
+3. Sin token o con menos de 32 caracteres el backend no arranca.
+4. La UI lo pide una vez y lo guarda en `sessionStorage` (se borra al cerrar la pestaña o tras un 401).
