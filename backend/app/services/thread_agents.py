@@ -21,6 +21,7 @@ from app.exceptions import ConflictError
 from app.models import Message, Thread
 from app.models.thread import HUMAN_ACTOR
 from app.services.activity import append_activity, notify_after_commit
+from app.services.untrusted import UNTRUSTED_NOTICE, wrap_untrusted
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,8 @@ def _agent_system(name: str) -> str:
     try:
         seed = get_seed(name)
     except KeyError:
-        return f"You are {name} in GallaIA."
-    return f"{seed.foundational_prompt}\n\n{seed.role_prompt}"
+        return f"You are {name} in GallaIA.\n\n{UNTRUSTED_NOTICE}"
+    return f"{seed.foundational_prompt}\n\n{seed.role_prompt}\n\n{UNTRUSTED_NOTICE}"
 
 
 def mock_llm(system: str, user: str) -> str:
@@ -119,11 +120,13 @@ def default_llm(
     return GatewayLLM(db, thread_id, project_id)
 
 
-def _ask(llm: LLM, agent: str, system: str, user: str) -> str:
+def _ask(llm: LLM, agent: str, system: str, body: str) -> str:
     """Call the LLM; the gateway one also gets the agent (model + usage)."""
+    # GALLAIA-SEC-009: message bodies reach the LLM as delimited untrusted data.
+    wrapped = wrap_untrusted(body, "thread_message")
     if isinstance(llm, GatewayLLM):
-        return llm(system, user, agent=agent)
-    return llm(system, user)
+        return llm(system, wrapped, agent=agent)
+    return llm(system, wrapped)
 
 
 def _load_messages(db: Session, thread_id: int) -> list[Message]:

@@ -77,7 +77,7 @@ def test_verify_rejects_when_secret_unconfigured(monkeypatch):
         assert False, "expected UnauthorizedError"
     except UnauthorizedError as exc:
         assert exc.status_code == 401
-        assert "not configured" in exc.message.lower() or "invalid" in exc.message.lower()
+        assert exc.message == "Unauthorized"
 
 
 def test_valid_secret_creates_task_and_session_stub(monkeypatch):

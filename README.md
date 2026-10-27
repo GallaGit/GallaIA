@@ -45,7 +45,7 @@ docker compose up --build
 ```
 
 - App: http://127.0.0.1:8000/
-- OpenAPI: http://127.0.0.1:8000/docs
+- OpenAPI: http://127.0.0.1:8000/docs (desactivado por defecto; actívalo con `API_DOCS_ENABLED=true` en `backend/.env`)
 
 ## Arranque local
 

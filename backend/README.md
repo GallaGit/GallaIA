@@ -53,7 +53,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 - App: http://127.0.0.1:8000/
-- OpenAPI: http://127.0.0.1:8000/docs
+- OpenAPI: http://127.0.0.1:8000/docs (desactivado por defecto; actívalo con `API_DOCS_ENABLED=true` en `backend/.env`)
 
 Al arrancar se crean tablas SQLite y se siembra el proyecto `default` con agentes `orquestador`, `fe`, `be` (grants + network + fs + secret refs Isolation).
 
@@ -68,7 +68,7 @@ docker compose up --build
 ```
 
 - App (UI + API): **http://127.0.0.1:8000/** (no `:5173`)
-- OpenAPI: http://127.0.0.1:8000/docs
+- OpenAPI: http://127.0.0.1:8000/docs (desactivado por defecto; actívalo con `API_DOCS_ENABLED=true` en `backend/.env`)
 - SQLite: `backend/data/` montado en el contenedor
 
 Documentación de los cambios: [docs/deployment/docker.md](../docs/deployment/docker.md).  
@@ -80,7 +80,7 @@ El `docker-compose.yml` de esta carpeta es solo API (legado).
 
 | Método | Ruta | Rol |
 |--------|------|-----|
-| GET | `/health` | Health + ping DB |
+| GET | `/health` | Health (solo `{"status":"ok"}`) |
 | GET | `/projects`, `/projects/{id}` | Proyectos |
 | GET | `/agents`, `/agents/{id}` | Agentes (prompts reconstruidos) |
 | GET/PUT | `/agents/{id}/grants` | Grants MCP/repo/env (default deny) |
