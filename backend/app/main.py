@@ -53,15 +53,21 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down %s", settings.app_name)
 
 
+def docs_enabled(s) -> bool:
+    """GALLAIA-SEC-008: API docs off unless API_DOCS_ENABLED=true (never in production)."""
+    return bool(s.api_docs_enabled) and s.app_env != "production"
+
+
+_docs_enabled = docs_enabled(settings)
 app = FastAPI(
     title=settings.app_name,
     version="0.2.0",
     description="GallaAI AgentOS — control plane MVP (Phase 0+1)",
     lifespan=lifespan,
-    # GALLAIA-SEC-008: no public API docs in production.
-    docs_url=None if settings.app_env == "production" else "/docs",
-    redoc_url=None if settings.app_env == "production" else "/redoc",
-    openapi_url=None if settings.app_env == "production" else "/openapi.json",
+    # GALLAIA-SEC-008: docs closed by default; opt in with API_DOCS_ENABLED=true.
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
 )
 
 app.add_middleware(
@@ -102,11 +108,7 @@ app.include_router(triggers_routes.public_router, prefix="/api/v1")
 @app.get("/health")
 def health(settings: SettingsDep):
     logger.debug("GET /health")
-    return {
-        "status": "ok",
-        "app": settings.app_name,
-        "env": settings.app_env,
-    }
+    return {"status": "ok"}
 
 
 def _spa_index() -> FileResponse | None:

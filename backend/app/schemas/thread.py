@@ -23,7 +23,7 @@ class MessageCreate(BaseModel):
     sender: str = Field(min_length=1, max_length=80)
     recipient: str | None = Field(default=None, max_length=80)
     kind: MessageKind = "text"
-    body: str = Field(min_length=1)
+    body: str = Field(min_length=1, max_length=20000)
 
 
 class MessageOut(BaseModel):

@@ -27,7 +27,7 @@ docker compose up --build
 # o: bash scripts/docker-up.sh
 ```
 
-Abre **http://127.0.0.1:8000/** (UI). OpenAPI: http://127.0.0.1:8000/docs.
+Abre **http://127.0.0.1:8000/** (UI). OpenAPI: http://127.0.0.1:8000/docs (solo con `API_DOCS_ENABLED=true`).
 
 No uses `:5173` con Docker; ese puerto es solo Vite en desarrollo local.
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class TaskCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=10000)
     project_id: int | None = None
     assignee_agent_id: int | None = None
     approval_gate: bool = False
@@ -13,7 +13,7 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=10000)
     assignee_agent_id: int | None = None
     approval_gate: bool | None = None
 

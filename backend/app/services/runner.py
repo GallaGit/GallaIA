@@ -286,16 +286,20 @@ def _run_gateway(
     and logs one tool event per failed provider. If every provider fails, the
     gateway's mock fallback produces the summary.
     """
+    from app.services.untrusted import UNTRUSTED_NOTICE, wrap_untrusted
+
     mock_summary = (
         f"[mock] Agent '{agent.name}' completed task '{task.name}' "
         "(all LLM providers failed)."
     )
+    system = agent.foundational_prompt + "\n\n" + agent.role_prompt + "\n\n" + UNTRUSTED_NOTICE
+    user_content = (
+        wrap_untrusted(f"Task: {task.name}\n\n{task.description or ''}", "task")
+        + "\n\nProduce a short completion summary (no real tools available in this stub)."
+    )
     result = gateway.complete(
-        agent.foundational_prompt + "\n\n" + agent.role_prompt,
-        (
-            f"Task: {task.name}\n\n{task.description or ''}\n\n"
-            "Produce a short completion summary (no real tools available in this stub)."
-        ),
+        system,
+        user_content,
         model=agent.model,
         fallback=lambda _system, _user: mock_summary,
         on_usage=db_usage_sink(

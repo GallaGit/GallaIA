@@ -108,6 +108,8 @@ class Settings(BaseSettings):
         default="",
         validation_alias=AliasChoices("VAPID_PRIVATE_KEY", "vapid_private_key"),
     )
+    # GALLAIA-SEC-008: opt-in for /docs, /redoc, /openapi.json (env API_DOCS_ENABLED).
+    api_docs_enabled: bool = False
 
     @field_validator("gallaia_operator_token")
     @classmethod

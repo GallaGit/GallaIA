@@ -45,10 +45,10 @@ def verify_webhook_secret(provided: str | None, settings: Settings) -> None:
     """Constant-time compare against configured secret. Empty config denies."""
     expected = (settings.gallaia_webhook_secret or "").strip()
     if not expected:
-        raise UnauthorizedError("Webhook secret not configured")
+        raise UnauthorizedError("Unauthorized")
     got = (provided or "").strip()
     if not got or not secrets.compare_digest(got, expected):
-        raise UnauthorizedError("Invalid webhook secret")
+        raise UnauthorizedError("Unauthorized")
 
 
 def _default_project(db: Session) -> Project:

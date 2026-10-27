@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 WebhookShape = Literal["generic", "support-inbound", "bug-report"]
 
@@ -14,8 +14,19 @@ class WebhookTriggerIn(BaseModel):
 
     shape: WebhookShape = "generic"
     name: str | None = Field(default=None, max_length=200)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=10000)
     payload: dict[str, Any] | None = None
+
+    @field_validator("payload")
+    @classmethod
+    def _validate_payload_size(cls, value: dict[str, Any] | None) -> dict[str, Any] | None:
+        if value is None:
+            return value
+        import json
+
+        if len(json.dumps(value)) > 20000:
+            raise ValueError("payload too large")
+        return value
 
 
 class WebhookTriggerOut(BaseModel):
