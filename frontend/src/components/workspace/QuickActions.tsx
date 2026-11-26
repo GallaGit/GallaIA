@@ -1,11 +1,17 @@
+import type { ControlInboxMessage } from '../../api/client'
+
 type Props = {
   busy: boolean
   live: boolean
   closed: boolean
   hasThread: boolean
+  pendingApproval: ControlInboxMessage | null
+  deciding: boolean
   onCreateThread: () => void
   onAdvance: () => void
   onCloseThread: () => void
+  onApprove: () => void
+  onReject: () => void
 }
 
 export default function QuickActions({
@@ -13,10 +19,15 @@ export default function QuickActions({
   live,
   closed,
   hasThread,
+  pendingApproval,
+  deciding,
   onCreateThread,
   onAdvance,
   onCloseThread,
+  onApprove,
+  onReject,
 }: Props) {
+  const canDecide = Boolean(pendingApproval) && !deciding
   return (
     <section className="ws-panel" aria-label="Acciones rápidas">
       <h3>Acciones rápidas</h3>
@@ -48,18 +59,28 @@ export default function QuickActions({
         <button
           type="button"
           className="ws-btn ws-btn-ok"
-          disabled
-          title="Fase B — aprobaciones F2.2c"
+          disabled={!canDecide}
+          title={
+            pendingApproval
+              ? `Aprobar inbox #${pendingApproval.id}`
+              : 'Sin aprobación pendiente'
+          }
+          onClick={onApprove}
         >
-          Aprobar
+          {deciding ? '…' : 'Aprobar'}
         </button>
         <button
           type="button"
           className="ws-btn ws-btn-danger"
-          disabled
-          title="Fase B — aprobaciones F2.2c"
+          disabled={!canDecide}
+          title={
+            pendingApproval
+              ? `Rechazar inbox #${pendingApproval.id}`
+              : 'Sin aprobación pendiente'
+          }
+          onClick={onReject}
         >
-          Rechazar
+          {deciding ? '…' : 'Rechazar'}
         </button>
       </div>
       <p className="ws-soon">

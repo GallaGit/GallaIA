@@ -7,15 +7,29 @@ from sqlalchemy import select
 
 from app.api.dependencies.db import DbSession
 from app.exceptions import BadRequestError, ConflictError, NotFoundError
-from app.models import InboxMessage, Thread
+from app.models import InboxMessage, Message, Thread
 from app.runtime import thread_graph
 from app.schemas import InboxDecideIn, InboxDecideOut, InboxMessageOut, InboxReplyIn
 from app.schemas.inbox import InboxResolveIn
 from app.schemas.thread import MessageOut
 from app.services import thread_agents
-from app.services.activity import append_activity, notify_after_commit
+from app.services.activity import append_activity, notify_after_commit, publish_inbox
 
 router = APIRouter(prefix="/inbox", tags=["inbox"])
+
+
+def _target_agent(db: DbSession, msg: InboxMessage) -> str | None:
+    if msg.thread_message_id is None:
+        return None
+    linked = db.get(Message, msg.thread_message_id)
+    if linked is None:
+        return None
+    return linked.recipient
+
+
+def _inbox_out(db: DbSession, msg: InboxMessage) -> InboxMessageOut:
+    data = InboxMessageOut.model_validate(msg)
+    return data.model_copy(update={"target_agent": _target_agent(db, msg)})
 
 
 def _close_message(
@@ -49,7 +63,8 @@ def list_inbox(db: DbSession, status: str | None = None):
     stmt = select(InboxMessage).order_by(InboxMessage.id.desc())
     if status is not None:
         stmt = stmt.where(InboxMessage.status == status)
-    return list(db.scalars(stmt).all())
+    rows = list(db.scalars(stmt).all())
+    return [_inbox_out(db, m) for m in rows]
 
 
 @router.get("/{message_id}", response_model=InboxMessageOut)
@@ -57,7 +72,7 @@ def get_inbox_message(message_id: int, db: DbSession):
     msg = db.get(InboxMessage, message_id)
     if msg is None:
         raise NotFoundError(f"Inbox message {message_id} not found")
-    return msg
+    return _inbox_out(db, msg)
 
 
 @router.post("/{message_id}/reply", response_model=InboxMessageOut)
@@ -70,12 +85,15 @@ def reply_inbox(message_id: int, payload: InboxReplyIn, db: DbSession):
         raise BadRequestError("Thread approvals must use /decide")
     if msg.status != "open":
         raise BadRequestError("Message is not open")
-    return _close_message(
+    return _inbox_out(
         db,
-        msg,
-        reply_body=payload.body,
-        activity_type="inbox.replied",
-        activity_message=f"Inbox #{msg.id} replied",
+        _close_message(
+            db,
+            msg,
+            reply_body=payload.body,
+            activity_type="inbox.replied",
+            activity_message=f"Inbox #{msg.id} replied",
+        ),
     )
 
 
@@ -90,12 +108,15 @@ def resolve_inbox(message_id: int, payload: InboxResolveIn, db: DbSession):
     if msg.status != "open":
         raise BadRequestError("Message is not open")
     note = (payload.note or "").strip() or None
-    return _close_message(
+    return _inbox_out(
         db,
-        msg,
-        reply_body=note,
-        activity_type="inbox.resolved",
-        activity_message=f"Inbox #{msg.id} resolved",
+        _close_message(
+            db,
+            msg,
+            reply_body=note,
+            activity_type="inbox.resolved",
+            activity_message=f"Inbox #{msg.id} resolved",
+        ),
     )
 
 
@@ -118,8 +139,9 @@ def decide_inbox(message_id: int, payload: InboxDecideIn, db: DbSession):
     if thread.status == "closed":
         raise ConflictError(f"Thread {thread.id} is closed")
 
+    target = _target_agent(db, msg)
     llm = thread_agents.default_llm(db, thread.id, thread.project_id)
-    created, events = thread_graph.resume_thread_approval(
+    created, events, signals = thread_graph.resume_thread_approval(
         db, thread, msg, payload.approved, payload.note, llm
     )
 
@@ -127,10 +149,14 @@ def decide_inbox(message_id: int, payload: InboxDecideIn, db: DbSession):
     msg.reply_body = note
     msg.status = "answered"
     msg.answered_at = datetime.now(timezone.utc)
+    decision_label = "approved" if payload.approved else "rejected"
     evt = append_activity(
         db,
         type="inbox.decided",
-        message=f"Inbox #{msg.id} decided",
+        message=(
+            f"Inbox #{msg.id} decided · {decision_label}"
+            + (f" · target={target}" if target else "")
+        ),
         task_id=msg.task_id,
         session_id=msg.session_id,
     )
@@ -141,7 +167,22 @@ def decide_inbox(message_id: int, payload: InboxDecideIn, db: DbSession):
     notify_after_commit(evt)
     for event in events:
         notify_after_commit(event)
+    publish_inbox(
+        {
+            "action": "decided",
+            "inbox_id": msg.id,
+            "kind": msg.kind,
+            "status": msg.status,
+            "thread_id": msg.thread_id,
+            "thread_message_id": msg.thread_message_id,
+            "target_agent": target,
+            "approved": bool(payload.approved),
+            "body": msg.body,
+        }
+    )
+    for signal in signals:
+        publish_inbox(signal)
     return InboxDecideOut(
-        inbox=InboxMessageOut.model_validate(msg),
+        inbox=_inbox_out(db, msg),
         created=[MessageOut.model_validate(m) for m in created],
     )

@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import type { Agent } from '../../api/client'
+import type { Agent, ControlInboxMessage } from '../../api/client'
 import type { DerivedAgentStatus } from '../../lib/agentStatus'
 import AgentTreeCard, { type AgentKey } from './AgentTreeCard'
 import TreeConnectors from './TreeConnectors'
@@ -11,6 +11,13 @@ type Props = {
   onSelect: (key: AgentKey) => void
   onPrompt: (key: AgentKey, text: string) => void | Promise<void>
   promptDisabled?: boolean
+  waitingByAgent: Record<string, ControlInboxMessage | undefined>
+  decidingId: number | null
+  onDecide: (
+    inboxId: number,
+    approved: boolean,
+    note?: string,
+  ) => void | Promise<void>
 }
 
 export default function AgentTree({
@@ -20,11 +27,47 @@ export default function AgentTree({
   onSelect,
   onPrompt,
   promptDisabled,
+  waitingByAgent,
+  decidingId,
+  onDecide,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const orqRef = useRef<HTMLElement>(null)
   const feRef = useRef<HTMLElement>(null)
   const beRef = useRef<HTMLElement>(null)
+
+  const card = (
+    key: AgentKey,
+    ref: React.RefObject<HTMLElement | null>,
+    subAgents: number,
+  ) => {
+    const pending = waitingByAgent[key] ?? null
+    return (
+      <AgentTreeCard
+        agent={agentsByName[key] ?? null}
+        agentKey={key}
+        status={statuses[key] ?? 'idle'}
+        selected={selected === key}
+        subAgents={subAgents}
+        cardRef={ref}
+        onSelect={() => onSelect(key)}
+        onSubmitPrompt={(t) => onPrompt(key, t)}
+        disabled={promptDisabled}
+        pendingApproval={pending}
+        deciding={pending != null && decidingId === pending.id}
+        onApprove={
+          pending
+            ? (note) => onDecide(pending.id, true, note)
+            : undefined
+        }
+        onReject={
+          pending
+            ? (note) => onDecide(pending.id, false, note)
+            : undefined
+        }
+      />
+    )
+  }
 
   return (
     <div className="tree-wrap" ref={wrapRef}>
@@ -35,40 +78,10 @@ export default function AgentTree({
         beRef={beRef}
       />
       <div className="ws-tree">
-        <AgentTreeCard
-          agent={agentsByName.orquestador ?? null}
-          agentKey="orquestador"
-          status={statuses.orquestador ?? 'idle'}
-          selected={selected === 'orquestador'}
-          subAgents={2}
-          cardRef={orqRef}
-          onSelect={() => onSelect('orquestador')}
-          onSubmitPrompt={(t) => onPrompt('orquestador', t)}
-          disabled={promptDisabled}
-        />
+        {card('orquestador', orqRef, 2)}
         <div className="ws-children">
-          <AgentTreeCard
-            agent={agentsByName.fe ?? null}
-            agentKey="fe"
-            status={statuses.fe ?? 'idle'}
-            selected={selected === 'fe'}
-            subAgents={0}
-            cardRef={feRef}
-            onSelect={() => onSelect('fe')}
-            onSubmitPrompt={(t) => onPrompt('fe', t)}
-            disabled={promptDisabled}
-          />
-          <AgentTreeCard
-            agent={agentsByName.be ?? null}
-            agentKey="be"
-            status={statuses.be ?? 'idle'}
-            selected={selected === 'be'}
-            subAgents={0}
-            cardRef={beRef}
-            onSelect={() => onSelect('be')}
-            onSubmitPrompt={(t) => onPrompt('be', t)}
-            disabled={promptDisabled}
-          />
+          {card('fe', feRef, 0)}
+          {card('be', beRef, 0)}
         </div>
       </div>
       <p className="sr-only">

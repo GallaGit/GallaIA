@@ -21,6 +21,8 @@ class InboxMessageOut(BaseModel):
     reply_body: str | None = None
     created_at: datetime
     answered_at: datetime | None = None
+    # Specialist awaiting approval (fe|be); hydrated from the linked message.
+    target_agent: str | None = None
 
 
 class InboxReplyIn(BaseModel):

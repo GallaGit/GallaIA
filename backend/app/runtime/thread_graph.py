@@ -192,6 +192,7 @@ def _approve(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
         .order_by(InboxMessage.id)
         .limit(1)
     )
+    created_now = False
     if inbox is None:
         inbox = InboxMessage(
             from_role="agent",
@@ -205,6 +206,33 @@ def _approve(state: ThreadState, config: RunnableConfig) -> dict[str, Any]:
         )
         db.add(inbox)
         db.flush()
+        created_now = True
+
+    if created_now:
+        from app.services.activity import append_activity
+
+        events.append(
+            append_activity(
+                db,
+                type="inbox.approval_pending",
+                message=(
+                    f"Inbox #{inbox.id} pending approval · "
+                    f"thread={thread.id} target={msg.recipient}"
+                ),
+            )
+        )
+        cfg.setdefault("inbox_signals", []).append(
+            {
+                "action": "pending",
+                "inbox_id": inbox.id,
+                "kind": "thread_approval",
+                "status": "open",
+                "thread_id": thread.id,
+                "thread_message_id": msg.id,
+                "target_agent": msg.recipient,
+                "body": inbox.body,
+            }
+        )
 
     decision = interrupt({"inbox_id": inbox.id, "message_id": msg.id})
     if isinstance(decision, dict):
@@ -426,8 +454,8 @@ def _created_messages(
 
 def run_thread_graph(
     db: Session, thread: Thread, max_steps: int, llm: thread_agents.LLM
-) -> tuple[list[Message], list]:
-    """Advance `thread` with LangGraph. Returns (created messages, events).
+) -> tuple[list[Message], list, list[dict[str, Any]]]:
+    """Advance `thread` with LangGraph. Returns (created, events, inbox_signals).
 
     The caller owns the transaction (commit/refresh/notify), exactly as with
     the classic loop. When the graph pauses for a human decision we commit the
@@ -444,13 +472,14 @@ def run_thread_graph(
             "thread": thread,
             "llm": llm,
             "events": [],
+            "inbox_signals": [],
         },
         # pick + handler per step, plus the no-reply skips and the final pick.
         "recursion_limit": 4 * int(max_steps) + 20,
     }
     snapshot = graph.get_state(config)
     if _has_pending_interrupt(snapshot):
-        return [], []  # waiting for the human; do not advance
+        return [], [], []  # waiting for the human; do not advance
 
     events: list[ActivityEvent] = config["configurable"]["events"]
     prior = dict(getattr(snapshot, "values", None) or {})
@@ -468,9 +497,12 @@ def run_thread_graph(
     values = dict(getattr(snapshot, "values", None) or final)
     created_ids = [int(i) for i in (values.get("created") or [])]
     created = _created_messages(db, thread, created_ids)
+    signals: list[dict[str, Any]] = list(
+        config["configurable"].get("inbox_signals") or []
+    )
     if _has_pending_interrupt(snapshot):
         db.commit()  # persist the Inbox row even when created is empty
-    return created, events
+    return created, events, signals
 
 
 def pending_approval(thread_id: int) -> int | None:
@@ -499,8 +531,11 @@ def resume_thread_approval(
     note: str | None,
     llm: thread_agents.LLM,
     max_steps: int = 6,
-) -> tuple[list[Message], list]:
-    """Resume a paused graph with the human decision. Returns (created, events)."""
+) -> tuple[list[Message], list, list[dict[str, Any]]]:
+    """Resume a paused graph with the human decision.
+
+    Returns (created messages, activity events, inbox SSE signals).
+    """
     graph = _graph()
     if graph is None or Command is None:
         raise RuntimeError("langgraph is not installed")
@@ -513,6 +548,7 @@ def resume_thread_approval(
             "thread": thread,
             "llm": llm,
             "events": events,
+            "inbox_signals": [],
         },
         "recursion_limit": 4 * int(max_steps) + 20,
     }
@@ -528,9 +564,12 @@ def resume_thread_approval(
     created_ids = [int(i) for i in (values.get("created") or [])]
     created_ids = [i for i in created_ids if i not in already]
     created = _created_messages(db, thread, created_ids)
+    signals: list[dict[str, Any]] = list(
+        config["configurable"].get("inbox_signals") or []
+    )
     if _has_pending_interrupt(snapshot):
         db.commit()  # next approval row must survive even before the API commits
-    return created, events
+    return created, events, signals
 
 
 def get_thread_graph_state(thread_id: int) -> dict | None:
