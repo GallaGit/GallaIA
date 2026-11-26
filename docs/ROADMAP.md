@@ -187,6 +187,7 @@ Fuente de verdad del calendario **v2** (fases F0–F5). El roadmap AgentOS fases
 **Por hacer**
 
 - Vista de aprobaciones en la UI (Inbox y Conversaciones)
+- Propuesta de rediseño (borrador, 26-11-2026): [árbol de agentes](design/ui-arbol-agentes/SPEC-UI-arbol-agentes.md)
 - Aprobación configurable por agente o por tipo de acción (base para el ciclo de software de F3)
 - Extra `[llm]` con `langgraph`, `langgraph-checkpoint-sqlite` y `litellm` con hashes en los lockfiles
 
