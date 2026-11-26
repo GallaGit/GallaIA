@@ -8,13 +8,14 @@ import ThreadsPage from './pages/ThreadsPage'
 import ActivityPage from './pages/ActivityPage'
 import LivePage from './pages/LivePage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import WorkspacePage from './pages/WorkspacePage'
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Navigate to="/agents" replace />} />
-        <Route path="agents" element={<AgentsPage />} />
+        <Route path="agents" element={<WorkspacePage />} />
         <Route path="agents/:name" element={<AgentsPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="sessions" element={<SessionsPage />} />
