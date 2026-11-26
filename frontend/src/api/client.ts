@@ -120,6 +120,14 @@ export type ThreadDelegations = {
   summary_id: number | null
 }
 
+export type Project = {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  created_at: string
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = 'API no disponible') {
     super(message)
@@ -284,4 +292,5 @@ export const api = {
         body: JSON.stringify({ status: 'closed' }),
       },
     ),
+  projects: () => requestAt<Project[]>(`${API_ROOT}/projects`),
 }
