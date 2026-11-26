@@ -85,16 +85,26 @@ export default function Layout() {
     let cancelled = false
     const load = async () => {
       try {
-        const [projects, sessions, tasks, threads] = await Promise.all([
-          api.projects().catch(() => [] as Project[]),
-          api.sessions().catch(() => [] as Session[]),
-          api.tasks().catch(() => [] as Task[]),
-          api.threads().catch(() => [] as Thread[]),
-        ])
+        const [projects, sessions, tasks, threads, approvals] =
+          await Promise.all([
+            api.projects().catch(() => [] as Project[]),
+            api.sessions().catch(() => [] as Session[]),
+            api.tasks().catch(() => [] as Task[]),
+            api.threads().catch(() => [] as Thread[]),
+            api.controlInbox('open').catch(() => []),
+          ])
         if (cancelled) return
         const preferred =
           projects.find((p) => p.slug === 'default') ?? projects[0] ?? null
         setProject(preferred)
+        const openApprovals = approvals.filter(
+          (a) => a.kind === 'thread_approval',
+        )
+        const waitingTargets = new Set(
+          openApprovals
+            .map((a) => (a.target_agent || '').toLowerCase())
+            .filter(Boolean),
+        )
         const agentNames = ['orquestador', 'fe', 'be'] as const
         const statuses = Object.fromEntries(
           agentNames.map((name) => [
@@ -104,7 +114,9 @@ export default function Layout() {
               liveStreaming: false,
               sessions,
               tasks,
-              waitingApproval: false,
+              waitingApproval:
+                waitingTargets.has(name) ||
+                (name === 'orquestador' && openApprovals.length > 0),
             }),
           ]),
         )
@@ -113,6 +125,7 @@ export default function Layout() {
             agentStatuses: statuses,
             threads,
             delegations: null,
+            openApprovals: openApprovals.length,
           }),
         )
       } catch {
@@ -218,7 +231,7 @@ export default function Layout() {
             <b>{counts.paused}</b>
           </div>
           <p className="ws-hint" style={{ marginTop: 8 }}>
-            Waiting/Paused: fase B (sin inventar datos)
+            Pausados: reservado (sin API). Waiting = aprobaciones abiertas.
           </p>
         </div>
 

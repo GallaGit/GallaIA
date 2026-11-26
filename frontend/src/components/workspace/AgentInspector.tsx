@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Agent, Thread, ThreadDetail, ThreadMessage } from '../../api/client'
+import type {
+  Agent,
+  ControlInboxMessage,
+  Thread,
+  ThreadDetail,
+  ThreadMessage,
+} from '../../api/client'
 import type { AgentKey } from './AgentTreeCard'
 import { statusLabel, type DerivedAgentStatus } from '../../lib/agentStatus'
 import { MAX_MESSAGE_CHARS } from '../../hooks/useActiveThread'
@@ -18,6 +24,13 @@ type Props = {
   advanceInfo: string | null
   detailError: string | null
   streamError: string | null
+  pendingApproval?: ControlInboxMessage | null
+  deciding?: boolean
+  onDecide?: (
+    inboxId: number,
+    approved: boolean,
+    note?: string,
+  ) => void | Promise<void>
   onSelectThread: (id: string | null) => void
   onSend: (text: string) => void | Promise<void>
   onAdvance: () => void
@@ -50,6 +63,9 @@ export default function AgentInspector({
   advanceInfo,
   detailError,
   streamError,
+  pendingApproval = null,
+  deciding = false,
+  onDecide,
   onSelectThread,
   onSend,
   onAdvance,
@@ -59,6 +75,7 @@ export default function AgentInspector({
 }: Props) {
   const [tab, setTab] = useState<'chat' | 'context' | 'settings'>('chat')
   const [draft, setDraft] = useState('')
+  const [note, setNote] = useState('')
   const chatRef = useRef<HTMLDivElement>(null)
   const title =
     agent?.title ??
@@ -178,6 +195,50 @@ export default function AgentInspector({
                 <span style={{ whiteSpace: 'pre-wrap' }}>{m.body}</span>
               </div>
             ))}
+            {pendingApproval && (
+              <div className="ws-approval">
+                <h4>
+                  Aprobación pendiente
+                  {pendingApproval.target_agent
+                    ? ` · ${pendingApproval.target_agent.toUpperCase()}`
+                    : ''}
+                </h4>
+                <p>{pendingApproval.body}</p>
+                <label className="sr-only" htmlFor="insp-approval-note">
+                  Nota opcional
+                </label>
+                <input
+                  id="insp-approval-note"
+                  type="text"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Nota de contexto (opcional)…"
+                  disabled={deciding}
+                />
+                <div className="ws-approval-row">
+                  <button
+                    type="button"
+                    className="ws-btn ws-btn-ok"
+                    disabled={deciding || !onDecide}
+                    onClick={() =>
+                      void onDecide?.(pendingApproval.id, true, note)
+                    }
+                  >
+                    {deciding ? '…' : 'Aprobar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="ws-btn ws-btn-danger"
+                    disabled={deciding || !onDecide}
+                    onClick={() =>
+                      void onDecide?.(pendingApproval.id, false, note)
+                    }
+                  >
+                    {deciding ? '…' : 'Rechazar'}
+                  </button>
+                </div>
+              </div>
+            )}
             {live && (
               <div className="ws-stream" aria-label="Transmitiendo en directo">
                 <div className="ws-dots" aria-hidden="true">

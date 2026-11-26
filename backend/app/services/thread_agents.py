@@ -330,9 +330,10 @@ def advance_thread(
 
     from app.runtime import thread_graph  # local: thread_graph imports this module
 
+    inbox_signals: list = []
     if thread_graph.thread_engine() == thread_graph.LANGGRAPH:
         if thread_graph.langgraph_available():
-            created, events = thread_graph.run_thread_graph(
+            created, events, inbox_signals = thread_graph.run_thread_graph(
                 db, thread, max_steps, run_llm
             )
         else:
@@ -341,12 +342,19 @@ def advance_thread(
     else:
         created, events = _advance_classic(db, thread, max_steps, run_llm)
 
+    # Interrupt path may commit the Inbox row with empty `created`; still fan out
+    # activity + inbox SSE so the UI learns about pending approvals live.
     if created or (isinstance(run_llm, GatewayLLM) and run_llm.calls):
         db.commit()  # replies + llm_usage rows
         for reply in created:
             db.refresh(reply)
+    if events or inbox_signals:
+        from app.services.activity import publish_inbox
+
         for event in events:
             notify_after_commit(event)
+        for signal in inbox_signals:
+            publish_inbox(signal)
     return created
 
 

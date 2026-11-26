@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Agent } from '../../api/client'
+import type { Agent, ControlInboxMessage } from '../../api/client'
 import {
   statusLabel,
   type DerivedAgentStatus,
@@ -17,6 +17,10 @@ type Props = {
   onSelect: () => void
   onSubmitPrompt: (text: string) => void | Promise<void>
   disabled?: boolean
+  pendingApproval?: ControlInboxMessage | null
+  deciding?: boolean
+  onApprove?: (note: string) => void | Promise<void>
+  onReject?: (note: string) => void | Promise<void>
 }
 
 const PLACEHOLDERS: Record<AgentKey, string> = {
@@ -35,8 +39,13 @@ export default function AgentTreeCard({
   onSelect,
   onSubmitPrompt,
   disabled,
+  pendingApproval,
+  deciding,
+  onApprove,
+  onReject,
 }: Props) {
   const [draft, setDraft] = useState('')
+  const [note, setNote] = useState('')
   const title =
     agent?.title ??
     (agentKey === 'orquestador'
@@ -64,7 +73,9 @@ export default function AgentTreeCard({
   return (
     <article
       ref={cardRef as React.RefObject<HTMLElement>}
-      className={`ws-agent ws-agent--${agentKey}${selected ? ' is-selected' : ''}`}
+      className={`ws-agent ws-agent--${agentKey}${selected ? ' is-selected' : ''}${
+        pendingApproval ? ' is-waiting' : ''
+      }`}
       data-agent={agentKey}
       tabIndex={0}
       role="button"
@@ -96,6 +107,47 @@ export default function AgentTreeCard({
           Worktree: — <em className="ws-prox">(placeholder)</em>
         </span>
       </div>
+
+      {pendingApproval && (
+        <div
+          className="ws-approval"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <h4>Aprobación pendiente</h4>
+          <p>{pendingApproval.body}</p>
+          <label className="sr-only" htmlFor={`note-${agentKey}`}>
+            Nota opcional
+          </label>
+          <input
+            id={`note-${agentKey}`}
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Nota de contexto (opcional)…"
+            disabled={deciding}
+          />
+          <div className="ws-approval-row">
+            <button
+              type="button"
+              className="ws-btn ws-btn-ok"
+              disabled={deciding || !onApprove}
+              onClick={() => void onApprove?.(note)}
+            >
+              {deciding ? '…' : 'Aprobar'}
+            </button>
+            <button
+              type="button"
+              className="ws-btn ws-btn-danger"
+              disabled={deciding || !onReject}
+              onClick={() => void onReject?.(note)}
+            >
+              {deciding ? '…' : 'Rechazar'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <form className="ws-prompt-row" onSubmit={(e) => void handleSubmit(e)}>
         <label className="sr-only" htmlFor={`prompt-${agentKey}`}>
           {PLACEHOLDERS[agentKey]}
@@ -121,7 +173,8 @@ export default function AgentTreeCard({
       </form>
       {agentKey !== 'orquestador' && (
         <p className="ws-hint">
-          El mensaje se envía al Orquestador indicando destino {agentKey.toUpperCase()}.
+          El mensaje se envía al Orquestador indicando destino{' '}
+          {agentKey.toUpperCase()}.
         </p>
       )}
     </article>

@@ -128,6 +128,49 @@ export type Project = {
   created_at: string
 }
 
+/** Control-plane inbox (F2.2c approvals), not AgentOS handoffs. */
+export type ControlInboxMessage = {
+  id: number
+  from_role: string
+  agent_id: number | null
+  session_id: number | null
+  task_id: number | null
+  thread_id: number | null
+  thread_message_id: number | null
+  kind: string
+  body: string
+  status: string
+  reply_body: string | null
+  created_at: string
+  answered_at: string | null
+  target_agent: string | null
+}
+
+export type InboxDecideResult = {
+  inbox: ControlInboxMessage
+  created: ThreadMessage[]
+}
+
+export type ThreadGraphState = {
+  thread_id: number
+  engine: string
+  checkpointer: string | null
+  state: Record<string, unknown> | null
+  pending_approval: number | null
+}
+
+export type InboxSseEvent = {
+  action: 'pending' | 'decided' | string
+  inbox_id: number
+  kind?: string
+  status?: string
+  thread_id?: number | null
+  thread_message_id?: number | null
+  target_agent?: string | null
+  approved?: boolean | null
+  body?: string
+}
+
 export class ApiUnavailableError extends Error {
   constructor(message = 'API no disponible') {
     super(message)
@@ -225,12 +268,40 @@ export const api = {
   sessions: () => request<Session[]>('/sessions'),
   session: (id: string) =>
     request<Session>(`/sessions/${encodeURIComponent(id)}`),
+  /** AgentOS handoffs (session/task) — under /agentos */
   inbox: () => request<InboxItem[]>('/inbox'),
+  /** Control-plane inbox (thread_approval F2.2c) */
+  controlInbox: (status?: 'open' | 'answered') =>
+    requestAt<ControlInboxMessage[]>(
+      `${API_ROOT}/inbox${
+        status ? `?status=${encodeURIComponent(status)}` : ''
+      }`,
+    ),
+  controlInboxItem: (id: number | string) =>
+    requestAt<ControlInboxMessage>(
+      `${API_ROOT}/inbox/${encodeURIComponent(String(id))}`,
+    ),
+  decideInbox: (
+    id: number | string,
+    body: { approved: boolean; note?: string | null },
+  ) =>
+    requestAt<InboxDecideResult>(
+      `${API_ROOT}/inbox/${encodeURIComponent(String(id))}/decide`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    ),
+  threadGraphState: (id: number | string) =>
+    requestAt<ThreadGraphState>(
+      `${API_ROOT}/threads/${encodeURIComponent(String(id))}/graph-state`,
+    ),
   /** Control-plane activity feed (not under /agentos) */
   activity: (limit = 50) =>
     requestAt<ActivityEvent[]>(
       `${API_ROOT}/activity?limit=${encodeURIComponent(String(limit))}`,
     ),
+  activityStreamUrl: () => `${API_ROOT}/activity/stream`,
   /** Control-plane runner route stub (not under /agentos) */
   runnerRoute: () =>
     requestAt<{

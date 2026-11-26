@@ -4,6 +4,7 @@ import {
   api,
   ApiUnavailableError,
   type Agent,
+  type ControlInboxMessage,
   type Project,
   type Session,
   type Task,
@@ -14,6 +15,7 @@ import DependenciesPanel from '../components/workspace/DependenciesPanel'
 import QuickActions from '../components/workspace/QuickActions'
 import type { AgentKey } from '../components/workspace/AgentTreeCard'
 import { useActiveThread } from '../hooks/useActiveThread'
+import { useControlInbox } from '../hooks/useControlInbox'
 import {
   deriveAgentStatus,
   deriveStatusCounts,
@@ -40,6 +42,7 @@ export default function WorkspacePage() {
   const pendingSend = useRef<PendingSend | null>(null)
 
   const chat = useActiveThread(threadId)
+  const inbox = useControlInbox(true)
 
   const agentsByName = useMemo(() => {
     const map: Record<string, Agent> = {}
@@ -82,7 +85,6 @@ export default function WorkspacePage() {
     if (open) setThreadId(String(open.id))
   }, [chat.threads, threadId])
 
-  // Flush prompt queued while creating / switching thread.
   useEffect(() => {
     const pending = pendingSend.current
     if (!pending || threadId !== pending.id) return
@@ -92,19 +94,27 @@ export default function WorkspacePage() {
     void chat.sendMessage(pending.text, pending.key)
   }, [threadId, chat.detail, chat])
 
+  // After stream ends, approvals may have been created — refresh inbox.
+  useEffect(() => {
+    if (!chat.live) void inbox.reload()
+  }, [chat.live, inbox.reload])
+
   const statuses = useMemo(() => {
     const map: Record<string, DerivedAgentStatus> = {}
+    const anyWaiting = inbox.approvals.length > 0
     for (const key of AGENT_ORDER) {
+      const waitingForAgent = Boolean(inbox.waitingByAgent[key])
       map[key] = deriveAgentStatus({
         agentName: key,
         liveStreaming: chat.live,
         sessions,
         tasks,
-        waitingApproval: false, // phase B
+        waitingApproval:
+          waitingForAgent || (key === 'orquestador' && anyWaiting && !chat.live),
       })
     }
     return map
-  }, [chat.live, sessions, tasks])
+  }, [chat.live, sessions, tasks, inbox.approvals, inbox.waitingByAgent])
 
   const counts = useMemo(
     () =>
@@ -112,13 +122,26 @@ export default function WorkspacePage() {
         agentStatuses: statuses,
         threads: chat.threads,
         delegations: chat.delegations,
+        openApprovals: inbox.approvals.length,
       }),
-    [statuses, chat.threads, chat.delegations],
+    [statuses, chat.threads, chat.delegations, inbox.approvals.length],
   )
 
   const projectActive =
     chat.live ||
-    sessions.some((s) => s.status === 'starting' || s.status === 'running')
+    sessions.some((s) => s.status === 'starting' || s.status === 'running') ||
+    inbox.approvals.length > 0
+
+  const activePending: ControlInboxMessage | null = useMemo(() => {
+    if (inbox.waitingByAgent[selected]) return inbox.waitingByAgent[selected]!
+    if (threadId) {
+      const forThread = inbox.approvals.find(
+        (a) => a.thread_id != null && String(a.thread_id) === threadId,
+      )
+      if (forThread) return forThread
+    }
+    return inbox.approvals[0] ?? null
+  }, [inbox.approvals, inbox.waitingByAgent, selected, threadId])
 
   const selectAgent = (key: AgentKey) => {
     setSelected(key)
@@ -156,6 +179,26 @@ export default function WorkspacePage() {
     const id = String(t.id)
     pendingSend.current = { key, text, id }
     setThreadId(id)
+  }
+
+  const handleDecide = async (
+    inboxId: number,
+    approved: boolean,
+    note?: string,
+  ) => {
+    try {
+      await inbox.decide(inboxId, approved, note)
+      if (threadId) {
+        // Refresh messages / delegations after resume
+        await chat.loadThreads()
+        // force detail reload by toggling
+        const id = threadId
+        setThreadId(null)
+        queueMicrotask(() => setThreadId(id))
+      }
+    } catch {
+      /* error already on inbox.error */
+    }
   }
 
   if (view === 'list') {
@@ -200,13 +243,12 @@ export default function WorkspacePage() {
         <span className="ws-counts">
           <em>3</em> agentes · <em>{counts.running}</em> en curso ·{' '}
           <em>{counts.waiting}</em> en espera
-          <span
-            className="ws-prox"
-            title="Waiting requiere aprobaciones F2.2c (fase B)"
-          >
-            {' '}
-            (waiting: fase B)
-          </span>
+          {inbox.live && (
+            <span className="ws-prox" title="SSE activity/inbox">
+              {' '}
+              · live
+            </span>
+          )}
         </span>
         <div className="ws-header-actions">
           <div className="ws-seg" role="group" aria-label="Vista">
@@ -239,6 +281,16 @@ export default function WorkspacePage() {
           {chat.error}
         </div>
       )}
+      {inbox.error && (
+        <div className="ws-error" role="alert">
+          Inbox: {inbox.error}
+        </div>
+      )}
+      {inbox.loading && inbox.approvals.length === 0 && (
+        <p className="ws-muted-line" style={{ padding: '0 1rem' }}>
+          Cargando aprobaciones…
+        </p>
+      )}
 
       <div className="ws-body">
         <div className="ws-canvas">
@@ -249,6 +301,9 @@ export default function WorkspacePage() {
             onSelect={selectAgent}
             onPrompt={onPrompt}
             promptDisabled={chat.busy}
+            waitingByAgent={inbox.waitingByAgent}
+            decidingId={inbox.decidingId}
+            onDecide={handleDecide}
           />
           <div className="ws-bottom-row">
             <DependenciesPanel
@@ -260,9 +315,22 @@ export default function WorkspacePage() {
               live={chat.live}
               closed={chat.closed}
               hasThread={Boolean(threadId)}
+              pendingApproval={activePending}
+              deciding={
+                activePending != null &&
+                inbox.decidingId === activePending.id
+              }
               onCreateThread={() => void handleCreateThread()}
               onAdvance={chat.advance}
               onCloseThread={() => void chat.closeThread()}
+              onApprove={() => {
+                if (activePending)
+                  void handleDecide(activePending.id, true)
+              }}
+              onReject={() => {
+                if (activePending)
+                  void handleDecide(activePending.id, false)
+              }}
             />
           </div>
         </div>
@@ -281,6 +349,11 @@ export default function WorkspacePage() {
           advanceInfo={chat.advanceInfo}
           detailError={chat.detailError}
           streamError={chat.streamError}
+          pendingApproval={activePending}
+          deciding={
+            activePending != null && inbox.decidingId === activePending.id
+          }
+          onDecide={handleDecide}
           onSelectThread={setThreadId}
           onSend={async (text) => {
             await chat.sendMessage(text, 'orquestador')
@@ -303,6 +376,7 @@ export default function WorkspacePage() {
           >
             {agentsByName[key]?.title ??
               (key === 'orquestador' ? 'Orquestador' : key.toUpperCase())}
+            {inbox.waitingByAgent[key] ? ' · espera' : ''}
           </button>
         ))}
       </div>

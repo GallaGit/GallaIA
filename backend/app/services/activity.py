@@ -19,6 +19,7 @@ from app.models.activity import ActivityEvent
 from app.schemas.activity import ActivityEventCreate, ActivityEventOut
 
 # In-process subscribers (SSE). Cleared on process restart — fine for lean Phase 7.
+# Queue items are either a legacy activity payload (dict) or {"event": str, "data": dict}.
 _subscribers: set[asyncio.Queue[dict[str, Any]]] = set()
 
 
@@ -85,22 +86,32 @@ def list_activity(db: Session, *, limit: int = 50) -> list[ActivityEvent]:
     return list(db.scalars(stmt).all())
 
 
-def publish_activity(event: ActivityEventOut | dict[str, Any]) -> None:
-    """Fan-out to live SSE queues (best-effort; drops if full)."""
-    if isinstance(event, ActivityEventOut):
-        payload = event.model_dump(mode="json")
-    else:
-        payload = event
+def _fanout(frame: dict[str, Any]) -> None:
+    """Best-effort put onto every SSE subscriber queue."""
     dead: list[asyncio.Queue[dict[str, Any]]] = []
     for q in list(_subscribers):
         try:
-            q.put_nowait(payload)
+            q.put_nowait(frame)
         except asyncio.QueueFull:
             dead.append(q)
         except Exception:  # noqa: BLE001 — never break callers on SSE fan-out
             dead.append(q)
     for q in dead:
         _subscribers.discard(q)
+
+
+def publish_activity(event: ActivityEventOut | dict[str, Any]) -> None:
+    """Fan-out an `activity` SSE frame (best-effort; drops if full)."""
+    if isinstance(event, ActivityEventOut):
+        payload = event.model_dump(mode="json")
+    else:
+        payload = event
+    _fanout({"event": "activity", "data": payload})
+
+
+def publish_inbox(event: dict[str, Any]) -> None:
+    """Fan-out an `inbox` SSE frame for approval create/decide (same hub)."""
+    _fanout({"event": "inbox", "data": event})
 
 
 def notify_after_commit(row: ActivityEvent) -> None:
@@ -153,8 +164,17 @@ async def activity_sse_stream(
                         yield _sse_pack("end", {"reason": "max_seconds"})
                         break
                     timeout = min(hb, remaining)
-                payload = await asyncio.wait_for(q.get(), timeout=timeout)
-                yield _sse_pack("activity", payload)
+                frame = await asyncio.wait_for(q.get(), timeout=timeout)
+                if (
+                    isinstance(frame, dict)
+                    and "event" in frame
+                    and "data" in frame
+                    and isinstance(frame["data"], dict)
+                ):
+                    yield _sse_pack(str(frame["event"]), frame["data"])
+                else:
+                    # Legacy bare activity payloads
+                    yield _sse_pack("activity", frame)
             except asyncio.TimeoutError:
                 yield _sse_pack(
                     "heartbeat",
