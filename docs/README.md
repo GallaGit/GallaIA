@@ -34,7 +34,8 @@ Punto de entrada de la documentación del producto **v2** (equipo Orquestador / 
 - Backend how-tos: [backend/](backend/)
 - API: [api/](api/)
 - ADR: [adr/](adr/)
-- Design Atelier: [design/atelier/](design/atelier/)
+- Design Atelier (UI actual): [design/atelier/](design/atelier/)
+- Propuesta de rediseño del árbol de agentes (borrador, 26-11-2026): [design/ui-arbol-agentes/SPEC-UI-arbol-agentes.md](design/ui-arbol-agentes/SPEC-UI-arbol-agentes.md)
 - Deployment: [deployment/](deployment/)
 
 ## Archivo v1
